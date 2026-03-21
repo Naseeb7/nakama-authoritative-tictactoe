@@ -8,7 +8,7 @@ interface MoveHistoryEntry {
 interface MatchState {
   board: [string, string, string, string, string, string, string, string, string];
   players: string[];
-  symbols: Record<string, string>;
+  symbols: Record<string, "X" | "O">;
   currentTurn: string | null;
   winner: string | null;
   status: MatchStatus;
@@ -76,7 +76,7 @@ var matchJoin = function (
   presences: Presence[]
 ): MatchState {
   var updatedPlayers: string[] = state.players.slice();
-  var updatedSymbols: Record<string, string> = {};
+  var updatedSymbols: Record<string, "X" | "O"> = {};
   var currentTurn = state.currentTurn;
   var status: MatchStatus = state.status;
   var i: number;
@@ -139,7 +139,7 @@ var matchLeave = function (
 ): MatchState {
   var leavingPlayerIds: Record<string, boolean> = {};
   var updatedPlayers: string[] = [];
-  var updatedSymbols: Record<string, string> = {};
+  var updatedSymbols: Record<string, "X" | "O"> = {};
   var winner = state.winner;
   var status: MatchStatus = state.status;
   var currentTurn = state.currentTurn;
@@ -197,10 +197,22 @@ var matchLoop = function (
   state: MatchState,
   messages: MatchMessage[]
 ): MatchStateResult<MatchState> {
+  var i: number;
+  var message: MatchMessage;
+
   logger.info("matchLoop executed.", {
     tick: tick,
     messageCount: messages.length
   });
+
+  for (i = 0; i < messages.length; i += 1) {
+    message = messages[i];
+
+    logger.info("Received match message.", {
+      opCode: message.opCode,
+      userId: message.sender.userId
+    });
+  }
 
   return {
     state: state
