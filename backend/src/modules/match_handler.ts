@@ -1,7 +1,18 @@
-interface TicTacToeMatchState {
-  matchId: string | null;
-  presences: Presence[];
-  tick: number;
+type MatchStatus = "waiting" | "active" | "finished";
+
+interface MoveHistoryEntry {
+  playerId: string;
+  position: number;
+}
+
+interface MatchState {
+  board: [string, string, string, string, string, string, string, string, string];
+  players: string[];
+  symbols: Record<string, string>;
+  currentTurn: string | null;
+  winner: string | null;
+  status: MatchStatus;
+  moveHistory: MoveHistoryEntry[];
 }
 
 var matchInit = function (
@@ -9,16 +20,21 @@ var matchInit = function (
   logger: Logger,
   _nk: Nakama,
   params: Record<string, string>
-): MatchInitResult<TicTacToeMatchState> {
+): MatchInitResult<MatchState> {
   logger.info("matchInit executed.", {
-    node: ctx.node
+    node: ctx.node,
+    matchId: params.matchId
   });
 
   return {
     state: {
-      matchId: typeof params.matchId === "string" ? params.matchId : null,
-      presences: [],
-      tick: 0
+      board: ["", "", "", "", "", "", "", "", ""],
+      players: [],
+      symbols: {},
+      currentTurn: null,
+      winner: null,
+      status: "waiting",
+      moveHistory: []
     },
     tickRate: 1,
     label: "tic_tac_toe_match"
@@ -31,17 +47,22 @@ var matchJoinAttempt = function (
   _nk: Nakama,
   _dispatcher: MatchDispatcher,
   _tick: number,
-  state: TicTacToeMatchState,
+  state: MatchState,
   presence: Presence,
   _metadata?: Record<string, string>
-): MatchJoinAttemptResult<TicTacToeMatchState> {
+): MatchJoinAttemptResult<MatchState> {
+  var accept = state.players.length < 2;
+
   logger.info("matchJoinAttempt executed.", {
-    userId: presence.userId
+    userId: presence.userId,
+    currentPlayerCount: state.players.length,
+    accept: accept
   });
 
   return {
     state: state,
-    accept: true
+    accept: accept,
+    rejectMessage: accept ? undefined : "Match is full."
   };
 };
 
@@ -51,24 +72,59 @@ var matchJoin = function (
   _nk: Nakama,
   _dispatcher: MatchDispatcher,
   _tick: number,
-  state: TicTacToeMatchState,
+  state: MatchState,
   presences: Presence[]
-): TicTacToeMatchState {
-  var updatedPresences: Presence[] = state.presences.slice();
+): MatchState {
+  var updatedPlayers: string[] = state.players.slice();
+  var updatedSymbols: Record<string, string> = {};
+  var currentTurn = state.currentTurn;
+  var status: MatchStatus = state.status;
   var i: number;
+  var playerId: string;
+
+  for (playerId in state.symbols) {
+    if (state.symbols.hasOwnProperty(playerId)) {
+      updatedSymbols[playerId] = state.symbols[playerId];
+    }
+  }
 
   logger.info("matchJoin executed.", {
     joinedCount: presences.length
   });
 
   for (i = 0; i < presences.length; i += 1) {
-    updatedPresences.push(presences[i]);
+    playerId = presences[i].userId;
+
+    if (updatedPlayers.indexOf(playerId) === -1 && updatedPlayers.length < 2) {
+      updatedPlayers.push(playerId);
+
+      if (updatedPlayers.length === 1) {
+        updatedSymbols[playerId] = "X";
+      } else if (updatedPlayers.length === 2) {
+        updatedSymbols[playerId] = "O";
+      }
+    }
+  }
+
+  if (updatedPlayers.length === 2) {
+    status = "active";
+    currentTurn = updatedPlayers[0];
+
+    logger.info("Match activated.", {
+      firstPlayer: updatedPlayers[0],
+      secondPlayer: updatedPlayers[1],
+      currentTurn: currentTurn
+    });
   }
 
   return {
-    matchId: state.matchId,
-    presences: updatedPresences,
-    tick: state.tick
+    board: state.board,
+    players: updatedPlayers,
+    symbols: updatedSymbols,
+    currentTurn: currentTurn,
+    winner: state.winner,
+    status: status,
+    moveHistory: state.moveHistory
   };
 };
 
@@ -78,31 +134,57 @@ var matchLeave = function (
   _nk: Nakama,
   _dispatcher: MatchDispatcher,
   _tick: number,
-  state: TicTacToeMatchState,
+  state: MatchState,
   presences: Presence[]
-): TicTacToeMatchState {
-  var leavingSessionIds: Record<string, boolean> = {};
-  var updatedPresences: Presence[] = [];
+): MatchState {
+  var leavingPlayerIds: Record<string, boolean> = {};
+  var updatedPlayers: string[] = [];
+  var updatedSymbols: Record<string, string> = {};
+  var winner = state.winner;
+  var status: MatchStatus = state.status;
+  var currentTurn = state.currentTurn;
   var i: number;
+  var playerId: string;
 
   logger.info("matchLeave executed.", {
     leftCount: presences.length
   });
 
   for (i = 0; i < presences.length; i += 1) {
-    leavingSessionIds[presences[i].sessionId] = true;
+    leavingPlayerIds[presences[i].userId] = true;
   }
 
-  for (i = 0; i < state.presences.length; i += 1) {
-    if (!leavingSessionIds[state.presences[i].sessionId]) {
-      updatedPresences.push(state.presences[i]);
+  for (i = 0; i < state.players.length; i += 1) {
+    playerId = state.players[i];
+
+    if (!leavingPlayerIds[playerId]) {
+      updatedPlayers.push(playerId);
+      if (state.symbols[playerId]) {
+        updatedSymbols[playerId] = state.symbols[playerId];
+      }
     }
   }
 
+  if (state.status === "active" && updatedPlayers.length === 1) {
+    winner = updatedPlayers[0];
+    status = "finished";
+    currentTurn = null;
+
+    logger.info("Active match ended due to disconnect.", {
+      winner: winner
+    });
+  } else if (updatedPlayers.length === 0) {
+    currentTurn = null;
+  }
+
   return {
-    matchId: state.matchId,
-    presences: updatedPresences,
-    tick: state.tick
+    board: state.board,
+    players: updatedPlayers,
+    symbols: updatedSymbols,
+    currentTurn: currentTurn,
+    winner: winner,
+    status: status,
+    moveHistory: state.moveHistory
   };
 };
 
@@ -112,20 +194,16 @@ var matchLoop = function (
   _nk: Nakama,
   _dispatcher: MatchDispatcher,
   tick: number,
-  state: TicTacToeMatchState,
+  state: MatchState,
   messages: MatchMessage[]
-): MatchStateResult<TicTacToeMatchState> {
+): MatchStateResult<MatchState> {
   logger.info("matchLoop executed.", {
     tick: tick,
     messageCount: messages.length
   });
 
   return {
-    state: {
-      matchId: state.matchId,
-      presences: state.presences,
-      tick: tick
-    }
+    state: state
   };
 };
 
@@ -135,9 +213,9 @@ var matchTerminate = function (
   _nk: Nakama,
   _dispatcher: MatchDispatcher,
   _tick: number,
-  state: TicTacToeMatchState,
+  state: MatchState,
   graceSeconds: number
-): TicTacToeMatchState {
+): MatchState {
   logger.info("matchTerminate executed.", {
     graceSeconds: graceSeconds
   });
@@ -151,9 +229,9 @@ var matchSignal = function (
   _nk: Nakama,
   _dispatcher: MatchDispatcher,
   _tick: number,
-  state: TicTacToeMatchState,
+  state: MatchState,
   data: string
-): MatchSignalResult<TicTacToeMatchState> {
+): MatchSignalResult<MatchState> {
   logger.info("matchSignal executed.");
 
   return {
@@ -162,7 +240,7 @@ var matchSignal = function (
   };
 };
 
-var createMatchHandler: MatchHandler<TicTacToeMatchState> = {
+var createMatchHandler: MatchHandler<MatchState> = {
   matchInit: matchInit,
   matchJoinAttempt: matchJoinAttempt,
   matchJoin: matchJoin,
