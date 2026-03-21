@@ -1,0 +1,15 @@
+{
+  "name": "nakama-authoritative-tictactoe-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TypeScript runtime modules for Nakama authoritative tic-tac-toe.",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@heroiclabs/nakama-runtime": "^3.22.0",
+    "typescript": "^5.6.3"
+  }
+}
