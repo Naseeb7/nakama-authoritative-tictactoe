@@ -1,31 +1,34 @@
-import { createTicTacToeMatchHandler } from "./modules/match_handler";
-
-function registerRpc(logger: nkruntime.Logger, initializer: nkruntime.Initializer): void {
-  initializer.registerRpc("healthcheck", (_ctx, _logger, _nk, _payload) => {
-    logger.debug("Healthcheck RPC invoked.");
-    return JSON.stringify({ ok: true, service: "nakama-authoritative-tictactoe" });
-  });
+function createMatchRpc(
+  _ctx: RpcContext,
+  logger: Logger,
+  _nk: Nakama,
+  _payload: string
+): string {
+  logger.info("create_match RPC placeholder invoked.");
+  return JSON.stringify({ message: "create_match RPC not implemented yet." });
 }
 
-function registerMatches(logger: nkruntime.Logger, initializer: nkruntime.Initializer): void {
-  initializer.registerMatch("tic_tac_toe", createTicTacToeMatchHandler(logger));
+function findMatchRpc(
+  _ctx: RpcContext,
+  logger: Logger,
+  _nk: Nakama,
+  _payload: string
+): string {
+  logger.info("find_match RPC placeholder invoked.");
+  return JSON.stringify({ message: "find_match RPC not implemented yet." });
 }
 
-const InitModule: nkruntime.InitModule = function (
-  ctx: nkruntime.Context,
-  logger: nkruntime.Logger,
-  _nk: nkruntime.Nakama,
-  initializer: nkruntime.Initializer
+function InitModule(
+  _ctx: RpcContext,
+  logger: Logger,
+  _nk: Nakama,
+  initializer: Initializer
 ): void {
-  logger.info("Initializing Nakama TypeScript runtime modules", {
-    env: ctx.env,
-    execution_mode: ctx.executionMode
-  });
+  logger.info("Initializing Nakama runtime module wiring.");
 
-  registerRpc(logger, initializer);
-  registerMatches(logger, initializer);
+  initializer.registerMatch("tic_tac_toe_match", createMatchHandler);
+  initializer.registerRpc("create_match", createMatchRpc);
+  initializer.registerRpc("find_match", findMatchRpc);
 
-  logger.info("Runtime module initialization complete.");
-};
-
-export { InitModule };
+  logger.info("Nakama runtime module wiring complete.");
+}

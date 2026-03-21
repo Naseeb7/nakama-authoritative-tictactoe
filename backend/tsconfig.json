@@ -1,23 +1,17 @@
 {
   "compilerOptions": {
-    "target": "ES2019",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "outDir": "build",
-    "rootDir": "src",
+    "target": "ES5",
+    "module": "none",
+    "outFile": "build/main.js",
     "strict": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "types": [
-      "@heroiclabs/nakama-runtime"
-    ]
+    "removeComments": false,
+    "noEmitHelpers": false,
+    "skipLibCheck": true
   },
-  "include": [
-    "src/**/*.ts"
+  "files": [
+    "src/types/nakama.ts",
+    "src/modules/match_handler.ts",
+    "src/main.ts"
   ],
-  "exclude": [
-    "build",
-    "node_modules"
-  ]
+  "exclude": ["build", "node_modules"]
 }
