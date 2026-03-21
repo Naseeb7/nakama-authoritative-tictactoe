@@ -1,4 +1,5 @@
 type MatchStatus = "waiting" | "active" | "finished";
+var MOVE_OPCODE = 1;
 
 interface MoveHistoryEntry {
   playerId: string;
@@ -13,6 +14,10 @@ interface MatchState {
   winner: string | null;
   status: MatchStatus;
   moveHistory: MoveHistoryEntry[];
+}
+
+interface MovePayload {
+  position: number;
 }
 
 var matchInit = function (
@@ -192,13 +197,17 @@ var matchLoop = function (
   _ctx: RpcContext,
   logger: Logger,
   _nk: Nakama,
-  _dispatcher: MatchDispatcher,
+  dispatcher: MatchDispatcher,
   tick: number,
   state: MatchState,
   messages: MatchMessage[]
 ): MatchStateResult<MatchState> {
   var i: number;
   var message: MatchMessage;
+  var payload: MovePayload | null;
+  var playerId: string;
+  var playerSymbol: "X" | "O" | undefined;
+  var nextPlayer: string | null;
 
   logger.info("matchLoop executed.", {
     tick: tick,
@@ -212,6 +221,80 @@ var matchLoop = function (
       opCode: message.opCode,
       userId: message.sender.userId
     });
+
+    if (message.opCode !== MOVE_OPCODE) {
+      continue;
+    }
+
+    payload = parseMovePayload(message.data);
+    playerId = message.sender.userId;
+
+    if (state.status !== "active") {
+      logger.info("Rejected move: match is not active.", {
+        userId: playerId
+      });
+      continue;
+    }
+
+    if (state.currentTurn !== playerId) {
+      logger.info("Rejected move: not current turn.", {
+        userId: playerId,
+        currentTurn: state.currentTurn
+      });
+      continue;
+    }
+
+    if (!payload || !isValidPosition(payload.position)) {
+      logger.info("Rejected move: invalid position payload.", {
+        userId: playerId
+      });
+      continue;
+    }
+
+    if (state.board[payload.position] !== "") {
+      logger.info("Rejected move: board position already occupied.", {
+        userId: playerId,
+        position: payload.position
+      });
+      continue;
+    }
+
+    playerSymbol = state.symbols[playerId];
+    if (!playerSymbol) {
+      logger.info("Rejected move: player has no assigned symbol.", {
+        userId: playerId
+      });
+      continue;
+    }
+
+    state.board[payload.position] = playerSymbol;
+    state.moveHistory.push({
+      playerId: playerId,
+      position: payload.position
+    });
+
+    if (hasWinningLine(state.board, playerSymbol)) {
+      state.winner = playerId;
+      state.status = "finished";
+      state.currentTurn = null;
+    } else if (isBoardFull(state.board)) {
+      state.status = "finished";
+      state.currentTurn = null;
+    } else {
+      nextPlayer = getOtherPlayerId(state.players, playerId);
+      state.currentTurn = nextPlayer;
+    }
+
+    dispatcher.broadcastMessage(
+      MOVE_OPCODE,
+      JSON.stringify({
+        board: state.board,
+        currentTurn: state.currentTurn,
+        winner: state.winner,
+        status: state.status,
+        moveHistory: state.moveHistory
+      })
+    );
   }
 
   return {
@@ -261,3 +344,67 @@ var createMatchHandler: MatchHandler<MatchState> = {
   matchTerminate: matchTerminate,
   matchSignal: matchSignal
 };
+
+function parseMovePayload(data: string): MovePayload | null {
+  try {
+    return JSON.parse(data) as MovePayload;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function isValidPosition(position: number): boolean {
+  return typeof position === "number" && position >= 0 && position <= 8 && position % 1 === 0;
+}
+
+function isBoardFull(board: [string, string, string, string, string, string, string, string, string]): boolean {
+  var i: number;
+
+  for (i = 0; i < board.length; i += 1) {
+    if (board[i] === "") {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function getOtherPlayerId(players: string[], currentPlayerId: string): string | null {
+  var i: number;
+
+  for (i = 0; i < players.length; i += 1) {
+    if (players[i] !== currentPlayerId) {
+      return players[i];
+    }
+  }
+
+  return null;
+}
+
+function hasWinningLine(
+  board: [string, string, string, string, string, string, string, string, string],
+  symbol: "X" | "O"
+): boolean {
+  var winningLines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
+  ];
+  var i: number;
+  var line: number[];
+
+  for (i = 0; i < winningLines.length; i += 1) {
+    line = winningLines[i];
+
+    if (board[line[0]] === symbol && board[line[1]] === symbol && board[line[2]] === symbol) {
+      return true;
+    }
+  }
+
+  return false;
+}

@@ -24,7 +24,9 @@ interface MatchMessage {
   sender: Presence;
 }
 
-interface MatchDispatcher {}
+interface MatchDispatcher {
+  broadcastMessage(opCode: number, data: string): void;
+}
 
 interface MatchStateResult<TState> {
   state: TState;
