@@ -25,6 +25,7 @@ interface PlayerStats {
 
 interface MatchState {
   matchId: string;
+  historyKey: string;
   board: [string, string, string, string, string, string, string, string, string];
   players: string[];
   symbols: Record<string, "X" | "O">;
@@ -55,6 +56,8 @@ var matchInit = function (
 ): MatchInitResult<MatchState> {
   var mode = getMatchModeFromParams(params);
   var label = getLifecycleLabel(mode, "waiting");
+  var startTime = getCurrentUnixTimestamp();
+  var matchId = params.matchId || "";
 
   logger.info("matchInit executed.", {
     node: ctx.node,
@@ -64,7 +67,8 @@ var matchInit = function (
 
   return {
     state: {
-      matchId: params.matchId || "",
+      matchId: matchId,
+      historyKey: createHistoryKey(matchId, mode, startTime),
       board: ["", "", "", "", "", "", "", "", ""],
       players: [],
       symbols: {},
@@ -72,7 +76,7 @@ var matchInit = function (
       winner: null,
       status: "waiting",
       label: label,
-      startTime: getCurrentUnixTimestamp(),
+      startTime: startTime,
       endTime: null,
       moveHistory: [],
       mode: mode,
@@ -204,6 +208,7 @@ var matchJoin = function (
 
   var updatedState: MatchState = {
     matchId: state.matchId,
+    historyKey: state.historyKey,
     board: state.board,
     players: updatedPlayers,
     symbols: updatedSymbols,
@@ -282,6 +287,7 @@ var matchLeave = function (
 
   var updatedState: MatchState = {
     matchId: state.matchId,
+    historyKey: state.historyKey,
     board: state.board,
     players: state.players,
     symbols: state.symbols,
@@ -953,8 +959,7 @@ function persistCompletedMatchIfNeeded(nk: Nakama, logger: Logger, state: MatchS
     nk.storageWrite([
       {
         collection: MATCH_HISTORY_COLLECTION,
-        key: state.matchId || String(state.startTime),
-        userId: "",
+        key: state.historyKey,
         value: JSON.stringify({
           players: state.players,
           winner: state.winner,
@@ -975,6 +980,18 @@ function persistCompletedMatchIfNeeded(nk: Nakama, logger: Logger, state: MatchS
       error: String(error)
     });
   }
+}
+
+function createHistoryKey(matchId: string, mode: MatchMode, startTime: number): string {
+  if (matchId) {
+    return matchId;
+  }
+
+  return MATCH_HISTORY_COLLECTION + ":" + mode + ":" + String(startTime) + ":" + createRandomSuffix();
+}
+
+function createRandomSuffix(): string {
+  return String(new Date().getTime()) + ":" + String(Math.floor(Math.random() * 1000000));
 }
 
 function getMatchDurationSeconds(startTime: number, endTime: number | null): number {

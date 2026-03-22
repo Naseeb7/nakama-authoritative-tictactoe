@@ -5,6 +5,7 @@
   "description": "TypeScript runtime modules for Nakama authoritative tic-tac-toe.",
   "scripts": {
     "build": "tsc",
+    "smoke-test": "node scripts/runtime_smoke_test.js",
     "watch": "tsc --watch",
     "type-check": "tsc --noEmit"
   },

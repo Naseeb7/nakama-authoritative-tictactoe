@@ -2,6 +2,7 @@ var GLOBAL_WINS_LEADERBOARD_ID = "global_wins";
 var DEFAULT_MATCH_MODE = "classic";
 var TIMED_MATCH_MODE = "timed";
 var MATCH_LABEL_PREFIX = "tic_tac_toe_match";
+var MATCH_LIST_LIMIT = 1000;
 
 function createMatchRpc(
   _ctx: RpcContext,
@@ -44,7 +45,7 @@ function findMatchRpc(
   var labelPrefix = getMatchLabelPrefixForMode(mode);
 
   try {
-    matches = nk.matchList(50, true, "", 0, 2, "");
+    matches = nk.matchList(MATCH_LIST_LIMIT, true, "", 0, 2, "");
 
     for (i = 0; i < matches.length; i += 1) {
       if (
