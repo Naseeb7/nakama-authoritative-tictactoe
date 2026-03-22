@@ -76,7 +76,7 @@ var matchJoin = function (
   _ctx: RpcContext,
   logger: Logger,
   _nk: Nakama,
-  _dispatcher: MatchDispatcher,
+  dispatcher: MatchDispatcher,
   _tick: number,
   state: MatchState,
   presences: Presence[]
@@ -123,7 +123,7 @@ var matchJoin = function (
     });
   }
 
-  return {
+  var updatedState: MatchState = {
     board: state.board,
     players: updatedPlayers,
     symbols: updatedSymbols,
@@ -132,6 +132,21 @@ var matchJoin = function (
     status: status,
     moveHistory: state.moveHistory
   };
+
+  dispatcher.broadcastMessage(
+    STATE_UPDATE_OPCODE,
+    JSON.stringify({
+      board: updatedState.board,
+      players: updatedState.players,
+      symbols: updatedState.symbols,
+      currentTurn: updatedState.currentTurn,
+      winner: updatedState.winner,
+      status: updatedState.status,
+      moveHistory: updatedState.moveHistory
+    })
+  );
+
+  return updatedState;
 };
 
 var matchLeave = function (
