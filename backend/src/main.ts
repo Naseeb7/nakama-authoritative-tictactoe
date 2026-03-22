@@ -1,21 +1,28 @@
 var GLOBAL_WINS_LEADERBOARD_ID = "global_wins";
+var DEFAULT_MATCH_MODE = "classic";
+var TIMED_MATCH_MODE = "timed";
 
 function createMatchRpc(
   _ctx: RpcContext,
   logger: Logger,
   nk: Nakama,
-  _payload: string
+  payload: string
 ): string {
   var matchId: string | null = null;
+  var mode = getRequestedMatchMode(payload);
 
   try {
-    matchId = nk.matchCreate("tic_tac_toe_match");
+    matchId = nk.matchCreate("tic_tac_toe_match", {
+      mode: mode
+    });
 
     logger.info("Created new Tic-Tac-Toe match", {
-      matchId: matchId
+      matchId: matchId,
+      mode: mode
     });
   } catch (error) {
     logger.error("Failed to create Tic-Tac-Toe match", {
+      mode: mode,
       error: String(error)
     });
   }
@@ -27,21 +34,24 @@ function findMatchRpc(
   _ctx: RpcContext,
   logger: Logger,
   nk: Nakama,
-  _payload: string
+  payload: string
 ): string {
   var matches: MatchListItem[] = [];
   var i: number;
   var matchId: string | null = null;
+  var mode = getRequestedMatchMode(payload);
+  var label = getRpcMatchLabelForMode(mode);
 
   try {
-    matches = nk.matchList(10, true, "tic_tac_toe_match", 0, 1, "");
+    matches = nk.matchList(10, true, label, 0, 1, "");
 
     for (i = 0; i < matches.length; i += 1) {
-      if (matches[i].authoritative && matches[i].label === "tic_tac_toe_match" && matches[i].size < 2) {
+      if (matches[i].authoritative && matches[i].label === label && matches[i].size < 2) {
         matchId = matches[i].matchId;
 
         logger.info("Found existing match", {
-          matchId: matchId
+          matchId: matchId,
+          mode: mode
         });
 
         break;
@@ -49,14 +59,19 @@ function findMatchRpc(
     }
 
     if (matchId === null) {
-      matchId = nk.matchCreate("tic_tac_toe_match");
+      matchId = nk.matchCreate("tic_tac_toe_match", {
+        mode: mode
+      });
 
       logger.info("Created fallback match", {
-        matchId: matchId
+        matchId: matchId,
+        mode: mode
       });
     }
   } catch (error) {
     logger.error("Failed to find or create Tic-Tac-Toe match", {
+      mode: mode,
+      label: label,
       error: String(error)
     });
   }
@@ -89,4 +104,38 @@ function InitModule(
   initializer.registerRpc("find_match", findMatchRpc);
 
   logger.info("Nakama runtime module wiring complete.");
+}
+
+function getRequestedMatchMode(payload: string): string {
+  var parsed = parseMatchmakingPayload(payload);
+
+  if (parsed && parsed.mode === TIMED_MATCH_MODE) {
+    return TIMED_MATCH_MODE;
+  }
+
+  if (parsed && parsed.timed === true) {
+    return TIMED_MATCH_MODE;
+  }
+
+  return DEFAULT_MATCH_MODE;
+}
+
+function getRpcMatchLabelForMode(mode: string): string {
+  if (mode === TIMED_MATCH_MODE) {
+    return "tic_tac_toe_match_timed";
+  }
+
+  return "tic_tac_toe_match";
+}
+
+function parseMatchmakingPayload(payload: string): any {
+  if (!payload) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(payload);
+  } catch (_error) {
+    return null;
+  }
 }

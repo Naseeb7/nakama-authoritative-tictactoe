@@ -1,9 +1,11 @@
 type MatchStatus = "waiting" | "active" | "finished";
+type MatchMode = "classic" | "timed";
 var MOVE_OPCODE = 1;
 var STATE_UPDATE_OPCODE = 2;
 var GLOBAL_WINS_LEADERBOARD_ID = "global_wins";
 var PLAYER_STATS_COLLECTION = "player_stats";
 var PLAYER_STATS_KEY = "stats";
+var TURN_TIMEOUT_SECONDS = 30;
 
 interface MoveHistoryEntry {
   playerId: string;
@@ -26,6 +28,8 @@ interface MatchState {
   winner: string | null;
   status: MatchStatus;
   moveHistory: MoveHistoryEntry[];
+  mode: MatchMode;
+  turnDeadlineTick: number | null;
 }
 
 interface MovePayload {
@@ -38,9 +42,12 @@ var matchInit = function (
   _nk: Nakama,
   params: Record<string, string>
 ): MatchInitResult<MatchState> {
+  var mode = getMatchModeFromParams(params);
+
   logger.info("matchInit executed.", {
     node: ctx.node,
-    matchId: params.matchId
+    matchId: params.matchId,
+    mode: mode
   });
 
   return {
@@ -51,10 +58,12 @@ var matchInit = function (
       currentTurn: null,
       winner: null,
       status: "waiting",
-      moveHistory: []
+      moveHistory: [],
+      mode: mode,
+      turnDeadlineTick: null
     },
     tickRate: 1,
-    label: "tic_tac_toe_match"
+    label: getStateMatchLabelForMode(mode)
   };
 };
 
@@ -88,7 +97,7 @@ var matchJoin = function (
   logger: Logger,
   _nk: Nakama,
   dispatcher: MatchDispatcher,
-  _tick: number,
+  tick: number,
   state: MatchState,
   presences: Presence[]
 ): MatchState {
@@ -96,6 +105,7 @@ var matchJoin = function (
   var updatedSymbols: Record<string, "X" | "O"> = {};
   var currentTurn = state.currentTurn;
   var status: MatchStatus = state.status;
+  var turnDeadlineTick = state.turnDeadlineTick;
   var i: number;
   var playerId: string;
 
@@ -126,11 +136,14 @@ var matchJoin = function (
   if (updatedPlayers.length === 2) {
     status = "active";
     currentTurn = updatedPlayers[0];
+    turnDeadlineTick = state.mode === "timed" ? tick + TURN_TIMEOUT_SECONDS : null;
 
     logger.info("Match activated.", {
       firstPlayer: updatedPlayers[0],
       secondPlayer: updatedPlayers[1],
-      currentTurn: currentTurn
+      currentTurn: currentTurn,
+      mode: state.mode,
+      turnDeadlineTick: turnDeadlineTick
     });
   }
 
@@ -141,21 +154,12 @@ var matchJoin = function (
     currentTurn: currentTurn,
     winner: state.winner,
     status: status,
-    moveHistory: state.moveHistory
+    moveHistory: state.moveHistory,
+    mode: state.mode,
+    turnDeadlineTick: turnDeadlineTick
   };
 
-  dispatcher.broadcastMessage(
-    STATE_UPDATE_OPCODE,
-    JSON.stringify({
-      board: updatedState.board,
-      players: updatedState.players,
-      symbols: updatedState.symbols,
-      currentTurn: updatedState.currentTurn,
-      winner: updatedState.winner,
-      status: updatedState.status,
-      moveHistory: updatedState.moveHistory
-    })
-  );
+  broadcastMatchState(dispatcher, updatedState);
 
   return updatedState;
 };
@@ -175,6 +179,7 @@ var matchLeave = function (
   var winner = state.winner;
   var status: MatchStatus = state.status;
   var currentTurn = state.currentTurn;
+  var turnDeadlineTick = state.turnDeadlineTick;
   var i: number;
   var playerId: string;
 
@@ -201,6 +206,7 @@ var matchLeave = function (
     winner = updatedPlayers[0];
     status = "finished";
     currentTurn = null;
+    turnDeadlineTick = null;
 
     logger.info("Active match ended due to disconnect.", {
       winner: winner
@@ -225,6 +231,7 @@ var matchLeave = function (
     }
   } else if (updatedPlayers.length === 0) {
     currentTurn = null;
+    turnDeadlineTick = null;
   }
 
   return {
@@ -234,7 +241,9 @@ var matchLeave = function (
     currentTurn: currentTurn,
     winner: winner,
     status: status,
-    moveHistory: state.moveHistory
+    moveHistory: state.moveHistory,
+    mode: state.mode,
+    turnDeadlineTick: turnDeadlineTick
   };
 };
 
@@ -254,11 +263,54 @@ var matchLoop = function (
   var playerSymbol: "X" | "O" | undefined;
   var nextPlayer: string | null;
   var loserId: string | null;
+  var timedOutPlayerId: string | null;
+  var timeoutWinnerId: string | null;
 
   logger.info("matchLoop executed.", {
     tick: tick,
     messageCount: messages.length
   });
+
+  if (
+    state.status === "active" &&
+    state.mode === "timed" &&
+    state.currentTurn !== null &&
+    state.turnDeadlineTick !== null &&
+    tick >= state.turnDeadlineTick
+  ) {
+    timedOutPlayerId = state.currentTurn;
+    timeoutWinnerId = getOtherPlayerId(state.players, timedOutPlayerId);
+
+    state.status = "finished";
+    state.currentTurn = null;
+    state.turnDeadlineTick = null;
+    state.winner = timeoutWinnerId;
+
+    logger.info("Turn timer expired. Auto-forfeit applied.", {
+      timedOutPlayerId: timedOutPlayerId,
+      winner: timeoutWinnerId
+    });
+
+    if (timeoutWinnerId !== null) {
+      try {
+        updatePlayerStats(_nk, timeoutWinnerId, true);
+        updatePlayerStats(_nk, timedOutPlayerId, false);
+        _nk.leaderboardRecordWrite(GLOBAL_WINS_LEADERBOARD_ID, timeoutWinnerId, "", 1, 0, {}, null);
+      } catch (error) {
+        logger.error("Failed to persist timeout result.", {
+          winner: timeoutWinnerId,
+          loser: timedOutPlayerId,
+          error: String(error)
+        });
+      }
+    }
+
+    broadcastMatchState(dispatcher, state);
+
+    return {
+      state: state
+    };
+  }
 
   for (i = 0; i < messages.length; i += 1) {
     message = messages[i];
@@ -328,6 +380,7 @@ var matchLoop = function (
       state.winner = playerId;
       state.status = "finished";
       state.currentTurn = null;
+      state.turnDeadlineTick = null;
 
       try {
         updatePlayerStats(_nk, playerId, true);
@@ -347,6 +400,7 @@ var matchLoop = function (
     } else if (isBoardFull(state.board)) {
       state.status = "finished";
       state.currentTurn = null;
+      state.turnDeadlineTick = null;
 
       try {
         if (state.players.length > 0) {
@@ -366,18 +420,10 @@ var matchLoop = function (
     } else {
       nextPlayer = getOtherPlayerId(state.players, playerId);
       state.currentTurn = nextPlayer;
+      state.turnDeadlineTick = state.mode === "timed" ? tick + TURN_TIMEOUT_SECONDS : null;
     }
 
-    dispatcher.broadcastMessage(
-      STATE_UPDATE_OPCODE,
-      JSON.stringify({
-        board: state.board,
-        currentTurn: state.currentTurn,
-        winner: state.winner,
-        status: state.status,
-        moveHistory: state.moveHistory
-      })
-    );
+    broadcastMatchState(dispatcher, state);
   }
 
   return {
@@ -492,6 +538,23 @@ function hasWinningLine(
   return false;
 }
 
+function broadcastMatchState(dispatcher: MatchDispatcher, state: MatchState): void {
+  dispatcher.broadcastMessage(
+    STATE_UPDATE_OPCODE,
+    JSON.stringify({
+      board: state.board,
+      players: state.players,
+      symbols: state.symbols,
+      currentTurn: state.currentTurn,
+      winner: state.winner,
+      status: state.status,
+      moveHistory: state.moveHistory,
+      mode: state.mode,
+      turnDeadlineTick: state.turnDeadlineTick
+    })
+  );
+}
+
 function updatePlayerStats(nk: Nakama, userId: string, didWin: boolean): void {
   var stats = readPlayerStats(nk, userId);
 
@@ -599,4 +662,20 @@ function toSafeNumber(value: any): number {
   }
 
   return 0;
+}
+
+function getMatchModeFromParams(params: Record<string, string>): MatchMode {
+  if (params.mode === "timed") {
+    return "timed";
+  }
+
+  return "classic";
+}
+
+function getStateMatchLabelForMode(mode: MatchMode): string {
+  if (mode === "timed") {
+    return "tic_tac_toe_match_timed";
+  }
+
+  return "tic_tac_toe_match";
 }
