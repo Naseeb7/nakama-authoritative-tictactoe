@@ -8,9 +8,27 @@ interface RpcContext {
 
 interface Logger {
   info(message: string, fields?: Record<string, unknown>): void;
+  error(message: string, fields?: Record<string, unknown>): void;
 }
 
-interface Nakama {}
+interface MatchListItem {
+  matchId: string;
+  authoritative: boolean;
+  label?: string;
+  size: number;
+}
+
+interface Nakama {
+  matchCreate(moduleName: string, params?: Record<string, string>): string;
+  matchList(
+    limit: number,
+    authoritative: boolean,
+    label: string,
+    minSize: number,
+    maxSize: number,
+    query: string
+  ): MatchListItem[];
+}
 
 interface Presence {
   userId: string;
