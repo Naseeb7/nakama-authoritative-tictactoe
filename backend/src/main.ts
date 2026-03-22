@@ -1,3 +1,5 @@
+var GLOBAL_WINS_LEADERBOARD_ID = "global_wins";
+
 function createMatchRpc(
   _ctx: RpcContext,
   logger: Logger,
@@ -65,10 +67,22 @@ function findMatchRpc(
 function InitModule(
   _ctx: RpcContext,
   logger: Logger,
-  _nk: Nakama,
+  nk: Nakama,
   initializer: Initializer
 ): void {
   logger.info("Initializing Nakama runtime module wiring.");
+
+  try {
+    nk.leaderboardCreate(GLOBAL_WINS_LEADERBOARD_ID, true, "desc", "incr", null, {});
+    logger.info("Ensured global wins leaderboard exists.", {
+      leaderboardId: GLOBAL_WINS_LEADERBOARD_ID
+    });
+  } catch (error) {
+    logger.error("Failed to create global wins leaderboard.", {
+      leaderboardId: GLOBAL_WINS_LEADERBOARD_ID,
+      error: String(error)
+    });
+  }
 
   initializer.registerMatch("tic_tac_toe_match", createMatchHandler);
   initializer.registerRpc("create_match", createMatchRpc);

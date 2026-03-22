@@ -18,6 +18,28 @@ interface MatchListItem {
   size: number;
 }
 
+interface StorageReadRequest {
+  collection: string;
+  key: string;
+  userId?: string;
+}
+
+interface StorageObject {
+  collection: string;
+  key: string;
+  userId?: string;
+  value: any;
+}
+
+interface StorageWriteRequest {
+  collection: string;
+  key: string;
+  userId?: string;
+  value: string;
+  permissionRead?: number;
+  permissionWrite?: number;
+}
+
 interface Nakama {
   matchCreate(moduleName: string, params?: Record<string, string>): string;
   matchList(
@@ -28,6 +50,25 @@ interface Nakama {
     maxSize: number,
     query: string
   ): MatchListItem[];
+  leaderboardCreate(
+    leaderboardId: string,
+    authoritative: boolean,
+    sortOrder: string,
+    operator: string,
+    resetSchedule: string | null,
+    metadata: Record<string, unknown>
+  ): void;
+  leaderboardRecordWrite(
+    leaderboardId: string,
+    ownerId: string,
+    username: string,
+    score: number,
+    subscore: number,
+    metadata: Record<string, unknown>,
+    overrideOperator?: number | null
+  ): void;
+  storageRead(objects: StorageReadRequest[]): StorageObject[];
+  storageWrite(objects: StorageWriteRequest[]): void;
 }
 
 interface Presence {

@@ -1,10 +1,21 @@
 type MatchStatus = "waiting" | "active" | "finished";
 var MOVE_OPCODE = 1;
 var STATE_UPDATE_OPCODE = 2;
+var GLOBAL_WINS_LEADERBOARD_ID = "global_wins";
+var PLAYER_STATS_COLLECTION = "player_stats";
+var PLAYER_STATS_KEY = "stats";
 
 interface MoveHistoryEntry {
   playerId: string;
   position: number;
+}
+
+interface PlayerStats {
+  wins: number;
+  losses: number;
+  gamesPlayed: number;
+  currentStreak: number;
+  bestStreak: number;
 }
 
 interface MatchState {
@@ -194,6 +205,24 @@ var matchLeave = function (
     logger.info("Active match ended due to disconnect.", {
       winner: winner
     });
+
+    try {
+      updatePlayerStats(_nk, winner, true);
+      _nk.leaderboardRecordWrite(GLOBAL_WINS_LEADERBOARD_ID, winner, "", 1, 0, {}, null);
+
+      if (state.players.length > 1) {
+        for (i = 0; i < state.players.length; i += 1) {
+          if (state.players[i] !== winner) {
+            updatePlayerStats(_nk, state.players[i], false);
+          }
+        }
+      }
+    } catch (error) {
+      logger.error("Failed to persist disconnect result.", {
+        winner: winner,
+        error: String(error)
+      });
+    }
   } else if (updatedPlayers.length === 0) {
     currentTurn = null;
   }
@@ -224,6 +253,7 @@ var matchLoop = function (
   var playerId: string;
   var playerSymbol: "X" | "O" | undefined;
   var nextPlayer: string | null;
+  var loserId: string | null;
 
   logger.info("matchLoop executed.", {
     tick: tick,
@@ -298,9 +328,41 @@ var matchLoop = function (
       state.winner = playerId;
       state.status = "finished";
       state.currentTurn = null;
+
+      try {
+        updatePlayerStats(_nk, playerId, true);
+        loserId = getOtherPlayerId(state.players, playerId);
+
+        if (loserId !== null) {
+          updatePlayerStats(_nk, loserId, false);
+        }
+
+        _nk.leaderboardRecordWrite(GLOBAL_WINS_LEADERBOARD_ID, playerId, "", 1, 0, {}, null);
+      } catch (error) {
+        logger.error("Failed to persist win result.", {
+          winner: playerId,
+          error: String(error)
+        });
+      }
     } else if (isBoardFull(state.board)) {
       state.status = "finished";
       state.currentTurn = null;
+
+      try {
+        if (state.players.length > 0) {
+          updateDrawStats(_nk, state.players[0]);
+          resetPlayerStreak(_nk, state.players[0]);
+        }
+
+        if (state.players.length > 1) {
+          updateDrawStats(_nk, state.players[1]);
+          resetPlayerStreak(_nk, state.players[1]);
+        }
+      } catch (error) {
+        logger.error("Failed to persist draw result.", {
+          error: String(error)
+        });
+      }
     } else {
       nextPlayer = getOtherPlayerId(state.players, playerId);
       state.currentTurn = nextPlayer;
@@ -428,4 +490,113 @@ function hasWinningLine(
   }
 
   return false;
+}
+
+function updatePlayerStats(nk: Nakama, userId: string, didWin: boolean): void {
+  var stats = readPlayerStats(nk, userId);
+
+  stats.gamesPlayed += 1;
+
+  if (didWin) {
+    stats.wins += 1;
+    stats.currentStreak += 1;
+
+    if (stats.currentStreak > stats.bestStreak) {
+      stats.bestStreak = stats.currentStreak;
+    }
+  } else {
+    stats.losses += 1;
+    stats.currentStreak = 0;
+  }
+
+  writePlayerStats(nk, userId, stats);
+}
+
+function resetPlayerStreak(nk: Nakama, userId: string): void {
+  var stats = readPlayerStats(nk, userId);
+
+  stats.currentStreak = 0;
+
+  writePlayerStats(nk, userId, stats);
+}
+
+function updateDrawStats(nk: Nakama, userId: string): void {
+  var stats = readPlayerStats(nk, userId);
+
+  stats.gamesPlayed += 1;
+  stats.currentStreak = 0;
+
+  writePlayerStats(nk, userId, stats);
+}
+
+function readPlayerStats(nk: Nakama, userId: string): PlayerStats {
+  var objects = nk.storageRead([
+    {
+      collection: PLAYER_STATS_COLLECTION,
+      key: PLAYER_STATS_KEY,
+      userId: userId
+    }
+  ]);
+
+  if (!objects || objects.length === 0) {
+    return createDefaultPlayerStats();
+  }
+
+  return normalizePlayerStats(objects[0].value);
+}
+
+function writePlayerStats(nk: Nakama, userId: string, stats: PlayerStats): void {
+  nk.storageWrite([
+    {
+      collection: PLAYER_STATS_COLLECTION,
+      key: PLAYER_STATS_KEY,
+      userId: userId,
+      value: JSON.stringify(stats),
+      permissionRead: 1,
+      permissionWrite: 0
+    }
+  ]);
+}
+
+function createDefaultPlayerStats(): PlayerStats {
+  return {
+    wins: 0,
+    losses: 0,
+    gamesPlayed: 0,
+    currentStreak: 0,
+    bestStreak: 0
+  };
+}
+
+function normalizePlayerStats(rawValue: any): PlayerStats {
+  var parsed = typeof rawValue === "string" ? parseStatsValue(rawValue) : rawValue;
+  var base = createDefaultPlayerStats();
+
+  if (!parsed) {
+    return base;
+  }
+
+  return {
+    wins: toSafeNumber(parsed.wins),
+    losses: toSafeNumber(parsed.losses),
+    gamesPlayed: toSafeNumber(parsed.gamesPlayed),
+    currentStreak: toSafeNumber(parsed.currentStreak),
+    bestStreak: toSafeNumber(parsed.bestStreak)
+  };
+}
+
+function parseStatsValue(rawValue: string): any {
+  try {
+    return JSON.parse(rawValue);
+  } catch (_error) {
+    return null;
+  }
+}
+
+function toSafeNumber(value: any): number {
+  if (typeof value === "number" && value >= 0) {
+    return value;
+  }
+
+  return 0;
 }
