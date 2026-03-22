@@ -5,7 +5,10 @@ var STATE_UPDATE_OPCODE = 2;
 var GLOBAL_WINS_LEADERBOARD_ID = "global_wins";
 var PLAYER_STATS_COLLECTION = "player_stats";
 var PLAYER_STATS_KEY = "stats";
+var MATCH_HISTORY_COLLECTION = "match_history";
 var TURN_TIMEOUT_SECONDS = 30;
+var DISCONNECT_TIMEOUT_SECONDS = 30;
+var MATCH_LABEL_PREFIX = "tic_tac_toe_match";
 
 interface MoveHistoryEntry {
   playerId: string;
@@ -21,15 +24,23 @@ interface PlayerStats {
 }
 
 interface MatchState {
+  matchId: string;
   board: [string, string, string, string, string, string, string, string, string];
   players: string[];
   symbols: Record<string, "X" | "O">;
   currentTurn: string | null;
   winner: string | null;
   status: MatchStatus;
+  label: string;
+  startTime: number;
+  endTime: number | null;
   moveHistory: MoveHistoryEntry[];
   mode: MatchMode;
+  disconnectedPlayers: Record<string, number>;
+  disconnectTimeoutSeconds: number;
   turnDeadlineTick: number | null;
+  pausedTurnRemainingSeconds: number | null;
+  historyPersisted: boolean;
 }
 
 interface MovePayload {
@@ -43,6 +54,7 @@ var matchInit = function (
   params: Record<string, string>
 ): MatchInitResult<MatchState> {
   var mode = getMatchModeFromParams(params);
+  var label = getLifecycleLabel(mode, "waiting");
 
   logger.info("matchInit executed.", {
     node: ctx.node,
@@ -52,18 +64,26 @@ var matchInit = function (
 
   return {
     state: {
+      matchId: params.matchId || "",
       board: ["", "", "", "", "", "", "", "", ""],
       players: [],
       symbols: {},
       currentTurn: null,
       winner: null,
       status: "waiting",
+      label: label,
+      startTime: getCurrentUnixTimestamp(),
+      endTime: null,
       moveHistory: [],
       mode: mode,
-      turnDeadlineTick: null
+      disconnectedPlayers: {},
+      disconnectTimeoutSeconds: DISCONNECT_TIMEOUT_SECONDS,
+      turnDeadlineTick: null,
+      pausedTurnRemainingSeconds: null,
+      historyPersisted: false
     },
     tickRate: 1,
-    label: getStateMatchLabelForMode(mode)
+    label: label
   };
 };
 
@@ -77,11 +97,13 @@ var matchJoinAttempt = function (
   presence: Presence,
   _metadata?: Record<string, string>
 ): MatchJoinAttemptResult<MatchState> {
-  var accept = state.players.length < 2;
+  var isReturningPlayer = state.players.indexOf(presence.userId) !== -1;
+  var accept = isReturningPlayer || (state.players.length < 2 && state.status !== "finished");
 
   logger.info("matchJoinAttempt executed.", {
     userId: presence.userId,
     currentPlayerCount: state.players.length,
+    isReturningPlayer: isReturningPlayer,
     accept: accept
   });
 
@@ -103,15 +125,25 @@ var matchJoin = function (
 ): MatchState {
   var updatedPlayers: string[] = state.players.slice();
   var updatedSymbols: Record<string, "X" | "O"> = {};
+  var updatedDisconnectedPlayers: Record<string, number> = {};
   var currentTurn = state.currentTurn;
   var status: MatchStatus = state.status;
   var turnDeadlineTick = state.turnDeadlineTick;
+  var pausedTurnRemainingSeconds = state.pausedTurnRemainingSeconds;
   var i: number;
   var playerId: string;
+  var wasDisconnected = false;
+  var previousLabel = state.label;
 
   for (playerId in state.symbols) {
     if (state.symbols.hasOwnProperty(playerId)) {
       updatedSymbols[playerId] = state.symbols[playerId];
+    }
+  }
+
+  for (playerId in state.disconnectedPlayers) {
+    if (state.disconnectedPlayers.hasOwnProperty(playerId)) {
+      updatedDisconnectedPlayers[playerId] = state.disconnectedPlayers[playerId];
     }
   }
 
@@ -121,6 +153,11 @@ var matchJoin = function (
 
   for (i = 0; i < presences.length; i += 1) {
     playerId = presences[i].userId;
+
+    if (updatedDisconnectedPlayers[playerId] !== undefined) {
+      delete updatedDisconnectedPlayers[playerId];
+      wasDisconnected = true;
+    }
 
     if (updatedPlayers.indexOf(playerId) === -1 && updatedPlayers.length < 2) {
       updatedPlayers.push(playerId);
@@ -134,30 +171,58 @@ var matchJoin = function (
   }
 
   if (updatedPlayers.length === 2) {
-    status = "active";
-    currentTurn = updatedPlayers[0];
-    turnDeadlineTick = state.mode === "timed" ? tick + TURN_TIMEOUT_SECONDS : null;
+    if (status === "waiting") {
+      status = "active";
+      currentTurn = updatedPlayers[0];
+      turnDeadlineTick = state.mode === "timed" ? tick + TURN_TIMEOUT_SECONDS : null;
+      pausedTurnRemainingSeconds = null;
 
-    logger.info("Match activated.", {
-      firstPlayer: updatedPlayers[0],
-      secondPlayer: updatedPlayers[1],
-      currentTurn: currentTurn,
-      mode: state.mode,
-      turnDeadlineTick: turnDeadlineTick
-    });
+      logger.info("Match activated.", {
+        firstPlayer: updatedPlayers[0],
+        secondPlayer: updatedPlayers[1],
+        currentTurn: currentTurn,
+        mode: state.mode,
+        turnDeadlineTick: turnDeadlineTick
+      });
+    } else if (
+      state.mode === "timed" &&
+      state.status === "active" &&
+      wasDisconnected &&
+      !hasDisconnectedPlayers(updatedDisconnectedPlayers) &&
+      currentTurn !== null &&
+      turnDeadlineTick === null
+    ) {
+      turnDeadlineTick = tick + getReconnectTurnWindow(pausedTurnRemainingSeconds);
+      pausedTurnRemainingSeconds = null;
+
+      logger.info("Restored timed turn deadline after reconnect.", {
+        currentTurn: currentTurn,
+        turnDeadlineTick: turnDeadlineTick
+      });
+    }
   }
 
   var updatedState: MatchState = {
+    matchId: state.matchId,
     board: state.board,
     players: updatedPlayers,
     symbols: updatedSymbols,
     currentTurn: currentTurn,
     winner: state.winner,
     status: status,
+    label: getLifecycleLabel(state.mode, status),
+    startTime: state.startTime,
+    endTime: state.endTime,
     moveHistory: state.moveHistory,
     mode: state.mode,
-    turnDeadlineTick: turnDeadlineTick
+    disconnectedPlayers: updatedDisconnectedPlayers,
+    disconnectTimeoutSeconds: state.disconnectTimeoutSeconds,
+    turnDeadlineTick: turnDeadlineTick,
+    pausedTurnRemainingSeconds: pausedTurnRemainingSeconds,
+    historyPersisted: state.historyPersisted
   };
+
+  updateMatchLabelIfNeeded(dispatcher, previousLabel, updatedState.label);
 
   broadcastMatchState(dispatcher, updatedState);
 
@@ -169,82 +234,75 @@ var matchLeave = function (
   logger: Logger,
   _nk: Nakama,
   _dispatcher: MatchDispatcher,
-  _tick: number,
+  tick: number,
   state: MatchState,
   presences: Presence[]
 ): MatchState {
-  var leavingPlayerIds: Record<string, boolean> = {};
-  var updatedPlayers: string[] = [];
-  var updatedSymbols: Record<string, "X" | "O"> = {};
-  var winner = state.winner;
-  var status: MatchStatus = state.status;
-  var currentTurn = state.currentTurn;
+  var updatedDisconnectedPlayers: Record<string, number> = {};
   var turnDeadlineTick = state.turnDeadlineTick;
+  var pausedTurnRemainingSeconds = state.pausedTurnRemainingSeconds;
   var i: number;
   var playerId: string;
+  var disconnectedAt = getCurrentUnixTimestamp();
+  var shouldPauseTurnTimer = false;
 
   logger.info("matchLeave executed.", {
     leftCount: presences.length
   });
 
+  for (playerId in state.disconnectedPlayers) {
+    if (state.disconnectedPlayers.hasOwnProperty(playerId)) {
+      updatedDisconnectedPlayers[playerId] = state.disconnectedPlayers[playerId];
+    }
+  }
+
   for (i = 0; i < presences.length; i += 1) {
-    leavingPlayerIds[presences[i].userId] = true;
-  }
+    playerId = presences[i].userId;
 
-  for (i = 0; i < state.players.length; i += 1) {
-    playerId = state.players[i];
-
-    if (!leavingPlayerIds[playerId]) {
-      updatedPlayers.push(playerId);
-      if (state.symbols[playerId]) {
-        updatedSymbols[playerId] = state.symbols[playerId];
-      }
+    if (state.players.indexOf(playerId) !== -1) {
+      updatedDisconnectedPlayers[playerId] = disconnectedAt;
+      shouldPauseTurnTimer = true;
     }
   }
 
-  if (state.status === "active" && updatedPlayers.length === 1) {
-    winner = updatedPlayers[0];
-    status = "finished";
-    currentTurn = null;
+  if (
+    shouldPauseTurnTimer &&
+    state.mode === "timed" &&
+    state.status === "active" &&
+    state.currentTurn !== null &&
+    turnDeadlineTick !== null
+  ) {
+    pausedTurnRemainingSeconds = getRemainingTurnSeconds(turnDeadlineTick, tick);
     turnDeadlineTick = null;
 
-    logger.info("Active match ended due to disconnect.", {
-      winner: winner
+    logger.info("Paused timed turn deadline because a player disconnected.", {
+      pausedTurnRemainingSeconds: pausedTurnRemainingSeconds
     });
-
-    try {
-      updatePlayerStats(_nk, winner, true);
-      _nk.leaderboardRecordWrite(GLOBAL_WINS_LEADERBOARD_ID, winner, "", 1, 0, {}, null);
-
-      if (state.players.length > 1) {
-        for (i = 0; i < state.players.length; i += 1) {
-          if (state.players[i] !== winner) {
-            updatePlayerStats(_nk, state.players[i], false);
-          }
-        }
-      }
-    } catch (error) {
-      logger.error("Failed to persist disconnect result.", {
-        winner: winner,
-        error: String(error)
-      });
-    }
-  } else if (updatedPlayers.length === 0) {
-    currentTurn = null;
-    turnDeadlineTick = null;
   }
 
-  return {
+  var updatedState: MatchState = {
+    matchId: state.matchId,
     board: state.board,
-    players: updatedPlayers,
-    symbols: updatedSymbols,
-    currentTurn: currentTurn,
-    winner: winner,
-    status: status,
+    players: state.players,
+    symbols: state.symbols,
+    currentTurn: state.currentTurn,
+    winner: state.winner,
+    status: state.status,
+    label: state.label,
+    startTime: state.startTime,
+    endTime: state.endTime,
     moveHistory: state.moveHistory,
     mode: state.mode,
-    turnDeadlineTick: turnDeadlineTick
+    disconnectedPlayers: updatedDisconnectedPlayers,
+    disconnectTimeoutSeconds: state.disconnectTimeoutSeconds,
+    turnDeadlineTick: turnDeadlineTick,
+    pausedTurnRemainingSeconds: pausedTurnRemainingSeconds,
+    historyPersisted: state.historyPersisted
   };
+
+  broadcastMatchState(_dispatcher, updatedState);
+
+  return updatedState;
 };
 
 var matchLoop = function (
@@ -271,20 +329,33 @@ var matchLoop = function (
     messageCount: messages.length
   });
 
+  if (state.status !== "finished" && hasDisconnectedPlayers(state.disconnectedPlayers)) {
+    if (finalizeExpiredDisconnects(state, tick, logger, _nk, dispatcher)) {
+      return {
+        state: state
+      };
+    }
+  }
+
   if (
     state.status === "active" &&
     state.mode === "timed" &&
+    !hasDisconnectedPlayers(state.disconnectedPlayers) &&
     state.currentTurn !== null &&
     state.turnDeadlineTick !== null &&
     tick >= state.turnDeadlineTick
   ) {
+    var previousLabel = state.label;
     timedOutPlayerId = state.currentTurn;
     timeoutWinnerId = getOtherPlayerId(state.players, timedOutPlayerId);
 
     state.status = "finished";
     state.currentTurn = null;
     state.turnDeadlineTick = null;
+    state.pausedTurnRemainingSeconds = null;
+    state.endTime = getCurrentUnixTimestamp();
     state.winner = timeoutWinnerId;
+    state.label = getLifecycleLabel(state.mode, state.status);
 
     logger.info("Turn timer expired. Auto-forfeit applied.", {
       timedOutPlayerId: timedOutPlayerId,
@@ -305,6 +376,8 @@ var matchLoop = function (
       }
     }
 
+    updateMatchLabelIfNeeded(dispatcher, previousLabel, state.label);
+    persistCompletedMatchIfNeeded(_nk, logger, state);
     broadcastMatchState(dispatcher, state);
 
     return {
@@ -326,6 +399,13 @@ var matchLoop = function (
     });
 
     if (message.opCode !== MOVE_OPCODE) {
+      continue;
+    }
+
+    if (hasDisconnectedPlayers(state.disconnectedPlayers)) {
+      logger.info("Rejected move: waiting for disconnected player to reconnect.", {
+        userId: message.sender.userId
+      });
       continue;
     }
 
@@ -377,10 +457,14 @@ var matchLoop = function (
     });
 
     if (hasWinningLine(state.board, playerSymbol)) {
+      var previousWinLabel = state.label;
       state.winner = playerId;
       state.status = "finished";
       state.currentTurn = null;
       state.turnDeadlineTick = null;
+      state.pausedTurnRemainingSeconds = null;
+      state.endTime = getCurrentUnixTimestamp();
+      state.label = getLifecycleLabel(state.mode, state.status);
 
       try {
         updatePlayerStats(_nk, playerId, true);
@@ -397,10 +481,17 @@ var matchLoop = function (
           error: String(error)
         });
       }
+
+      updateMatchLabelIfNeeded(dispatcher, previousWinLabel, state.label);
+      persistCompletedMatchIfNeeded(_nk, logger, state);
     } else if (isBoardFull(state.board)) {
+      var previousDrawLabel = state.label;
       state.status = "finished";
       state.currentTurn = null;
       state.turnDeadlineTick = null;
+      state.pausedTurnRemainingSeconds = null;
+      state.endTime = getCurrentUnixTimestamp();
+      state.label = getLifecycleLabel(state.mode, state.status);
 
       try {
         if (state.players.length > 0) {
@@ -417,6 +508,9 @@ var matchLoop = function (
           error: String(error)
         });
       }
+
+      updateMatchLabelIfNeeded(dispatcher, previousDrawLabel, state.label);
+      persistCompletedMatchIfNeeded(_nk, logger, state);
     } else {
       nextPlayer = getOtherPlayerId(state.players, playerId);
       state.currentTurn = nextPlayer;
@@ -548,8 +642,13 @@ function broadcastMatchState(dispatcher: MatchDispatcher, state: MatchState): vo
       currentTurn: state.currentTurn,
       winner: state.winner,
       status: state.status,
+      label: state.label,
+      startTime: state.startTime,
+      endTime: state.endTime,
       moveHistory: state.moveHistory,
       mode: state.mode,
+      disconnectedPlayers: state.disconnectedPlayers,
+      disconnectTimeoutSeconds: state.disconnectTimeoutSeconds,
       turnDeadlineTick: state.turnDeadlineTick
     })
   );
@@ -672,10 +771,216 @@ function getMatchModeFromParams(params: Record<string, string>): MatchMode {
   return "classic";
 }
 
-function getStateMatchLabelForMode(mode: MatchMode): string {
-  if (mode === "timed") {
-    return "tic_tac_toe_match_timed";
+function getLifecycleLabel(mode: MatchMode, status: MatchStatus): string {
+  return MATCH_LABEL_PREFIX + ":" + mode + ":" + status;
+}
+
+function updateMatchLabelIfNeeded(dispatcher: MatchDispatcher, previousLabel: string, nextLabel: string): void {
+  if (previousLabel === nextLabel) {
+    return;
   }
 
-  return "tic_tac_toe_match";
+  dispatcher.matchLabelUpdate(nextLabel);
+}
+
+function hasDisconnectedPlayers(disconnectedPlayers: Record<string, number>): boolean {
+  var playerId: string;
+
+  for (playerId in disconnectedPlayers) {
+    if (disconnectedPlayers.hasOwnProperty(playerId)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function getCurrentUnixTimestamp(): number {
+  return Math.floor(new Date().getTime() / 1000);
+}
+
+function getRemainingTurnSeconds(turnDeadlineTick: number, tick: number): number {
+  var remaining = turnDeadlineTick - tick;
+
+  if (remaining < 1) {
+    return 1;
+  }
+
+  return remaining;
+}
+
+function getReconnectTurnWindow(pausedTurnRemainingSeconds: number | null): number {
+  if (pausedTurnRemainingSeconds !== null && pausedTurnRemainingSeconds > 0) {
+    return pausedTurnRemainingSeconds;
+  }
+
+  return TURN_TIMEOUT_SECONDS;
+}
+
+function finalizeExpiredDisconnects(
+  state: MatchState,
+  tick: number,
+  logger: Logger,
+  nk: Nakama,
+  dispatcher: MatchDispatcher
+): boolean {
+  var now = getCurrentUnixTimestamp();
+  var connectedPlayers = getConnectedPlayers(state.players, state.disconnectedPlayers);
+  var expiredDisconnectedPlayers = getExpiredDisconnectedPlayers(
+    state.disconnectedPlayers,
+    state.disconnectTimeoutSeconds,
+    now
+  );
+  var winner: string | null = null;
+  var i: number;
+  var previousLabel = state.label;
+
+  if (expiredDisconnectedPlayers.length === 0) {
+    return false;
+  }
+
+  if (connectedPlayers.length > 0) {
+    winner = connectedPlayers[0];
+  } else if (!haveAllDisconnectedPlayersExpired(state.players, state.disconnectedPlayers, now, state.disconnectTimeoutSeconds)) {
+    return false;
+  }
+
+  state.status = "finished";
+  state.currentTurn = null;
+  state.turnDeadlineTick = null;
+  state.pausedTurnRemainingSeconds = null;
+  state.endTime = now;
+  state.winner = winner;
+  state.label = getLifecycleLabel(state.mode, state.status);
+
+  logger.info("Reconnect timeout expired. Finalizing match.", {
+    expiredDisconnectedPlayers: expiredDisconnectedPlayers,
+    winner: winner,
+    tick: tick
+  });
+
+  if (winner !== null) {
+    try {
+      updatePlayerStats(nk, winner, true);
+      nk.leaderboardRecordWrite(GLOBAL_WINS_LEADERBOARD_ID, winner, "", 1, 0, {}, null);
+
+      for (i = 0; i < state.players.length; i += 1) {
+        if (state.players[i] !== winner) {
+          updatePlayerStats(nk, state.players[i], false);
+        }
+      }
+    } catch (error) {
+      logger.error("Failed to persist reconnect-timeout result.", {
+        winner: winner,
+        error: String(error)
+      });
+    }
+  }
+
+  updateMatchLabelIfNeeded(dispatcher, previousLabel, state.label);
+  persistCompletedMatchIfNeeded(nk, logger, state);
+  broadcastMatchState(dispatcher, state);
+
+  return true;
+}
+
+function getConnectedPlayers(players: string[], disconnectedPlayers: Record<string, number>): string[] {
+  var connectedPlayers: string[] = [];
+  var i: number;
+
+  for (i = 0; i < players.length; i += 1) {
+    if (disconnectedPlayers[players[i]] === undefined) {
+      connectedPlayers.push(players[i]);
+    }
+  }
+
+  return connectedPlayers;
+}
+
+function getExpiredDisconnectedPlayers(
+  disconnectedPlayers: Record<string, number>,
+  disconnectTimeoutSeconds: number,
+  now: number
+): string[] {
+  var expiredPlayers: string[] = [];
+  var playerId: string;
+
+  for (playerId in disconnectedPlayers) {
+    if (
+      disconnectedPlayers.hasOwnProperty(playerId) &&
+      now - disconnectedPlayers[playerId] >= disconnectTimeoutSeconds
+    ) {
+      expiredPlayers.push(playerId);
+    }
+  }
+
+  return expiredPlayers;
+}
+
+function haveAllDisconnectedPlayersExpired(
+  players: string[],
+  disconnectedPlayers: Record<string, number>,
+  now: number,
+  disconnectTimeoutSeconds: number
+): boolean {
+  var i: number;
+  var playerId: string;
+
+  for (i = 0; i < players.length; i += 1) {
+    playerId = players[i];
+
+    if (
+      disconnectedPlayers[playerId] === undefined ||
+      now - disconnectedPlayers[playerId] < disconnectTimeoutSeconds
+    ) {
+      return false;
+    }
+  }
+
+  return players.length > 0;
+}
+
+function persistCompletedMatchIfNeeded(nk: Nakama, logger: Logger, state: MatchState): void {
+  var durationSeconds: number;
+
+  if (state.status !== "finished" || state.historyPersisted) {
+    return;
+  }
+
+  durationSeconds = getMatchDurationSeconds(state.startTime, state.endTime);
+
+  try {
+    nk.storageWrite([
+      {
+        collection: MATCH_HISTORY_COLLECTION,
+        key: state.matchId || String(state.startTime),
+        userId: "",
+        value: JSON.stringify({
+          players: state.players,
+          winner: state.winner,
+          mode: state.mode,
+          moveHistory: state.moveHistory,
+          durationSeconds: durationSeconds,
+          timestamp: state.endTime || getCurrentUnixTimestamp()
+        }),
+        permissionRead: 0,
+        permissionWrite: 0
+      }
+    ]);
+
+    state.historyPersisted = true;
+  } catch (error) {
+    logger.error("Failed to persist match history.", {
+      matchId: state.matchId,
+      error: String(error)
+    });
+  }
+}
+
+function getMatchDurationSeconds(startTime: number, endTime: number | null): number {
+  if (endTime === null || endTime < startTime) {
+    return 0;
+  }
+
+  return endTime - startTime;
 }

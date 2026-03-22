@@ -1,6 +1,7 @@
 var GLOBAL_WINS_LEADERBOARD_ID = "global_wins";
 var DEFAULT_MATCH_MODE = "classic";
 var TIMED_MATCH_MODE = "timed";
+var MATCH_LABEL_PREFIX = "tic_tac_toe_match";
 
 function createMatchRpc(
   _ctx: RpcContext,
@@ -40,13 +41,18 @@ function findMatchRpc(
   var i: number;
   var matchId: string | null = null;
   var mode = getRequestedMatchMode(payload);
-  var label = getRpcMatchLabelForMode(mode);
+  var labelPrefix = getMatchLabelPrefixForMode(mode);
 
   try {
-    matches = nk.matchList(10, true, label, 0, 1, "");
+    matches = nk.matchList(50, true, "", 0, 2, "");
 
     for (i = 0; i < matches.length; i += 1) {
-      if (matches[i].authoritative && matches[i].label === label && matches[i].size < 2) {
+      if (
+        matches[i].authoritative &&
+        matches[i].size < 2 &&
+        hasCompatibleMatchLabel(matches[i].label, mode) &&
+        isWaitingMatchLabel(matches[i].label, labelPrefix)
+      ) {
         matchId = matches[i].matchId;
 
         logger.info("Found existing match", {
@@ -71,7 +77,7 @@ function findMatchRpc(
   } catch (error) {
     logger.error("Failed to find or create Tic-Tac-Toe match", {
       mode: mode,
-      label: label,
+      labelPrefix: labelPrefix,
       error: String(error)
     });
   }
@@ -120,12 +126,8 @@ function getRequestedMatchMode(payload: string): string {
   return DEFAULT_MATCH_MODE;
 }
 
-function getRpcMatchLabelForMode(mode: string): string {
-  if (mode === TIMED_MATCH_MODE) {
-    return "tic_tac_toe_match_timed";
-  }
-
-  return "tic_tac_toe_match";
+function getMatchLabelPrefixForMode(mode: string): string {
+  return MATCH_LABEL_PREFIX + ":" + mode;
 }
 
 function parseMatchmakingPayload(payload: string): any {
@@ -138,4 +140,36 @@ function parseMatchmakingPayload(payload: string): any {
   } catch (_error) {
     return null;
   }
+}
+
+function hasCompatibleMatchLabel(label: string | undefined, mode: string): boolean {
+  if (!label) {
+    return false;
+  }
+
+  if (label.indexOf(getMatchLabelPrefixForMode(mode)) === 0) {
+    return true;
+  }
+
+  if (mode === DEFAULT_MATCH_MODE && label === MATCH_LABEL_PREFIX) {
+    return true;
+  }
+
+  if (mode === TIMED_MATCH_MODE && label === MATCH_LABEL_PREFIX + "_timed") {
+    return true;
+  }
+
+  return false;
+}
+
+function isWaitingMatchLabel(label: string | undefined, labelPrefix: string): boolean {
+  if (!label) {
+    return false;
+  }
+
+  if (label.indexOf(labelPrefix + ":waiting") === 0) {
+    return true;
+  }
+
+  return label === MATCH_LABEL_PREFIX || label === MATCH_LABEL_PREFIX + "_timed";
 }

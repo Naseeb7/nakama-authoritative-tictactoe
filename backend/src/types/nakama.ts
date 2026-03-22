@@ -85,6 +85,7 @@ interface MatchMessage {
 
 interface MatchDispatcher {
   broadcastMessage(opCode: number, data: string): void;
+  matchLabelUpdate(label: string): void;
 }
 
 interface MatchStateResult<TState> {
