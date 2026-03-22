@@ -1,5 +1,6 @@
 type MatchStatus = "waiting" | "active" | "finished";
 var MOVE_OPCODE = 1;
+var STATE_UPDATE_OPCODE = 2;
 
 interface MoveHistoryEntry {
   playerId: string;
@@ -217,6 +218,11 @@ var matchLoop = function (
   for (i = 0; i < messages.length; i += 1) {
     message = messages[i];
 
+    if (state.status === "finished") {
+      logger.info("Skipping remaining messages because match is finished.");
+      break;
+    }
+
     logger.info("Received match message.", {
       opCode: message.opCode,
       userId: message.sender.userId
@@ -286,7 +292,7 @@ var matchLoop = function (
     }
 
     dispatcher.broadcastMessage(
-      MOVE_OPCODE,
+      STATE_UPDATE_OPCODE,
       JSON.stringify({
         board: state.board,
         currentTurn: state.currentTurn,
