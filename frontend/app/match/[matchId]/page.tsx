@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 
 import { GameBoard } from "@/components/match/game-board";
 import { useApp } from "@/components/providers/app-provider";
 import { SectionCard } from "@/components/ui/section-card";
+import type { MatchMode } from "@/lib/match-types";
 
 function getResultText(
   winner: string | null,
@@ -49,6 +50,30 @@ function formatCountdown(seconds: number | null) {
   const remainder = safeSeconds % 60;
 
   return `${minutes}:${String(remainder).padStart(2, "0")}`;
+}
+
+function formatDuration(startTime: number, endTime: number | null) {
+  if (!endTime || endTime <= startTime) {
+    return "Unavailable";
+  }
+
+  const durationSeconds = endTime - startTime;
+  const minutes = Math.floor(durationSeconds / 60);
+  const seconds = durationSeconds % 60;
+
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function getLifecycleHeading(status: "waiting" | "active" | "finished") {
+  if (status === "waiting") {
+    return "Waiting for opponent";
+  }
+
+  if (status === "finished") {
+    return "Match complete";
+  }
+
+  return "Match in progress";
 }
 
 function TurnTimer({
@@ -113,6 +138,7 @@ export default function MatchRoomPage() {
     latestMatchState,
     leaveMatch,
     matchError,
+    requestMatch,
     sendMove,
     socketStatus,
     userId,
@@ -122,6 +148,8 @@ export default function MatchRoomPage() {
   const [pendingMoveCount, setPendingMoveCount] = useState<number | null>(null);
   const [moveError, setMoveError] = useState<string | null>(null);
   const [isSubmittingMove, setIsSubmittingMove] = useState(false);
+  const [matchActionError, setMatchActionError] = useState<string | null>(null);
+  const [isRequeuing, startRequeuing] = useTransition();
   const matchId = params.matchId;
 
   const assignedSymbol = useMemo(() => {
@@ -153,6 +181,13 @@ export default function MatchRoomPage() {
   const hasDisconnectedPlayers =
     !!latestMatchState &&
     Object.keys(latestMatchState.disconnectedPlayers).length > 0;
+  const currentMode: MatchMode = latestMatchState?.mode ?? activeMatch?.mode ?? "classic";
+  const lifecycleHeading = latestMatchState
+    ? getLifecycleHeading(latestMatchState.status)
+    : "Loading match";
+  const finishedDuration = latestMatchState
+    ? formatDuration(latestMatchState.startTime, latestMatchState.endTime)
+    : "Unavailable";
 
   async function handleMove(position: number) {
     setMoveError(null);
@@ -174,6 +209,23 @@ export default function MatchRoomPage() {
       setPendingMoveCount(null);
       setIsSubmittingMove(false);
     }
+  }
+
+  function handleNextMatch(action: "create_match" | "find_match") {
+    setMatchActionError(null);
+
+    startRequeuing(async () => {
+      try {
+        const nextMatchId = await requestMatch(action, currentMode);
+        router.push(`/match/${encodeURIComponent(nextMatchId)}`);
+      } catch (error) {
+        if (error instanceof Error) {
+          setMatchActionError(error.message);
+        } else {
+          setMatchActionError("Unable to join the next match.");
+        }
+      }
+    });
   }
 
   return (
@@ -228,6 +280,83 @@ export default function MatchRoomPage() {
 
         {latestMatchState ? (
           <>
+            <div
+              className={`mt-4 rounded-[1.6rem] border px-5 py-5 ${
+                latestMatchState.status === "finished"
+                  ? "border-emerald-200 bg-emerald-50"
+                  : latestMatchState.status === "waiting"
+                    ? "border-sky-200 bg-sky-50"
+                    : "border-slate-200 bg-slate-50"
+              }`}
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                Lifecycle
+              </p>
+              <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+                {lifecycleHeading}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-slate-700">
+                {latestMatchState.status === "waiting"
+                  ? "The room is open and waiting for the second player to join before the first turn starts."
+                  : latestMatchState.status === "finished"
+                    ? `${matchResult}. Queue another ${currentMode} match directly from here.`
+                    : canPlay
+                      ? "It is your turn. The board is live against the server-authoritative state."
+                      : "The board is live. Wait for the next authoritative turn update."}
+              </p>
+
+              {latestMatchState.status === "finished" ? (
+                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-[1.2rem] border border-white/60 bg-white/70 px-4 py-4 text-sm text-slate-700">
+                    Result: {matchResult}
+                  </div>
+                  <div className="rounded-[1.2rem] border border-white/60 bg-white/70 px-4 py-4 text-sm text-slate-700">
+                    Winner: {getWinnerText(latestMatchState.winner, latestMatchState.status)}
+                  </div>
+                  <div className="rounded-[1.2rem] border border-white/60 bg-white/70 px-4 py-4 text-sm text-slate-700">
+                    Duration: {finishedDuration}
+                  </div>
+                </div>
+              ) : null}
+
+              {latestMatchState.status === "finished" ? (
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleNextMatch("find_match")}
+                    disabled={isRequeuing}
+                    className="rounded-full bg-slate-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+                  >
+                    Find Next Match
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await leaveMatch();
+                      router.push("/play");
+                    }}
+                    disabled={isRequeuing}
+                    className="rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+                  >
+                    Open Matchmaking
+                  </button>
+                </div>
+              ) : null}
+
+              {latestMatchState.status === "finished" ? (
+                <p className="mt-4 text-sm leading-6 text-slate-600">
+                  Use `Find Next Match` on both clients for the next multiplayer test.
+                  Creating a fresh match manually opens a separate room by design.
+                </p>
+              ) : null}
+
+              {matchActionError ? (
+                <div className="mt-4 rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-4 text-sm text-rose-700">
+                  {matchActionError}
+                </div>
+              ) : null}
+            </div>
+
             <div className="mt-4">
               <GameBoard
                 board={latestMatchState.board}
@@ -300,8 +429,8 @@ export default function MatchRoomPage() {
                       key={`${move.playerId}-${move.position}-${index}`}
                       className="rounded-[1.2rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
                     >
-                      Turn {index + 1}: {move.playerId} played position{" "}
-                      {move.position}
+                      Turn {index + 1}: {move.playerId === userId ? "You" : move.playerId}{" "}
+                      played position {move.position}
                     </div>
                   ))
                 ) : (
