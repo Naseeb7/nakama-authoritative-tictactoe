@@ -40,7 +40,7 @@ function getWinnerText(
 }
 
 function formatCountdown(seconds: number | null) {
-  if (seconds === null) {
+  if (seconds === null || !Number.isFinite(seconds)) {
     return "Unavailable";
   }
 
@@ -63,7 +63,7 @@ function TurnTimer({
   secondsRemaining: number | null;
 }) {
   const [clockOffset] = useState<number>(() =>
-    serverTime * 1000 - Date.now()
+    Number.isFinite(serverTime) ? serverTime * 1000 - Date.now() : 0
   );
   const [now, setNow] = useState(() => Date.now());
 
@@ -85,15 +85,22 @@ function TurnTimer({
     return <>Unavailable</>;
   }
 
-  if (isPaused || turnExpiresAt === null) {
+  if (
+    isPaused ||
+    turnExpiresAt === null ||
+    !Number.isFinite(turnExpiresAt) ||
+    !Number.isFinite(serverTime)
+  ) {
     return <>{formatCountdown(secondsRemaining)}</>;
   }
 
+  const remainingSeconds = Math.ceil(
+    (turnExpiresAt * 1000 - (now + clockOffset)) / 1000
+  );
+
   return (
     <>
-      {formatCountdown(
-        Math.ceil((turnExpiresAt * 1000 - (now + clockOffset)) / 1000)
-      )}
+      {formatCountdown(remainingSeconds)}
     </>
   );
 }

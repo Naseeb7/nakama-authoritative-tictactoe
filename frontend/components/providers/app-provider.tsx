@@ -236,15 +236,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
-  const leaveMatch = useCallback(async () => {
-    const socket = socketRef.current;
-    const activeMatch = activeMatchRef.current;
-
-    if (!socket || !activeMatch) {
-      return;
-    }
-
-    await socket.leaveMatch(activeMatch.matchId);
+  const resetActiveMatchState = useCallback(() => {
     activeMatchRef.current = null;
     clearStoredMatchSession();
 
@@ -256,6 +248,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       matchError: null,
     }));
   }, []);
+
+  const leaveCurrentMatchIfJoined = useCallback(async () => {
+    const socket = socketRef.current;
+    const activeMatch = activeMatchRef.current;
+
+    if (!socket || !activeMatch) {
+      return;
+    }
+
+    await socket.leaveMatch(activeMatch.matchId);
+    resetActiveMatchState();
+  }, [resetActiveMatchState]);
+
+  const leaveMatch = useCallback(async () => {
+    await leaveCurrentMatchIfJoined();
+  }, [leaveCurrentMatchIfJoined]);
 
   const joinExistingMatch = useCallback(
     async (matchId: string, mode: MatchMode) => {
@@ -272,6 +280,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }));
 
       try {
+        await leaveCurrentMatchIfJoined();
         const joinedMatch = await socket.joinMatch(matchId);
         const nextMatch = mapRealtimeMatch(joinedMatch, mode, false);
 
@@ -297,7 +306,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
     },
-    []
+    [leaveCurrentMatchIfJoined]
   );
 
   const requestMatch = useCallback(
@@ -317,6 +326,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }));
 
       try {
+        await leaveCurrentMatchIfJoined();
         const matchId = await runMatchRpc(client, session, action, mode);
         const joinedMatch = await socket.joinMatch(matchId);
         const nextMatch = mapRealtimeMatch(
@@ -349,7 +359,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
     },
-    []
+    [leaveCurrentMatchIfJoined]
   );
 
   const sendMove = useCallback(async (position: number) => {
@@ -436,6 +446,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           }
 
           startTransition(() => {
+            if (nextState.status === "finished") {
+              clearStoredMatchSession();
+            }
+
             setValue((current) => ({
               ...current,
               latestMatchState: nextState,
@@ -601,7 +615,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         socketRef.current = null;
       }
     };
-  }, [clearMatchError, joinExistingMatch, leaveMatch, requestMatch, sendMove]);
+  }, [
+    clearMatchError,
+    joinExistingMatch,
+    leaveMatch,
+    requestMatch,
+    resetActiveMatchState,
+    sendMove,
+  ]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
