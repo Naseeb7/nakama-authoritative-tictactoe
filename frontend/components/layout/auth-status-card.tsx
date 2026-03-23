@@ -29,7 +29,7 @@ export function AuthStatusCard() {
           {status}
         </span>
         <span className="text-xs uppercase tracking-[0.2em] text-slate-400">
-          socket {socketStatus}
+          live {socketStatus}
         </span>
       </div>
 
@@ -41,7 +41,7 @@ export function AuthStatusCard() {
       </div>
 
       <div className="mt-4 rounded-[1.35rem] border border-white/8 bg-white/5 px-3 py-3 text-xs text-slate-300">
-        <p>Server: {getNakamaHttpUrl()}</p>
+        <p>Game link: {getNakamaHttpUrl()}</p>
         {error ? <p className="mt-2 text-rose-200">{error}</p> : null}
       </div>
     </section>

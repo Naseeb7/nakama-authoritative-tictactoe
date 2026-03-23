@@ -374,7 +374,7 @@ export default function MatchRoomPage() {
             {isTimedMatch ? (
               <div className="rounded-[1.35rem] border border-cyan-400/28 bg-cyan-400/10 px-4 py-4 text-cyan-100 shadow-[0_0_20px_rgba(0,183,255,0.1)] sm:col-span-2 xl:col-span-1">
                 <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-200">
-                  Turn Timer
+                  Turn Clock
                 </p>
                 <p className="mt-2 text-2xl font-semibold tracking-[0.12em]">
                 <TurnTimer
@@ -402,7 +402,7 @@ export default function MatchRoomPage() {
                 Status {latestMatchState.status}
               </span>
               <span className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-3 py-2 text-fuchsia-200">
-                Turn {latestMatchState.currentTurn ?? "None"}
+                Turn {latestMatchState.currentTurn === userId ? "you" : latestMatchState.currentTurn ?? "none"}
               </span>
               <span className="rounded-full border border-slate-700 bg-slate-950/70 px-3 py-2 text-slate-300">
                 Winner {getWinnerText(latestMatchState.winner, latestMatchState.status)}
@@ -414,7 +414,7 @@ export default function MatchRoomPage() {
             <div className="mt-4 grid gap-3 text-sm leading-6">
               {isTimedMatch ? (
                 <div className="rounded-[1.4rem] border border-cyan-400/28 bg-cyan-400/10 px-4 py-4 text-cyan-100">
-                  {hasDisconnectedPlayers ? "Turn timer paused with " : "Turn timer: "}
+                  {hasDisconnectedPlayers ? "The clock is paused with " : "Clock: "}
                   <TurnTimer
                     key={`body-${latestMatchState.turnExpiresAt ?? "none"}-${
                       hasDisconnectedPlayers ? "paused" : "live"
@@ -429,7 +429,7 @@ export default function MatchRoomPage() {
               ) : null}
               {hasDisconnectedPlayers ? (
                 <div className="rounded-[1.4rem] border border-fuchsia-400/25 bg-fuchsia-500/10 px-4 py-4 text-fuchsia-100">
-                  Reconnect timeout: {latestMatchState.disconnectTimeoutSeconds}s
+                  Return time left: {latestMatchState.disconnectTimeoutSeconds}s
                 </div>
               ) : null}
               <div className="rounded-[1.4rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-4 text-slate-200">
@@ -437,17 +437,17 @@ export default function MatchRoomPage() {
                   ? "Your turn. Pick an empty square."
                   : activeMatch?.matchId !== matchId && socketStatus === "connected"
                     ? isRouteJoinPending
-                      ? "Joining this match route over the live socket."
-                      : "This route is ready to rejoin the live room."
+                      ? "Opening this game again."
+                      : "Getting this game ready."
                   : socketStatus !== "connected"
-                    ? "Socket disconnected. Waiting to reconnect before sending or receiving match state."
+                    ? "Trying to reconnect you to the game."
                   : hasDisconnectedPlayers
-                    ? "Waiting for the disconnected player to rejoin before authoritative play can continue."
+                    ? "Waiting to see if the other player comes back."
                   : latestMatchState.status === "waiting"
-                    ? "Waiting for another player to join."
+                    ? "Waiting for another player."
                     : latestMatchState.status === "finished"
-                      ? "Match finished."
-                      : "Waiting for the other player."}
+                      ? "Game over."
+                      : "Waiting for the other player to move."}
               </div>
               {matchError || moveError ? (
                 <div className="rounded-[1.4rem] border border-rose-400/30 bg-rose-500/10 px-4 py-4 text-rose-200">
@@ -500,24 +500,23 @@ export default function MatchRoomPage() {
               </h3>
               <p className="mt-2 text-sm leading-6 text-slate-300">
                 {latestMatchState.status === "waiting"
-                  ? "The room is open and waiting for the second player to join before the first turn starts."
+                  ? "The game is ready and waiting for one more player."
                   : latestMatchState.status === "finished"
-                    ? `${matchResult}. Jump straight into another ${currentMode} duel from here.`
+                    ? `${matchResult}. You can jump straight into another ${currentMode} game from here.`
                     : hasDisconnectedPlayers
-                      ? "A player disconnected. The authoritative room is holding state while the reconnect window counts down."
+                      ? "Someone dropped out for a moment. The game is holding their spot for a short time."
                     : canPlay
-                      ? "It is your turn. The board is live against the server-authoritative state."
-                      : "The board is live. Wait for the next authoritative turn update."}
+                      ? "It is your turn."
+                      : "The board is live. Wait for the next move."}
               </p>
 
               {hasDisconnectedPlayers ? (
                 <div className="mt-4 rounded-[1.3rem] border border-fuchsia-400/28 bg-fuchsia-500/10 px-4 py-4 text-sm text-fuchsia-100">
                   <p className="font-medium">
-                    Rejoin window active
+                    Comeback window active
                   </p>
                   <p className="mt-1 leading-6">
-                    If the disconnected player does not return before the timer expires,
-                    the backend will finalize the match automatically.
+                    If the missing player does not make it back in time, the game will end on its own.
                   </p>
                   <div className="mt-3 grid gap-3">
                     {disconnectedEntries.map(([playerId, disconnectedAt]) => (
@@ -539,8 +538,8 @@ export default function MatchRoomPage() {
               {activeMatch?.matchId !== matchId && socketStatus === "connected" ? (
                 <div className="mt-4 rounded-[1.2rem] border border-cyan-400/28 bg-cyan-400/10 px-4 py-4 text-sm text-cyan-100">
                   {isRouteJoinPending
-                    ? "Rejoining the live room for this route."
-                    : "This route is waiting to reconnect to the live room."}
+                    ? "Rejoining this game."
+                    : "Getting this game ready again."}
                 </div>
               ) : null}
 
@@ -584,8 +583,8 @@ export default function MatchRoomPage() {
 
               {latestMatchState.status === "finished" ? (
                 <p className="mt-4 text-sm leading-6 text-slate-400">
-                  Use `Play Again` on both clients to jump into the next live round.
-                  Creating a new room manually will open a separate duel.
+                  Use `Play Again` on both screens to jump into the next round.
+                  `Back to Lobby` takes you out to the game menu.
                 </p>
               ) : null}
 

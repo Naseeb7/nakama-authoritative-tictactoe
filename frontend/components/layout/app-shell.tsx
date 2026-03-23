@@ -20,15 +20,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 href="/"
                 className="inline-flex w-fit rounded-full border border-cyan-400/35 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.32em] text-cyan-200 shadow-[0_0_18px_rgba(0,183,255,0.18)]"
               >
-                Lila
+                PulseGrid
               </Link>
               <div>
                 <h1 className="font-sans text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                  Lila: Grid Duel
+                  PulseGrid
                 </h1>
                 <p className="max-w-2xl text-sm leading-6 text-[color:var(--ink-soft)] sm:text-base">
-                  A fast two-player strategy game where every turn is confirmed by the
-                  server, every room stays in sync, and every rematch is one tap away.
+                  A fast two-player game with fair turns, quick rematches, and a board
+                  that stays the same for both players from start to finish.
                 </p>
               </div>
             </div>

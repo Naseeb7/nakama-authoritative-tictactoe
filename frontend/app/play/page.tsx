@@ -12,13 +12,13 @@ const modes = [
     id: "classic",
     name: "Classic",
     description:
-      "Pure head-to-head play with clean turn validation and instant win checks.",
+      "Straight-up play with no clock. Just you, your rival, and the board.",
   },
   {
     id: "timed",
     name: "Rush",
     description:
-      "Adds turn pressure, pause-on-disconnect handling, and timeout victories.",
+      "A faster mode with a ticking clock on every turn.",
   },
 ] as const satisfies Array<{
   description: string;
@@ -56,10 +56,10 @@ export default function PlayPage() {
         </h2>
         <div className="mt-5 flex flex-wrap gap-2 text-xs uppercase tracking-[0.22em]">
           <span className="rounded-full border border-cyan-400/25 bg-cyan-400/10 px-3 py-2 text-cyan-200">
-            Connection {status}
+            Game {status}
           </span>
           <span className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-3 py-2 text-fuchsia-200">
-            Socket {socketStatus}
+            Live {socketStatus}
           </span>
           <span className="rounded-full border border-slate-700 bg-slate-950/70 px-3 py-2 text-slate-300">
             Mode {selectedMode}
@@ -125,15 +125,15 @@ export default function PlayPage() {
 
       <SectionCard className="bg-[linear-gradient(180deg,_rgba(8,12,28,0.96),_rgba(13,19,43,0.92))] text-slate-50">
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-fuchsia-300">
-          Mission Feed
+          Next Up
         </p>
         <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
           {activeMatch ? activeMatch.matchId : "No room joined"}
         </h2>
         <p className="mt-3 text-sm leading-7 text-slate-300">
           {activeMatch
-            ? `You are in ${activeMatch.mode} mode with ${activeMatch.presences.length} visible player presence(s).`
-            : "No room locked in yet. Join the queue or create a private room to begin."}
+            ? `You are in ${activeMatch.mode} mode with ${activeMatch.presences.length} player slot(s) filled.`
+            : "No game locked in yet. Join the queue or create your own room to begin."}
         </p>
         <div className="mt-6 grid gap-3">
           <div className="rounded-[1.35rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-4">
@@ -141,7 +141,7 @@ export default function PlayPage() {
               Queue
             </p>
             <p className="mt-2 text-sm text-slate-200">
-              Reuses an open waiting room when one exists.
+              Finds a game that is already waiting for one more player.
             </p>
           </div>
           <div className="rounded-[1.35rem] border border-fuchsia-400/18 bg-slate-950/70 px-4 py-4">
@@ -149,7 +149,7 @@ export default function PlayPage() {
               Private Room
             </p>
             <p className="mt-2 text-sm text-slate-200">
-              Opens a separate room id immediately.
+              Starts a brand-new game just for this match.
             </p>
           </div>
         </div>

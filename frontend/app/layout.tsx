@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lila: Grid Duel",
+  title: "PulseGrid",
   description: "A realtime server-authoritative tic-tac-toe duel built with Nakama and Next.js.",
 };
 

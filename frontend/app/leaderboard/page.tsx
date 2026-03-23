@@ -192,16 +192,15 @@ export default function LeaderboardPage() {
           Every win and streak, recorded live.
         </h2>
         <p className="mt-3 max-w-3xl text-sm leading-7 text-[color:var(--ink-soft)] sm:text-base">
-          Your match history is pulled directly from the live game session, so
-          your placement and streaks reflect the same authoritative results used
-          inside the room.
+          This page tracks your wins, losses, games played, and streaks so you can
+          see how your recent run is going.
         </p>
 
         <div className="mt-6 rounded-[1.5rem] border border-[color:var(--stroke)] bg-white/65 px-4 py-4 text-sm leading-6 text-stone-700">
-          <p>Connection: {status}</p>
+          <p>Game: {status}</p>
           <p>Player: {username ?? "Unknown"}</p>
-          <p>Player id: {userId ?? "Unavailable"}</p>
-          <p>Board sync: {isLoading ? "loading" : "ready"}</p>
+          <p>Profile: {userId ?? "Unavailable"}</p>
+          <p>Loading: {isLoading ? "yes" : "no"}</p>
           {loadError ? <p className="mt-2 text-rose-700">{loadError}</p> : null}
         </div>
 
@@ -229,7 +228,7 @@ export default function LeaderboardPage() {
           Hall of Fame
         </p>
         <h2 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
-          The sharpest players in the current ladder.
+          The players with the most wins right now.
         </h2>
 
         <div className="mt-6 grid gap-3">
