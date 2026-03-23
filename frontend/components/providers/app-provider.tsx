@@ -72,8 +72,33 @@ const STATE_UPDATE_OPCODE = 2;
 const textDecoder = new TextDecoder();
 
 function toErrorMessage(error: unknown): string {
+  if (typeof error === "string") {
+    return error;
+  }
+
   if (error instanceof Error) {
     return error.message;
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    if ("code" in error && typeof error.code === "number") {
+      return `${error.message} (code ${error.code})`;
+    }
+
+    return error.message;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return "Unknown error";
+    }
   }
 
   return "Unknown error";
@@ -88,11 +113,13 @@ function mapRealtimeMatch(
   mode: MatchMode,
   createdByCurrentAction: boolean
 ): ActiveMatch {
+  const presences = Array.isArray(match.presences) ? match.presences : [];
+
   return {
     createdByCurrentAction,
     matchId: match.match_id,
     mode,
-    presences: match.presences.map((presence) => ({
+    presences: presences.map((presence) => ({
       sessionId: presence.session_id,
       userId: presence.user_id,
       username: presence.username,
@@ -255,6 +282,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           matchError: null,
         }));
       } catch (error) {
+        console.error("joinExistingMatch failed", error);
         const message = toErrorMessage(error);
 
         setValue((current) => ({
@@ -306,6 +334,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
         return matchId;
       } catch (error) {
+        console.error("requestMatch failed", error);
         const message = toErrorMessage(error);
 
         setValue((current) => ({
@@ -401,6 +430,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             return;
           }
 
+          const joins = Array.isArray(event.joins) ? event.joins : [];
+          const leaves = Array.isArray(event.leaves) ? event.leaves : [];
+
           const nextPresences = new Map(
             activeMatchRef.current.presences.map((presence) => [
               presence.sessionId,
@@ -408,7 +440,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             ])
           );
 
-          event.joins.forEach((presence) => {
+          joins.forEach((presence) => {
             nextPresences.set(presence.session_id, {
               sessionId: presence.session_id,
               userId: presence.user_id,
@@ -416,7 +448,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             });
           });
 
-          event.leaves.forEach((presence) => {
+          leaves.forEach((presence) => {
             nextPresences.delete(presence.session_id);
           });
 
@@ -497,6 +529,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           }
         }
       } catch (error) {
+        console.error("bootstrap failed", error);
         if (socket) {
           socket.disconnect(false);
         }
