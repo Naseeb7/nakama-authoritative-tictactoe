@@ -151,18 +151,18 @@ function testReconnectRestoresTimedTurnWindow() {
   const dispatcher = createDispatcher();
   let state = handler.matchInit({}, logger, nk, { mode: "timed", matchId: "match-1" }).state;
 
-  state = handler.matchJoin({}, logger, nk, dispatcher, 1, state, [createPresence("p1")]);
-  state = handler.matchJoin({}, logger, nk, dispatcher, 2, state, [createPresence("p2")]);
+  state = handler.matchJoin({}, logger, nk, dispatcher, 1, state, [createPresence("p1")]).state;
+  state = handler.matchJoin({}, logger, nk, dispatcher, 2, state, [createPresence("p2")]).state;
 
   assert(state.status === "active", "match should activate on second join");
   assert(state.turnDeadlineTick === 32, "timed mode should set initial deadline");
 
-  state = handler.matchLeave({}, logger, nk, dispatcher, 10, state, [createPresence("p2")]);
+  state = handler.matchLeave({}, logger, nk, dispatcher, 10, state, [createPresence("p2")]).state;
   assert(state.disconnectedPlayers.p2 !== undefined, "disconnect should be tracked");
   assert(state.turnDeadlineTick === null, "turn deadline should pause during disconnect");
   assert(state.pausedTurnRemainingSeconds === 22, "remaining turn window should be preserved");
 
-  state = handler.matchJoin({}, logger, nk, dispatcher, 15, state, [createPresence("p2")]);
+  state = handler.matchJoin({}, logger, nk, dispatcher, 15, state, [createPresence("p2")]).state;
   assert(state.disconnectedPlayers.p2 === undefined, "reconnect should clear disconnect tracking");
   assert(state.turnDeadlineTick === 37, "reconnect should restore the paused deadline");
 }
@@ -173,8 +173,8 @@ function testReconnectTimeoutPersistsHistoryOnce() {
   const dispatcher = createDispatcher();
   let state = handler.matchInit({}, logger, nk, { mode: "classic", matchId: "match-2" }).state;
 
-  state = handler.matchJoin({}, logger, nk, dispatcher, 1, state, [createPresence("p1"), createPresence("p2")]);
-  state = handler.matchLeave({}, logger, nk, dispatcher, 5, state, [createPresence("p2")]);
+  state = handler.matchJoin({}, logger, nk, dispatcher, 1, state, [createPresence("p1"), createPresence("p2")]).state;
+  state = handler.matchLeave({}, logger, nk, dispatcher, 5, state, [createPresence("p2")]).state;
   state = handler.matchLoop({}, logger, nk, dispatcher, 6, state, []).state;
   assert(state.status === "active", "match should remain active during reconnect window");
   state.disconnectedPlayers.p2 = state.disconnectedPlayers.p2 - (state.disconnectTimeoutSeconds + 1);
