@@ -76,6 +76,10 @@ function getLifecycleHeading(status: "waiting" | "active" | "finished") {
   return "Match in progress";
 }
 
+function getPlayerLabel(playerId: string, currentUserId: string | null) {
+  return playerId === currentUserId ? "You" : playerId;
+}
+
 function TurnTimer({
   serverTime,
   turnExpiresAt,
@@ -130,11 +134,37 @@ function TurnTimer({
   );
 }
 
+function ReconnectCountdown({
+  disconnectedAt,
+  timeoutSeconds,
+}: {
+  disconnectedAt: number;
+  timeoutSeconds: number;
+}) {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setNow(Date.now());
+    }, 250);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
+  const expiresAt = (disconnectedAt + timeoutSeconds) * 1000;
+  const remainingSeconds = Math.ceil((expiresAt - now) / 1000);
+
+  return <>{formatCountdown(remainingSeconds)}</>;
+}
+
 export default function MatchRoomPage() {
   const params = useParams<{ matchId: string }>();
   const router = useRouter();
   const {
     activeMatch,
+    joinExistingMatch,
     latestMatchState,
     leaveMatch,
     matchError,
@@ -149,6 +179,8 @@ export default function MatchRoomPage() {
   const [moveError, setMoveError] = useState<string | null>(null);
   const [isSubmittingMove, setIsSubmittingMove] = useState(false);
   const [matchActionError, setMatchActionError] = useState<string | null>(null);
+  const [joinRouteError, setJoinRouteError] = useState<string | null>(null);
+  const [isJoiningRouteMatch, setIsJoiningRouteMatch] = useState(false);
   const [isRequeuing, startRequeuing] = useTransition();
   const matchId = params.matchId;
 
@@ -178,9 +210,14 @@ export default function MatchRoomPage() {
     latestMatchState.moveHistory.length === pendingMoveCount;
 
   const isTimedMatch = latestMatchState?.mode === "timed";
+  const isActiveMatch = latestMatchState?.status === "active";
   const hasDisconnectedPlayers =
+    isActiveMatch &&
     !!latestMatchState &&
     Object.keys(latestMatchState.disconnectedPlayers).length > 0;
+  const disconnectedEntries = latestMatchState
+    ? Object.entries(latestMatchState.disconnectedPlayers)
+    : [];
   const currentMode: MatchMode = latestMatchState?.mode ?? activeMatch?.mode ?? "classic";
   const lifecycleHeading = latestMatchState
     ? getLifecycleHeading(latestMatchState.status)
@@ -188,6 +225,52 @@ export default function MatchRoomPage() {
   const finishedDuration = latestMatchState
     ? formatDuration(latestMatchState.startTime, latestMatchState.endTime)
     : "Unavailable";
+  const isRouteJoinPending =
+    activeMatch?.matchId !== matchId &&
+    socketStatus === "connected" &&
+    isJoiningRouteMatch;
+
+  useEffect(() => {
+    if (!matchId || socketStatus !== "connected") {
+      return;
+    }
+
+    if (activeMatch?.matchId === matchId) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function ensureRouteMatchJoined() {
+      setIsJoiningRouteMatch(true);
+
+      try {
+        await joinExistingMatch(matchId, activeMatch?.mode ?? "classic");
+
+        if (!cancelled) {
+          setIsJoiningRouteMatch(false);
+          setJoinRouteError(null);
+        }
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+
+        setIsJoiningRouteMatch(false);
+        setJoinRouteError(
+          error instanceof Error
+            ? error.message
+            : "Unable to join the match from the current route."
+        );
+      }
+    }
+
+    void ensureRouteMatchJoined();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeMatch?.matchId, activeMatch?.mode, joinExistingMatch, matchId, socketStatus]);
 
   async function handleMove(position: number) {
     setMoveError(null);
@@ -300,10 +383,46 @@ export default function MatchRoomPage() {
                   ? "The room is open and waiting for the second player to join before the first turn starts."
                   : latestMatchState.status === "finished"
                     ? `${matchResult}. Queue another ${currentMode} match directly from here.`
+                    : hasDisconnectedPlayers
+                      ? "A player disconnected. The authoritative room is holding state while the reconnect window counts down."
                     : canPlay
                       ? "It is your turn. The board is live against the server-authoritative state."
                       : "The board is live. Wait for the next authoritative turn update."}
               </p>
+
+              {hasDisconnectedPlayers ? (
+                <div className="mt-4 rounded-[1.3rem] border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900">
+                  <p className="font-medium">
+                    Reconnect window active
+                  </p>
+                  <p className="mt-1 leading-6">
+                    If the disconnected player does not return before the timer expires,
+                    the backend will finalize the match automatically.
+                  </p>
+                  <div className="mt-3 grid gap-3">
+                    {disconnectedEntries.map(([playerId, disconnectedAt]) => (
+                      <div
+                        key={playerId}
+                        className="rounded-[1.1rem] border border-amber-200 bg-white/70 px-4 py-3"
+                      >
+                        {getPlayerLabel(playerId, userId)} reconnects in{" "}
+                        <ReconnectCountdown
+                          disconnectedAt={disconnectedAt}
+                          timeoutSeconds={latestMatchState.disconnectTimeoutSeconds}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {activeMatch?.matchId !== matchId && socketStatus === "connected" ? (
+                <div className="mt-4 rounded-[1.2rem] border border-sky-200 bg-sky-50 px-4 py-4 text-sm text-sky-900">
+                  {isRouteJoinPending
+                    ? "Rejoining the authoritative match for this route."
+                    : "This route is waiting to join the authoritative match session."}
+                </div>
+              ) : null}
 
               {latestMatchState.status === "finished" ? (
                 <div className="mt-4 grid gap-3 sm:grid-cols-3">
@@ -350,9 +469,9 @@ export default function MatchRoomPage() {
                 </p>
               ) : null}
 
-              {matchActionError ? (
+              {matchActionError || (activeMatch?.matchId !== matchId ? joinRouteError : null) ? (
                 <div className="mt-4 rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-4 text-sm text-rose-700">
-                  {matchActionError}
+                  {matchActionError ?? joinRouteError}
                 </div>
               ) : null}
             </div>
@@ -386,7 +505,7 @@ export default function MatchRoomPage() {
               {isTimedMatch ? (
                 <div className="rounded-[1.4rem] border border-amber-200 bg-amber-50 px-4 py-4">
                   {hasDisconnectedPlayers
-                    ? "Timer paused with "
+                    ? "Turn timer paused with "
                     : "Turn timer: "}
                   <TurnTimer
                     key={`body-${latestMatchState.turnExpiresAt ?? "none"}-${
@@ -397,14 +516,25 @@ export default function MatchRoomPage() {
                     isPaused={hasDisconnectedPlayers}
                     secondsRemaining={latestMatchState.turnSecondsRemaining}
                   />
-                  {hasDisconnectedPlayers ? " remaining." : null}
+                  {hasDisconnectedPlayers ? " remaining until play resumes." : null}
+                </div>
+              ) : null}
+              {hasDisconnectedPlayers ? (
+                <div className="rounded-[1.4rem] border border-amber-200 bg-amber-50 px-4 py-4">
+                  Reconnect timeout: {latestMatchState.disconnectTimeoutSeconds}s
                 </div>
               ) : null}
               <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4">
                 {canPlay
                   ? "Your turn. Pick an empty square."
+                  : activeMatch?.matchId !== matchId && socketStatus === "connected"
+                    ? isRouteJoinPending
+                      ? "Joining this match route over the live socket."
+                      : "This route is ready to rejoin the live match session."
                   : socketStatus !== "connected"
-                    ? "Socket disconnected. Reconnect before sending moves."
+                    ? "Socket disconnected. Waiting to reconnect before sending or receiving match state."
+                  : hasDisconnectedPlayers
+                    ? "Waiting for the disconnected player to rejoin before authoritative play can continue."
                   : latestMatchState.status === "waiting"
                     ? "Waiting for another player to join."
                     : latestMatchState.status === "finished"
