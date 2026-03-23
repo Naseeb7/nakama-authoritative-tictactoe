@@ -25,12 +25,12 @@ export default function Home() {
   return (
     <div className="grid gap-6 xl:grid-cols-[1.18fr_0.82fr]">
       <SectionCard className="relative overflow-hidden">
-        <div className="pointer-events-none absolute right-[-3rem] top-[-3rem] h-40 w-40 rounded-full bg-[radial-gradient(circle,_rgba(240,195,171,0.8),_transparent_70%)]" />
-        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--accent-deep)]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(0,183,255,0.16),_transparent_28%),radial-gradient(circle_at_20%_80%,_rgba(255,79,216,0.12),_transparent_22%)]" />
+        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-300">
           Lila: Grid Duel
         </p>
-        <h2 className="mt-3 max-w-3xl text-4xl font-semibold tracking-tight text-stone-950 sm:text-5xl lg:text-6xl">
-          A quick strategy duel with zero guesswork.
+        <h2 className="mt-3 max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl">
+          Neon duels. Instant rematches. One authoritative board.
         </h2>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-[color:var(--ink-soft)] sm:text-base">
           Jump into a head-to-head tic-tac-toe match where the board state,
@@ -41,57 +41,57 @@ export default function Home() {
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href="/play"
-            className="rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-medium text-white shadow-[0_14px_30px_rgba(189,86,38,0.28)] transition hover:-translate-y-0.5 hover:bg-[color:var(--accent-deep)]"
+            className="rounded-full border border-cyan-400/40 bg-cyan-400/12 px-5 py-3 text-sm font-medium text-cyan-100 shadow-[0_0_26px_rgba(0,183,255,0.16)] transition hover:-translate-y-0.5 hover:bg-cyan-400/18"
           >
             Start a Match
           </Link>
           <Link
             href="/leaderboard"
-            className="rounded-full border border-[color:var(--stroke-strong)] bg-white/75 px-5 py-3 text-sm font-medium text-stone-700 transition hover:-translate-y-0.5 hover:bg-white"
+            className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-5 py-3 text-sm font-medium text-fuchsia-100 transition hover:-translate-y-0.5 hover:bg-fuchsia-500/16"
           >
             Enter the Hall of Fame
           </Link>
         </div>
 
         <div className="mt-8 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-[1.5rem] border border-[color:var(--stroke)] bg-white/68 px-4 py-4">
-            <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--accent-deep)]">
+          <div className="rounded-[1.5rem] border border-cyan-400/18 bg-slate-950/55 px-4 py-4">
+            <p className="text-xs uppercase tracking-[0.24em] text-cyan-300">
               Modes
             </p>
-            <p className="mt-2 text-2xl font-semibold text-stone-950">2</p>
+            <p className="mt-2 text-2xl font-semibold text-white">2</p>
             <p className="mt-1 text-sm text-[color:var(--ink-soft)]">Classic play and timed showdowns.</p>
           </div>
-          <div className="rounded-[1.5rem] border border-[color:var(--stroke)] bg-white/68 px-4 py-4">
-            <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--accent-deep)]">
+          <div className="rounded-[1.5rem] border border-cyan-400/18 bg-slate-950/55 px-4 py-4">
+            <p className="text-xs uppercase tracking-[0.24em] text-cyan-300">
               Sync
             </p>
-            <p className="mt-2 text-2xl font-semibold text-stone-950">1 source</p>
+            <p className="mt-2 text-2xl font-semibold text-white">1 source</p>
             <p className="mt-1 text-sm text-[color:var(--ink-soft)]">One authoritative board for both players.</p>
           </div>
-          <div className="rounded-[1.5rem] border border-[color:var(--stroke)] bg-white/68 px-4 py-4">
-            <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--accent-deep)]">
+          <div className="rounded-[1.5rem] border border-cyan-400/18 bg-slate-950/55 px-4 py-4">
+            <p className="text-xs uppercase tracking-[0.24em] text-cyan-300">
               Rejoin
             </p>
-            <p className="mt-2 text-2xl font-semibold text-stone-950">30 sec</p>
+            <p className="mt-2 text-2xl font-semibold text-white">30 sec</p>
             <p className="mt-1 text-sm text-[color:var(--ink-soft)]">Recovery window before a dropped player forfeits.</p>
           </div>
         </div>
       </SectionCard>
 
-      <SectionCard className="bg-[linear-gradient(180deg,_rgba(37,25,19,0.98),_rgba(73,47,32,0.94))] text-stone-50">
-        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-stone-400">
+      <SectionCard className="bg-[linear-gradient(180deg,_rgba(8,12,28,0.96),_rgba(13,19,43,0.92))] text-slate-50">
+        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-fuchsia-300">
           Live Features
         </p>
         <div className="mt-5 grid gap-3">
           {foundationItems.map((item) => (
             <div
               key={item.title}
-              className="rounded-[1.5rem] border border-white/10 bg-white/6 px-4 py-4"
+              className="rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-4"
             >
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-stone-200">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-100">
                 {item.title}
               </p>
-              <p className="mt-2 text-sm leading-6 text-stone-300">
+              <p className="mt-2 text-sm leading-6 text-slate-300">
                 {item.body}
               </p>
             </div>
@@ -99,10 +99,10 @@ export default function Home() {
         </div>
 
         <div className="mt-6 rounded-[1.6rem] border border-white/10 bg-white/6 px-5 py-5">
-          <p className="text-xs uppercase tracking-[0.24em] text-stone-400">
+          <p className="text-xs uppercase tracking-[0.24em] text-fuchsia-300">
             Why Lila works
           </p>
-          <p className="mt-3 text-sm leading-7 text-stone-300">
+          <p className="mt-3 text-sm leading-7 text-slate-300">
             It keeps the rules honest. The server resolves every move, the room
             stays synchronized, and the interface stays focused on momentum
             instead of setup friction.
