@@ -19,6 +19,9 @@ export type MatchStatePayload = {
   status: MatchLifecycleStatus;
   symbols: Record<string, "X" | "O">;
   turnDeadlineTick: number | null;
+  turnExpiresAt: number | null;
+  turnSecondsRemaining: number | null;
+  serverTime: number;
   winner: string | null;
 };
 

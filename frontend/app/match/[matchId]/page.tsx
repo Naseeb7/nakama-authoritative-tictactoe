@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { GameBoard } from "@/components/match/game-board";
 import { useApp } from "@/components/providers/app-provider";
@@ -37,6 +37,65 @@ function getWinnerText(
   }
 
   return winner ?? "Draw";
+}
+
+function formatCountdown(seconds: number | null) {
+  if (seconds === null) {
+    return "Unavailable";
+  }
+
+  const safeSeconds = Math.max(0, seconds);
+  const minutes = Math.floor(safeSeconds / 60);
+  const remainder = safeSeconds % 60;
+
+  return `${minutes}:${String(remainder).padStart(2, "0")}`;
+}
+
+function TurnTimer({
+  serverTime,
+  turnExpiresAt,
+  isPaused,
+  secondsRemaining,
+}: {
+  serverTime: number;
+  turnExpiresAt: number | null;
+  isPaused: boolean;
+  secondsRemaining: number | null;
+}) {
+  const [clockOffset] = useState<number>(() =>
+    serverTime * 1000 - Date.now()
+  );
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (secondsRemaining === null || isPaused) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setNow(Date.now());
+    }, 250);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [isPaused, secondsRemaining]);
+
+  if (secondsRemaining === null) {
+    return <>Unavailable</>;
+  }
+
+  if (isPaused || turnExpiresAt === null) {
+    return <>{formatCountdown(secondsRemaining)}</>;
+  }
+
+  return (
+    <>
+      {formatCountdown(
+        Math.ceil((turnExpiresAt * 1000 - (now + clockOffset)) / 1000)
+      )}
+    </>
+  );
 }
 
 export default function MatchRoomPage() {
@@ -82,6 +141,11 @@ export default function MatchRoomPage() {
     pendingMoveCount !== null &&
     !!latestMatchState &&
     latestMatchState.moveHistory.length === pendingMoveCount;
+
+  const isTimedMatch = latestMatchState?.mode === "timed";
+  const hasDisconnectedPlayers =
+    !!latestMatchState &&
+    Object.keys(latestMatchState.disconnectedPlayers).length > 0;
 
   async function handleMove(position: number) {
     setMoveError(null);
@@ -133,6 +197,20 @@ export default function MatchRoomPage() {
           <div className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-4">
             Result: {matchResult}
           </div>
+          {isTimedMatch ? (
+            <div className="rounded-[1.4rem] border border-amber-400/20 bg-amber-300/10 px-4 py-4">
+              Turn timer:{" "}
+              <TurnTimer
+                key={`hero-${latestMatchState?.turnExpiresAt ?? "none"}-${
+                  hasDisconnectedPlayers ? "paused" : "live"
+                }`}
+                serverTime={latestMatchState.serverTime}
+                turnExpiresAt={latestMatchState.turnExpiresAt}
+                isPaused={hasDisconnectedPlayers}
+                secondsRemaining={latestMatchState?.turnSecondsRemaining ?? null}
+              />
+            </div>
+          ) : null}
         </div>
       </SectionCard>
 
@@ -169,6 +247,23 @@ export default function MatchRoomPage() {
               <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4">
                 Move count: {latestMatchState.moveHistory.length}
               </div>
+              {isTimedMatch ? (
+                <div className="rounded-[1.4rem] border border-amber-200 bg-amber-50 px-4 py-4">
+                  {hasDisconnectedPlayers
+                    ? "Timer paused with "
+                    : "Turn timer: "}
+                  <TurnTimer
+                    key={`body-${latestMatchState.turnExpiresAt ?? "none"}-${
+                      hasDisconnectedPlayers ? "paused" : "live"
+                    }`}
+                    serverTime={latestMatchState.serverTime}
+                    turnExpiresAt={latestMatchState.turnExpiresAt}
+                    isPaused={hasDisconnectedPlayers}
+                    secondsRemaining={latestMatchState.turnSecondsRemaining}
+                  />
+                  {hasDisconnectedPlayers ? " remaining." : null}
+                </div>
+              ) : null}
               <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4">
                 {canPlay
                   ? "Your turn. Pick an empty square."
