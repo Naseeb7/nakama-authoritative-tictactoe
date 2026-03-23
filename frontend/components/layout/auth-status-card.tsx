@@ -19,7 +19,7 @@ export function AuthStatusCard() {
   const { error, socketStatus, status, username } = useApp();
 
   return (
-    <section className="w-full rounded-[1.5rem] border border-slate-200 bg-slate-950 px-4 py-4 text-slate-50 shadow-[0_12px_40px_rgba(15,23,42,0.18)] sm:max-w-sm">
+    <section className="w-full rounded-[1.75rem] border border-white/15 bg-[linear-gradient(180deg,_rgba(40,28,22,0.96),_rgba(67,42,28,0.92))] px-4 py-4 text-stone-50 shadow-[0_20px_50px_rgba(63,35,17,0.24)] sm:max-w-sm">
       <div className="flex items-center justify-between gap-3">
         <span
           className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] ${getStatusTone(
@@ -28,21 +28,21 @@ export function AuthStatusCard() {
         >
           {status}
         </span>
-        <span className="text-xs uppercase tracking-[0.2em] text-slate-400">
+        <span className="text-xs uppercase tracking-[0.2em] text-stone-400">
           socket {socketStatus}
         </span>
       </div>
 
       <div className="mt-4 space-y-1">
-        <p className="text-sm text-slate-400">Signed in as</p>
-        <p className="text-lg font-semibold">
+        <p className="text-sm text-stone-400">Signed in as</p>
+        <p className="text-lg font-semibold tracking-tight">
           {username ? username : "Connecting..."}
         </p>
       </div>
 
-      <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-3 py-3 text-xs text-slate-300">
+      <div className="mt-4 rounded-[1.35rem] border border-white/10 bg-white/6 px-3 py-3 text-xs text-stone-300">
         <p>Server: {getNakamaHttpUrl()}</p>
-        {error ? <p className="mt-2 text-rose-300">{error}</p> : null}
+        {error ? <p className="mt-2 text-rose-200">{error}</p> : null}
       </div>
     </section>
   );

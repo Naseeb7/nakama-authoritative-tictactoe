@@ -312,35 +312,35 @@ export default function MatchRoomPage() {
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-      <SectionCard className="bg-slate-950 text-slate-50">
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">
-          Match Room
+    <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+      <SectionCard className="bg-[linear-gradient(180deg,_rgba(37,25,19,0.98),_rgba(73,47,32,0.94))] text-stone-50">
+        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-stone-400">
+          Arena
         </p>
-        <h2 className="mt-3 text-3xl font-semibold tracking-tight">
+        <h2 className="mt-3 break-all text-3xl font-semibold tracking-tight sm:text-4xl">
           {matchId}
         </h2>
-        <p className="mt-3 text-sm leading-7 text-slate-300 sm:text-base">
+        <p className="mt-3 text-sm leading-7 text-stone-300 sm:text-base">
           {activeMatch?.matchId === matchId
-            ? "This room is connected to the active authoritative match session."
-            : "This route is ready, but the current client session is not joined to this match id."}
+            ? "You are connected to the live room for this duel."
+            : "This route is open, but your current session is not joined to this room id yet."}
         </p>
 
-        <div className="mt-6 grid gap-3 text-sm text-slate-300">
-          <div className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-4">
+        <div className="mt-6 grid gap-3 text-sm text-stone-300">
+          <div className="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-4">
             Player: {username ?? "Unknown"}
           </div>
-          <div className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-4">
+          <div className="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-4">
             Symbol: {assignedSymbol ?? "Pending"}
           </div>
-          <div className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-4">
-            Mode: {activeMatch?.mode ?? "Unknown"}
+          <div className="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-4">
+            Ruleset: {activeMatch?.mode ?? "Unknown"}
           </div>
-          <div className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-4">
+          <div className="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-4">
             Result: {matchResult}
           </div>
           {isTimedMatch ? (
-            <div className="rounded-[1.4rem] border border-amber-400/20 bg-amber-300/10 px-4 py-4">
+            <div className="rounded-[1.4rem] border border-amber-400/20 bg-amber-300/10 px-4 py-4 text-amber-100">
               Turn timer:{" "}
               <TurnTimer
                 key={`hero-${latestMatchState?.turnExpiresAt ?? "none"}-${
@@ -357,8 +357,8 @@ export default function MatchRoomPage() {
       </SectionCard>
 
       <SectionCard>
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
-          Authoritative Board
+        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--accent-deep)]">
+          Duel Board
         </p>
 
         {latestMatchState ? (
@@ -366,23 +366,23 @@ export default function MatchRoomPage() {
             <div
               className={`mt-4 rounded-[1.6rem] border px-5 py-5 ${
                 latestMatchState.status === "finished"
-                  ? "border-emerald-200 bg-emerald-50"
+                  ? "border-emerald-200 bg-emerald-50/90"
                   : latestMatchState.status === "waiting"
-                    ? "border-sky-200 bg-sky-50"
-                    : "border-slate-200 bg-slate-50"
+                    ? "border-sky-200 bg-sky-50/90"
+                    : "border-[color:var(--stroke)] bg-white/68"
               }`}
             >
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                Lifecycle
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--accent-deep)]">
+                Match State
               </p>
-              <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+              <h3 className="mt-2 text-2xl font-semibold tracking-tight text-stone-950 sm:text-3xl">
                 {lifecycleHeading}
               </h3>
-              <p className="mt-2 text-sm leading-6 text-slate-700">
+              <p className="mt-2 text-sm leading-6 text-stone-700">
                 {latestMatchState.status === "waiting"
                   ? "The room is open and waiting for the second player to join before the first turn starts."
                   : latestMatchState.status === "finished"
-                    ? `${matchResult}. Queue another ${currentMode} match directly from here.`
+                    ? `${matchResult}. Jump straight into another ${currentMode} duel from here.`
                     : hasDisconnectedPlayers
                       ? "A player disconnected. The authoritative room is holding state while the reconnect window counts down."
                     : canPlay
@@ -393,7 +393,7 @@ export default function MatchRoomPage() {
               {hasDisconnectedPlayers ? (
                 <div className="mt-4 rounded-[1.3rem] border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900">
                   <p className="font-medium">
-                    Reconnect window active
+                    Rejoin window active
                   </p>
                   <p className="mt-1 leading-6">
                     If the disconnected player does not return before the timer expires,
@@ -419,20 +419,20 @@ export default function MatchRoomPage() {
               {activeMatch?.matchId !== matchId && socketStatus === "connected" ? (
                 <div className="mt-4 rounded-[1.2rem] border border-sky-200 bg-sky-50 px-4 py-4 text-sm text-sky-900">
                   {isRouteJoinPending
-                    ? "Rejoining the authoritative match for this route."
-                    : "This route is waiting to join the authoritative match session."}
+                    ? "Rejoining the live room for this route."
+                    : "This route is waiting to reconnect to the live room."}
                 </div>
               ) : null}
 
               {latestMatchState.status === "finished" ? (
                 <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-[1.2rem] border border-white/60 bg-white/70 px-4 py-4 text-sm text-slate-700">
+                  <div className="rounded-[1.2rem] border border-white/60 bg-white/70 px-4 py-4 text-sm text-stone-700">
                     Result: {matchResult}
                   </div>
-                  <div className="rounded-[1.2rem] border border-white/60 bg-white/70 px-4 py-4 text-sm text-slate-700">
+                  <div className="rounded-[1.2rem] border border-white/60 bg-white/70 px-4 py-4 text-sm text-stone-700">
                     Winner: {getWinnerText(latestMatchState.winner, latestMatchState.status)}
                   </div>
-                  <div className="rounded-[1.2rem] border border-white/60 bg-white/70 px-4 py-4 text-sm text-slate-700">
+                  <div className="rounded-[1.2rem] border border-white/60 bg-white/70 px-4 py-4 text-sm text-stone-700">
                     Duration: {finishedDuration}
                   </div>
                 </div>
@@ -444,9 +444,9 @@ export default function MatchRoomPage() {
                     type="button"
                     onClick={() => handleNextMatch("find_match")}
                     disabled={isRequeuing}
-                    className="rounded-full bg-slate-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+                    className="rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-medium text-white shadow-[0_14px_30px_rgba(189,86,38,0.24)] transition hover:-translate-y-0.5 hover:bg-[color:var(--accent-deep)] disabled:cursor-not-allowed disabled:bg-stone-300 disabled:shadow-none"
                   >
-                    Find Next Match
+                    Play Again
                   </button>
                   <button
                     type="button"
@@ -455,17 +455,17 @@ export default function MatchRoomPage() {
                       router.push("/play");
                     }}
                     disabled={isRequeuing}
-                    className="rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+                    className="rounded-full border border-[color:var(--stroke-strong)] bg-white/75 px-5 py-3 text-sm font-medium text-stone-700 transition hover:-translate-y-0.5 hover:bg-white disabled:cursor-not-allowed disabled:border-stone-200 disabled:text-stone-400"
                   >
-                    Open Matchmaking
+                    Back to Lobby
                   </button>
                 </div>
               ) : null}
 
               {latestMatchState.status === "finished" ? (
-                <p className="mt-4 text-sm leading-6 text-slate-600">
-                  Use `Find Next Match` on both clients for the next multiplayer test.
-                  Creating a fresh match manually opens a separate room by design.
+                <p className="mt-4 text-sm leading-6 text-stone-600">
+                  Use `Play Again` on both clients to jump into the next live round.
+                  Creating a new room manually will open a separate duel.
                 </p>
               ) : null}
 
@@ -486,20 +486,20 @@ export default function MatchRoomPage() {
             </div>
 
             <div className="mt-4 grid gap-3 text-sm leading-6 text-slate-700">
-              <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4">
+              <div className="rounded-[1.4rem] border border-[color:var(--stroke)] bg-white/68 px-4 py-4 text-stone-700">
                 Status: {latestMatchState.status}
               </div>
-              <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4">
+              <div className="rounded-[1.4rem] border border-[color:var(--stroke)] bg-white/68 px-4 py-4 text-stone-700">
                 Current turn: {latestMatchState.currentTurn ?? "None"}
               </div>
-              <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4">
+              <div className="rounded-[1.4rem] border border-[color:var(--stroke)] bg-white/68 px-4 py-4 text-stone-700">
                 Winner:{" "}
                 {getWinnerText(
                   latestMatchState.winner,
                   latestMatchState.status
                 )}
               </div>
-              <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4">
+              <div className="rounded-[1.4rem] border border-[color:var(--stroke)] bg-white/68 px-4 py-4 text-stone-700">
                 Move count: {latestMatchState.moveHistory.length}
               </div>
               {isTimedMatch ? (
@@ -524,13 +524,13 @@ export default function MatchRoomPage() {
                   Reconnect timeout: {latestMatchState.disconnectTimeoutSeconds}s
                 </div>
               ) : null}
-              <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4">
+              <div className="rounded-[1.4rem] border border-[color:var(--stroke)] bg-white/68 px-4 py-4 text-stone-700">
                 {canPlay
                   ? "Your turn. Pick an empty square."
                   : activeMatch?.matchId !== matchId && socketStatus === "connected"
                     ? isRouteJoinPending
                       ? "Joining this match route over the live socket."
-                      : "This route is ready to rejoin the live match session."
+                      : "This route is ready to rejoin the live room."
                   : socketStatus !== "connected"
                     ? "Socket disconnected. Waiting to reconnect before sending or receiving match state."
                   : hasDisconnectedPlayers
@@ -549,22 +549,22 @@ export default function MatchRoomPage() {
             </div>
 
             <div className="mt-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                Move History
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--accent-deep)]">
+                Turn Log
               </p>
               <div className="mt-3 grid gap-2">
                 {latestMatchState.moveHistory.length > 0 ? (
                   latestMatchState.moveHistory.map((move, index) => (
                     <div
                       key={`${move.playerId}-${move.position}-${index}`}
-                      className="rounded-[1.2rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
+                      className="rounded-[1.2rem] border border-[color:var(--stroke)] bg-white/70 px-4 py-3 text-sm text-stone-700"
                     >
                       Turn {index + 1}: {move.playerId === userId ? "You" : move.playerId}{" "}
                       played position {move.position}
                     </div>
                   ))
                 ) : (
-                  <div className="rounded-[1.2rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                  <div className="rounded-[1.2rem] border border-[color:var(--stroke)] bg-white/70 px-4 py-3 text-sm text-stone-600">
                     No moves yet.
                   </div>
                 )}
@@ -572,7 +572,7 @@ export default function MatchRoomPage() {
             </div>
           </>
         ) : (
-          <div className="mt-4 rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-700">
+          <div className="mt-4 rounded-[1.4rem] border border-[color:var(--stroke)] bg-white/68 px-4 py-4 text-sm leading-6 text-stone-700">
             Waiting for authoritative state broadcast from the backend.
           </div>
         )}
@@ -584,15 +584,15 @@ export default function MatchRoomPage() {
               await leaveMatch();
               router.push("/play");
             }}
-            className="rounded-full bg-slate-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
+            className="rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-medium text-white shadow-[0_14px_30px_rgba(189,86,38,0.24)] transition hover:-translate-y-0.5 hover:bg-[color:var(--accent-deep)]"
           >
-            Leave Match
+            Leave Room
           </button>
           <Link
             href="/play"
-            className="rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+            className="rounded-full border border-[color:var(--stroke-strong)] bg-white/75 px-5 py-3 text-sm font-medium text-stone-700 transition hover:-translate-y-0.5 hover:bg-white"
           >
-            Back to matchmaking
+            Back to Lobby
           </Link>
         </div>
       </SectionCard>

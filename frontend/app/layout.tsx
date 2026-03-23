@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Tic-Tac-Toe",
-  description: "Frontend for the Nakama authoritative tic-tac-toe app",
+  title: "Lila: Grid Duel",
+  description: "A realtime server-authoritative tic-tac-toe duel built with Nakama and Next.js.",
 };
 
 export default function RootLayout({

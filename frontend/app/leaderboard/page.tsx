@@ -185,51 +185,51 @@ export default function LeaderboardPage() {
   return (
     <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
       <SectionCard>
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
-          Phase 4
+        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--accent-deep)]">
+          Your Record
         </p>
-        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">
-          Live leaderboard and player stats.
+        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-stone-950 sm:text-4xl">
+          Every win and streak, recorded live.
         </h2>
-        <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
-          This page now reads the global wins leaderboard and the signed-in
-          player&apos;s stored stats directly from Nakama using the existing
-          authenticated frontend session.
+        <p className="mt-3 max-w-3xl text-sm leading-7 text-[color:var(--ink-soft)] sm:text-base">
+          Your match history is pulled directly from the live game session, so
+          your placement and streaks reflect the same authoritative results used
+          inside the room.
         </p>
 
-        <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-700">
-          <p>Frontend status: {status}</p>
+        <div className="mt-6 rounded-[1.5rem] border border-[color:var(--stroke)] bg-white/65 px-4 py-4 text-sm leading-6 text-stone-700">
+          <p>Connection: {status}</p>
           <p>Player: {username ?? "Unknown"}</p>
           <p>Player id: {userId ?? "Unavailable"}</p>
-          <p>Surface state: {isLoading ? "loading" : "ready"}</p>
-          {loadError ? <p className="mt-2 text-rose-600">{loadError}</p> : null}
+          <p>Board sync: {isLoading ? "loading" : "ready"}</p>
+          {loadError ? <p className="mt-2 text-rose-700">{loadError}</p> : null}
         </div>
 
-        <div className="mt-6 grid gap-3">
-          <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700">
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-[1.4rem] border border-[color:var(--stroke)] bg-white/70 px-4 py-4 text-sm text-stone-700">
             Wins: {playerStats.wins}
           </div>
-          <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700">
+          <div className="rounded-[1.4rem] border border-[color:var(--stroke)] bg-white/70 px-4 py-4 text-sm text-stone-700">
             Losses: {playerStats.losses}
           </div>
-          <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700">
+          <div className="rounded-[1.4rem] border border-[color:var(--stroke)] bg-white/70 px-4 py-4 text-sm text-stone-700">
             Games played: {playerStats.gamesPlayed}
           </div>
-          <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700">
+          <div className="rounded-[1.4rem] border border-[color:var(--stroke)] bg-white/70 px-4 py-4 text-sm text-stone-700">
             Current streak: {playerStats.currentStreak}
           </div>
-          <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700">
+          <div className="rounded-[1.4rem] border border-[color:var(--stroke)] bg-white/70 px-4 py-4 text-sm text-stone-700 sm:col-span-2">
             Best streak: {playerStats.bestStreak}
           </div>
         </div>
       </SectionCard>
 
-      <SectionCard className="bg-slate-950 text-slate-50">
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">
-          Global Wins
+      <SectionCard className="bg-[linear-gradient(180deg,_rgba(37,25,19,0.98),_rgba(73,47,32,0.94))] text-stone-50">
+        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-stone-400">
+          Hall of Fame
         </p>
-        <h2 className="mt-3 text-2xl font-semibold tracking-tight">
-          Top players by authoritative match wins.
+        <h2 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
+          The sharpest players in the current ladder.
         </h2>
 
         <div className="mt-6 grid gap-3">
@@ -237,24 +237,24 @@ export default function LeaderboardPage() {
             leaderboardEntries.map((entry) => (
               <div
                 key={`${entry.ownerId}-${entry.rank}`}
-                className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-200"
+                className="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-4 text-sm text-stone-200"
               >
                 <div className="flex items-center justify-between gap-4">
                   <span className="font-medium">
                     #{entry.rank || "-"} {entry.username}
                   </span>
-                  <span>{entry.score} win(s)</span>
+                  <span>{entry.score} wins</span>
                 </div>
-                <p className="mt-2 text-xs uppercase tracking-[0.2em] text-slate-400">
+                <p className="mt-2 text-xs uppercase tracking-[0.2em] text-stone-400">
                   {entry.ownerId === userId ? "You" : entry.ownerId}
                 </p>
               </div>
             ))
           ) : (
-            <div className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-6 text-slate-300">
+            <div className="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-4 text-sm leading-6 text-stone-300">
               {isLoading
-                ? "Loading leaderboard records."
-                : "No leaderboard records yet."}
+                ? "Loading the hall of fame."
+                : "No ranked wins yet."}
             </div>
           )}
         </div>
