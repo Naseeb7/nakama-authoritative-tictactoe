@@ -338,28 +338,45 @@ export default function MatchRoomPage() {
           <h2 className="mt-3 break-all text-3xl font-semibold tracking-tight text-white sm:text-4xl">
             {matchId}
           </h2>
-          <p className="mt-3 text-sm leading-7 text-slate-300 sm:text-base">
-            {activeMatch?.matchId === matchId
-              ? "You are connected to the live room for this duel."
-              : "This route is open, but your current session is not joined to this room id yet."}
-          </p>
-
-          <div className="mt-6 grid gap-3 text-sm text-slate-300">
-            <div className="rounded-[1.4rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-4">
-              Player: {username ?? "Unknown"}
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+            <div className="rounded-[1.35rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-4">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-300">
+                Pilot
+              </p>
+              <p className="mt-2 text-base font-semibold text-white">
+                {username ?? "Unknown"}
+              </p>
             </div>
-            <div className="rounded-[1.4rem] border border-fuchsia-400/18 bg-slate-950/70 px-4 py-4">
-              Symbol: {assignedSymbol ?? "Pending"}
+            <div className="rounded-[1.35rem] border border-fuchsia-400/18 bg-slate-950/70 px-4 py-4">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-fuchsia-300">
+                Symbol
+              </p>
+              <p className="mt-2 text-base font-semibold text-white">
+                {assignedSymbol ?? "Pending"}
+              </p>
             </div>
-            <div className="rounded-[1.4rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-4">
-              Ruleset: {activeMatch?.mode ?? "Unknown"}
+            <div className="rounded-[1.35rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-4">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-300">
+                Ruleset
+              </p>
+              <p className="mt-2 text-base font-semibold text-white">
+                {activeMatch?.mode ?? "Unknown"}
+              </p>
             </div>
-            <div className="rounded-[1.4rem] border border-fuchsia-400/18 bg-slate-950/70 px-4 py-4">
-              Result: {matchResult}
+            <div className="rounded-[1.35rem] border border-fuchsia-400/18 bg-slate-950/70 px-4 py-4">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-fuchsia-300">
+                Result
+              </p>
+              <p className="mt-2 text-base font-semibold text-white">
+                {matchResult}
+              </p>
             </div>
             {isTimedMatch ? (
-              <div className="rounded-[1.4rem] border border-cyan-400/28 bg-cyan-400/10 px-4 py-4 text-cyan-100 shadow-[0_0_20px_rgba(0,183,255,0.1)]">
-                Turn timer:{" "}
+              <div className="rounded-[1.35rem] border border-cyan-400/28 bg-cyan-400/10 px-4 py-4 text-cyan-100 shadow-[0_0_20px_rgba(0,183,255,0.1)] sm:col-span-2 xl:col-span-1">
+                <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-200">
+                  Turn Timer
+                </p>
+                <p className="mt-2 text-2xl font-semibold tracking-[0.12em]">
                 <TurnTimer
                   key={`hero-${latestMatchState?.turnExpiresAt ?? "none"}-${
                     hasDisconnectedPlayers ? "paused" : "live"
@@ -369,6 +386,7 @@ export default function MatchRoomPage() {
                   isPaused={hasDisconnectedPlayers}
                   secondsRemaining={latestMatchState?.turnSecondsRemaining ?? null}
                 />
+                </p>
               </div>
             ) : null}
           </div>
@@ -377,21 +395,23 @@ export default function MatchRoomPage() {
         {latestMatchState ? (
           <SectionCard>
             <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-300">
-              Match Desk
+              Live HUD
             </p>
+            <div className="mt-4 flex flex-wrap gap-2 text-xs uppercase tracking-[0.22em]">
+              <span className="rounded-full border border-cyan-400/25 bg-cyan-400/10 px-3 py-2 text-cyan-200">
+                Status {latestMatchState.status}
+              </span>
+              <span className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-3 py-2 text-fuchsia-200">
+                Turn {latestMatchState.currentTurn ?? "None"}
+              </span>
+              <span className="rounded-full border border-slate-700 bg-slate-950/70 px-3 py-2 text-slate-300">
+                Winner {getWinnerText(latestMatchState.winner, latestMatchState.status)}
+              </span>
+              <span className="rounded-full border border-slate-700 bg-slate-950/70 px-3 py-2 text-slate-300">
+                Moves {latestMatchState.moveHistory.length}
+              </span>
+            </div>
             <div className="mt-4 grid gap-3 text-sm leading-6">
-              <div className="rounded-[1.4rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-4 text-slate-200">
-                Status: {latestMatchState.status}
-              </div>
-              <div className="rounded-[1.4rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-4 text-slate-200">
-                Current turn: {latestMatchState.currentTurn ?? "None"}
-              </div>
-              <div className="rounded-[1.4rem] border border-fuchsia-400/18 bg-slate-950/70 px-4 py-4 text-slate-200">
-                Winner: {getWinnerText(latestMatchState.winner, latestMatchState.status)}
-              </div>
-              <div className="rounded-[1.4rem] border border-fuchsia-400/18 bg-slate-950/70 px-4 py-4 text-slate-200">
-                Move count: {latestMatchState.moveHistory.length}
-              </div>
               {isTimedMatch ? (
                 <div className="rounded-[1.4rem] border border-cyan-400/28 bg-cyan-400/10 px-4 py-4 text-cyan-100">
                   {hasDisconnectedPlayers ? "Turn timer paused with " : "Turn timer: "}
@@ -475,9 +495,6 @@ export default function MatchRoomPage() {
                     : "border-cyan-400/18 bg-slate-950/66"
               }`}
             >
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">
-                Match State
-              </p>
               <h3 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
                 {lifecycleHeading}
               </h3>
@@ -589,7 +606,7 @@ export default function MatchRoomPage() {
             </div>
 
             <div className="mt-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--accent-deep)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">
                 Turn Log
               </p>
               <div className="mt-3 grid gap-2">

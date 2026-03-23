@@ -52,12 +52,22 @@ export default function PlayPage() {
           Play Now
         </p>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-          Choose how the next duel begins.
+          Queue up and drop straight into the arena.
         </h2>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-[color:var(--ink-soft)] sm:text-base">
-          Match into an open room or spin up a fresh one. Once the server
-          responds, Lila joins the room immediately and drops you into the live board.
-        </p>
+        <div className="mt-5 flex flex-wrap gap-2 text-xs uppercase tracking-[0.22em]">
+          <span className="rounded-full border border-cyan-400/25 bg-cyan-400/10 px-3 py-2 text-cyan-200">
+            Connection {status}
+          </span>
+          <span className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-3 py-2 text-fuchsia-200">
+            Socket {socketStatus}
+          </span>
+          <span className="rounded-full border border-slate-700 bg-slate-950/70 px-3 py-2 text-slate-300">
+            Mode {selectedMode}
+          </span>
+          <span className="rounded-full border border-slate-700 bg-slate-950/70 px-3 py-2 text-slate-300">
+            Queue {isPending ? "working" : joinStatus}
+          </span>
+        </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           {modes.map((mode) => (
@@ -106,18 +116,16 @@ export default function PlayPage() {
           </button>
         </div>
 
-        <div className="mt-6 rounded-[1.5rem] border border-slate-800 bg-slate-950/70 px-4 py-4 text-sm leading-6 text-slate-300">
-          <p>Connection: {status}</p>
-          <p>Live socket: {socketStatus}</p>
-          <p>Selected mode: {selectedMode}</p>
-          <p>Queue status: {isPending ? "working" : joinStatus}</p>
-          {matchError ? <p className="mt-2 text-rose-700">{matchError}</p> : null}
-        </div>
+        {matchError ? (
+          <div className="mt-6 rounded-[1.35rem] border border-rose-400/30 bg-rose-500/10 px-4 py-4 text-sm text-rose-200">
+            {matchError}
+          </div>
+        ) : null}
       </SectionCard>
 
       <SectionCard className="bg-[linear-gradient(180deg,_rgba(8,12,28,0.96),_rgba(13,19,43,0.92))] text-slate-50">
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-fuchsia-300">
-          Current Room
+          Mission Feed
         </p>
         <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
           {activeMatch ? activeMatch.matchId : "No room joined"}
@@ -125,14 +133,24 @@ export default function PlayPage() {
         <p className="mt-3 text-sm leading-7 text-slate-300">
           {activeMatch
             ? `You are in ${activeMatch.mode} mode with ${activeMatch.presences.length} visible player presence(s).`
-            : "Once you join a room, this panel will track the match you are currently connected to."}
+            : "No room locked in yet. Join the queue or create a private room to begin."}
         </p>
         <div className="mt-6 grid gap-3">
-          <div className="rounded-[1.4rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-4 text-sm text-slate-200">
-            `Join Queue` reuses a waiting room when one is already open.
+          <div className="rounded-[1.35rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-4">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-300">
+              Queue
+            </p>
+            <p className="mt-2 text-sm text-slate-200">
+              Reuses an open waiting room when one exists.
+            </p>
           </div>
-          <div className="rounded-[1.4rem] border border-fuchsia-400/18 bg-slate-950/70 px-4 py-4 text-sm text-slate-200">
-            `Create Room` always opens a separate private room id.
+          <div className="rounded-[1.35rem] border border-fuchsia-400/18 bg-slate-950/70 px-4 py-4">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-fuchsia-300">
+              Private Room
+            </p>
+            <p className="mt-2 text-sm text-slate-200">
+              Opens a separate room id immediately.
+            </p>
           </div>
         </div>
         {activeMatch ? (
