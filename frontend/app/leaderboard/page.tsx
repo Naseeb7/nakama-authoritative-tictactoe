@@ -42,12 +42,14 @@ function normalizeStats(value: unknown): PlayerStats {
     return createEmptyStats();
   }
 
+  const stats = parsed as Record<string, unknown>;
+
   return {
-    bestStreak: toSafeNumber(parsed.bestStreak),
-    currentStreak: toSafeNumber(parsed.currentStreak),
-    gamesPlayed: toSafeNumber(parsed.gamesPlayed),
-    losses: toSafeNumber(parsed.losses),
-    wins: toSafeNumber(parsed.wins),
+    bestStreak: toSafeNumber(stats.bestStreak),
+    currentStreak: toSafeNumber(stats.currentStreak),
+    gamesPlayed: toSafeNumber(stats.gamesPlayed),
+    losses: toSafeNumber(stats.losses),
+    wins: toSafeNumber(stats.wins),
   };
 }
 
