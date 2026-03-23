@@ -91,27 +91,35 @@ function TurnTimer({
   isPaused: boolean;
   secondsRemaining: number | null;
 }) {
-  const [clockOffset] = useState<number>(() =>
-    Number.isFinite(serverTime) ? serverTime * 1000 - Date.now() : 0
-  );
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState<number | null>(null);
+  const clockOffset =
+    Number.isFinite(serverTime) && now !== null ? serverTime * 1000 - now : 0;
 
   useEffect(() => {
     if (secondsRemaining === null || isPaused) {
       return;
     }
 
+    const syncId = window.setTimeout(() => {
+      setNow(Date.now());
+    }, 0);
+
     const intervalId = window.setInterval(() => {
       setNow(Date.now());
-    }, 250);
+    }, 1000);
 
     return () => {
+      window.clearTimeout(syncId);
       window.clearInterval(intervalId);
     };
   }, [isPaused, secondsRemaining]);
 
   if (secondsRemaining === null) {
     return <>Unavailable</>;
+  }
+
+  if (now === null) {
+    return <>{formatCountdown(secondsRemaining)}</>;
   }
 
   if (
@@ -141,17 +149,26 @@ function ReconnectCountdown({
   disconnectedAt: number;
   timeoutSeconds: number;
 }) {
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState<number | null>(null);
 
   useEffect(() => {
+    const syncId = window.setTimeout(() => {
+      setNow(Date.now());
+    }, 0);
+
     const intervalId = window.setInterval(() => {
       setNow(Date.now());
-    }, 250);
+    }, 1000);
 
     return () => {
+      window.clearTimeout(syncId);
       window.clearInterval(intervalId);
     };
   }, []);
+
+  if (now === null) {
+    return <>{formatCountdown(timeoutSeconds)}</>;
+  }
 
   const expiresAt = (disconnectedAt + timeoutSeconds) * 1000;
   const remainingSeconds = Math.ceil((expiresAt - now) / 1000);
@@ -312,49 +329,134 @@ export default function MatchRoomPage() {
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
-      <SectionCard className="bg-[linear-gradient(180deg,_rgba(37,25,19,0.98),_rgba(73,47,32,0.94))] text-stone-50">
-        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-stone-400">
-          Arena
-        </p>
-        <h2 className="mt-3 break-all text-3xl font-semibold tracking-tight sm:text-4xl">
-          {matchId}
-        </h2>
-        <p className="mt-3 text-sm leading-7 text-stone-300 sm:text-base">
-          {activeMatch?.matchId === matchId
-            ? "You are connected to the live room for this duel."
-            : "This route is open, but your current session is not joined to this room id yet."}
-        </p>
+    <div className="grid gap-6 xl:grid-cols-[0.88fr_1.12fr]">
+      <div className="grid gap-6 xl:sticky xl:top-8 xl:self-start">
+        <SectionCard className="bg-[linear-gradient(180deg,_rgba(37,25,19,0.98),_rgba(73,47,32,0.94))] text-stone-50">
+          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-stone-400">
+            Arena
+          </p>
+          <h2 className="mt-3 break-all text-3xl font-semibold tracking-tight sm:text-4xl">
+            {matchId}
+          </h2>
+          <p className="mt-3 text-sm leading-7 text-stone-300 sm:text-base">
+            {activeMatch?.matchId === matchId
+              ? "You are connected to the live room for this duel."
+              : "This route is open, but your current session is not joined to this room id yet."}
+          </p>
 
-        <div className="mt-6 grid gap-3 text-sm text-stone-300">
-          <div className="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-4">
-            Player: {username ?? "Unknown"}
-          </div>
-          <div className="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-4">
-            Symbol: {assignedSymbol ?? "Pending"}
-          </div>
-          <div className="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-4">
-            Ruleset: {activeMatch?.mode ?? "Unknown"}
-          </div>
-          <div className="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-4">
-            Result: {matchResult}
-          </div>
-          {isTimedMatch ? (
-            <div className="rounded-[1.4rem] border border-amber-400/20 bg-amber-300/10 px-4 py-4 text-amber-100">
-              Turn timer:{" "}
-              <TurnTimer
-                key={`hero-${latestMatchState?.turnExpiresAt ?? "none"}-${
-                  hasDisconnectedPlayers ? "paused" : "live"
-                }`}
-                serverTime={latestMatchState.serverTime}
-                turnExpiresAt={latestMatchState.turnExpiresAt}
-                isPaused={hasDisconnectedPlayers}
-                secondsRemaining={latestMatchState?.turnSecondsRemaining ?? null}
-              />
+          <div className="mt-6 grid gap-3 text-sm text-stone-300">
+            <div className="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-4">
+              Player: {username ?? "Unknown"}
             </div>
-          ) : null}
-        </div>
-      </SectionCard>
+            <div className="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-4">
+              Symbol: {assignedSymbol ?? "Pending"}
+            </div>
+            <div className="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-4">
+              Ruleset: {activeMatch?.mode ?? "Unknown"}
+            </div>
+            <div className="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-4">
+              Result: {matchResult}
+            </div>
+            {isTimedMatch ? (
+              <div className="rounded-[1.4rem] border border-amber-400/20 bg-amber-300/10 px-4 py-4 text-amber-100">
+                Turn timer:{" "}
+                <TurnTimer
+                  key={`hero-${latestMatchState?.turnExpiresAt ?? "none"}-${
+                    hasDisconnectedPlayers ? "paused" : "live"
+                  }`}
+                  serverTime={latestMatchState.serverTime}
+                  turnExpiresAt={latestMatchState.turnExpiresAt}
+                  isPaused={hasDisconnectedPlayers}
+                  secondsRemaining={latestMatchState?.turnSecondsRemaining ?? null}
+                />
+              </div>
+            ) : null}
+          </div>
+        </SectionCard>
+
+        {latestMatchState ? (
+          <SectionCard>
+            <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--accent-deep)]">
+              Match Desk
+            </p>
+            <div className="mt-4 grid gap-3 text-sm leading-6">
+              <div className="rounded-[1.4rem] border border-[color:var(--stroke)] bg-white/68 px-4 py-4 text-stone-700">
+                Status: {latestMatchState.status}
+              </div>
+              <div className="rounded-[1.4rem] border border-[color:var(--stroke)] bg-white/68 px-4 py-4 text-stone-700">
+                Current turn: {latestMatchState.currentTurn ?? "None"}
+              </div>
+              <div className="rounded-[1.4rem] border border-[color:var(--stroke)] bg-white/68 px-4 py-4 text-stone-700">
+                Winner: {getWinnerText(latestMatchState.winner, latestMatchState.status)}
+              </div>
+              <div className="rounded-[1.4rem] border border-[color:var(--stroke)] bg-white/68 px-4 py-4 text-stone-700">
+                Move count: {latestMatchState.moveHistory.length}
+              </div>
+              {isTimedMatch ? (
+                <div className="rounded-[1.4rem] border border-amber-200 bg-amber-50 px-4 py-4 text-amber-900">
+                  {hasDisconnectedPlayers ? "Turn timer paused with " : "Turn timer: "}
+                  <TurnTimer
+                    key={`body-${latestMatchState.turnExpiresAt ?? "none"}-${
+                      hasDisconnectedPlayers ? "paused" : "live"
+                    }`}
+                    serverTime={latestMatchState.serverTime}
+                    turnExpiresAt={latestMatchState.turnExpiresAt}
+                    isPaused={hasDisconnectedPlayers}
+                    secondsRemaining={latestMatchState.turnSecondsRemaining}
+                  />
+                  {hasDisconnectedPlayers ? " remaining until play resumes." : null}
+                </div>
+              ) : null}
+              {hasDisconnectedPlayers ? (
+                <div className="rounded-[1.4rem] border border-amber-200 bg-amber-50 px-4 py-4 text-amber-900">
+                  Reconnect timeout: {latestMatchState.disconnectTimeoutSeconds}s
+                </div>
+              ) : null}
+              <div className="rounded-[1.4rem] border border-[color:var(--stroke)] bg-white/68 px-4 py-4 text-stone-700">
+                {canPlay
+                  ? "Your turn. Pick an empty square."
+                  : activeMatch?.matchId !== matchId && socketStatus === "connected"
+                    ? isRouteJoinPending
+                      ? "Joining this match route over the live socket."
+                      : "This route is ready to rejoin the live room."
+                  : socketStatus !== "connected"
+                    ? "Socket disconnected. Waiting to reconnect before sending or receiving match state."
+                  : hasDisconnectedPlayers
+                    ? "Waiting for the disconnected player to rejoin before authoritative play can continue."
+                  : latestMatchState.status === "waiting"
+                    ? "Waiting for another player to join."
+                    : latestMatchState.status === "finished"
+                      ? "Match finished."
+                      : "Waiting for the other player."}
+              </div>
+              {matchError || moveError ? (
+                <div className="rounded-[1.4rem] border border-rose-200 bg-rose-50 px-4 py-4 text-rose-700">
+                  {moveError ?? matchError}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={async () => {
+                  await leaveMatch();
+                  router.push("/play");
+                }}
+                className="rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-medium text-white shadow-[0_14px_30px_rgba(189,86,38,0.24)] transition hover:-translate-y-0.5 hover:bg-[color:var(--accent-deep)]"
+              >
+                Leave Room
+              </button>
+              <Link
+                href="/play"
+                className="rounded-full border border-[color:var(--stroke-strong)] bg-white/75 px-5 py-3 text-sm font-medium text-stone-700 transition hover:-translate-y-0.5 hover:bg-white"
+              >
+                Back to Lobby
+              </Link>
+            </div>
+          </SectionCard>
+        ) : null}
+      </div>
 
       <SectionCard>
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--accent-deep)]">
@@ -485,69 +587,6 @@ export default function MatchRoomPage() {
               />
             </div>
 
-            <div className="mt-4 grid gap-3 text-sm leading-6 text-slate-700">
-              <div className="rounded-[1.4rem] border border-[color:var(--stroke)] bg-white/68 px-4 py-4 text-stone-700">
-                Status: {latestMatchState.status}
-              </div>
-              <div className="rounded-[1.4rem] border border-[color:var(--stroke)] bg-white/68 px-4 py-4 text-stone-700">
-                Current turn: {latestMatchState.currentTurn ?? "None"}
-              </div>
-              <div className="rounded-[1.4rem] border border-[color:var(--stroke)] bg-white/68 px-4 py-4 text-stone-700">
-                Winner:{" "}
-                {getWinnerText(
-                  latestMatchState.winner,
-                  latestMatchState.status
-                )}
-              </div>
-              <div className="rounded-[1.4rem] border border-[color:var(--stroke)] bg-white/68 px-4 py-4 text-stone-700">
-                Move count: {latestMatchState.moveHistory.length}
-              </div>
-              {isTimedMatch ? (
-                <div className="rounded-[1.4rem] border border-amber-200 bg-amber-50 px-4 py-4">
-                  {hasDisconnectedPlayers
-                    ? "Turn timer paused with "
-                    : "Turn timer: "}
-                  <TurnTimer
-                    key={`body-${latestMatchState.turnExpiresAt ?? "none"}-${
-                      hasDisconnectedPlayers ? "paused" : "live"
-                    }`}
-                    serverTime={latestMatchState.serverTime}
-                    turnExpiresAt={latestMatchState.turnExpiresAt}
-                    isPaused={hasDisconnectedPlayers}
-                    secondsRemaining={latestMatchState.turnSecondsRemaining}
-                  />
-                  {hasDisconnectedPlayers ? " remaining until play resumes." : null}
-                </div>
-              ) : null}
-              {hasDisconnectedPlayers ? (
-                <div className="rounded-[1.4rem] border border-amber-200 bg-amber-50 px-4 py-4">
-                  Reconnect timeout: {latestMatchState.disconnectTimeoutSeconds}s
-                </div>
-              ) : null}
-              <div className="rounded-[1.4rem] border border-[color:var(--stroke)] bg-white/68 px-4 py-4 text-stone-700">
-                {canPlay
-                  ? "Your turn. Pick an empty square."
-                  : activeMatch?.matchId !== matchId && socketStatus === "connected"
-                    ? isRouteJoinPending
-                      ? "Joining this match route over the live socket."
-                      : "This route is ready to rejoin the live room."
-                  : socketStatus !== "connected"
-                    ? "Socket disconnected. Waiting to reconnect before sending or receiving match state."
-                  : hasDisconnectedPlayers
-                    ? "Waiting for the disconnected player to rejoin before authoritative play can continue."
-                  : latestMatchState.status === "waiting"
-                    ? "Waiting for another player to join."
-                    : latestMatchState.status === "finished"
-                      ? "Match finished."
-                      : "Waiting for the other player."}
-              </div>
-              {matchError || moveError ? (
-                <div className="rounded-[1.4rem] border border-rose-200 bg-rose-50 px-4 py-4 text-rose-700">
-                  {moveError ?? matchError}
-                </div>
-              ) : null}
-            </div>
-
             <div className="mt-6">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--accent-deep)]">
                 Turn Log
@@ -576,25 +615,6 @@ export default function MatchRoomPage() {
             Waiting for authoritative state broadcast from the backend.
           </div>
         )}
-
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={async () => {
-              await leaveMatch();
-              router.push("/play");
-            }}
-            className="rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-medium text-white shadow-[0_14px_30px_rgba(189,86,38,0.24)] transition hover:-translate-y-0.5 hover:bg-[color:var(--accent-deep)]"
-          >
-            Leave Room
-          </button>
-          <Link
-            href="/play"
-            className="rounded-full border border-[color:var(--stroke-strong)] bg-white/75 px-5 py-3 text-sm font-medium text-stone-700 transition hover:-translate-y-0.5 hover:bg-white"
-          >
-            Back to Lobby
-          </Link>
-        </div>
       </SectionCard>
     </div>
   );

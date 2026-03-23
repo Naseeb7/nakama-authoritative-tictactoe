@@ -13,7 +13,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen text-[color:var(--foreground)]">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-5 py-6 sm:px-8 lg:px-10">
         <header className="relative overflow-hidden rounded-[2.25rem] border border-white/35 bg-[linear-gradient(135deg,_rgba(255,252,247,0.82),_rgba(248,236,221,0.72))] px-5 py-5 shadow-[0_24px_90px_rgba(67,43,19,0.1)] backdrop-blur-xl sm:px-7 sm:py-6">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.75),_transparent_70%)]" />
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-2">
               <Link
