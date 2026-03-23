@@ -373,9 +373,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await socket.sendMatchState(
       activeMatch.matchId,
       MOVE_OPCODE,
-      JSON.stringify({ position }),
-      undefined,
-      true
+      JSON.stringify({ position })
     );
   }, []);
 
