@@ -189,10 +189,66 @@ function testReconnectTimeoutPersistsHistoryOnce() {
   assert(historyWrites.length === 1, "match history should be written once");
 }
 
+function testMovePayloadSupportsSocketBase64Encoding() {
+  const { initializer, nk, logger } = bootstrapRuntime();
+  const handler = initializer.matches.tic_tac_toe_match;
+  const dispatcher = createDispatcher();
+  let state = handler.matchInit({}, logger, nk, { mode: "classic", matchId: "match-3" }).state;
+
+  state = handler.matchJoin({}, logger, nk, dispatcher, 1, state, [createPresence("p1"), createPresence("p2")]).state;
+  state = handler.matchLoop(
+    {},
+    logger,
+    nk,
+    dispatcher,
+    2,
+    state,
+    [
+      {
+        opCode: 1,
+        data: Buffer.from(JSON.stringify({ position: 0 }), "utf8").toString("base64"),
+        sender: createPresence("p1")
+      }
+    ]
+  ).state;
+
+  assert(state.board[0] === "X", "base64 move payload should be decoded before validation");
+  assert(state.moveHistory.length === 1, "decoded move should update history");
+}
+
+function testMovePayloadSupportsByteArrayEncoding() {
+  const { initializer, nk, logger } = bootstrapRuntime();
+  const handler = initializer.matches.tic_tac_toe_match;
+  const dispatcher = createDispatcher();
+  let state = handler.matchInit({}, logger, nk, { mode: "classic", matchId: "match-4" }).state;
+
+  state = handler.matchJoin({}, logger, nk, dispatcher, 1, state, [createPresence("p1"), createPresence("p2")]).state;
+  state = handler.matchLoop(
+    {},
+    logger,
+    nk,
+    dispatcher,
+    2,
+    state,
+    [
+      {
+        opCode: 1,
+        data: Array.from(Buffer.from(JSON.stringify({ position: 4 }), "utf8")),
+        sender: createPresence("p1")
+      }
+    ]
+  ).state;
+
+  assert(state.board[4] === "X", "byte-array move payload should be normalized before validation");
+  assert(state.moveHistory.length === 1, "normalized move should update history");
+}
+
 function run() {
   testFindMatchUsesModeAwareWaitingLabels();
   testReconnectRestoresTimedTurnWindow();
   testReconnectTimeoutPersistsHistoryOnce();
+  testMovePayloadSupportsSocketBase64Encoding();
+  testMovePayloadSupportsByteArrayEncoding();
   process.stdout.write("runtime smoke tests passed\n");
 }
 
