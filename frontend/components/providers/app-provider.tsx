@@ -58,6 +58,7 @@ type AppContextValue = {
   leaveMatch: () => Promise<void>;
   matchError: string | null;
   requestMatch: (action: MatchAction, mode: MatchMode) => Promise<string>;
+  sendMove: (position: number) => Promise<void>;
   session: Session | null;
   socket: Socket | null;
   socketStatus: SocketStatus;
@@ -68,6 +69,7 @@ type AppContextValue = {
 
 const AppContext = createContext<AppContextValue | null>(null);
 const SESSION_REFRESH_WINDOW_MS = 5 * 60 * 1000;
+const MOVE_OPCODE = 1;
 const STATE_UPDATE_OPCODE = 2;
 const textDecoder = new TextDecoder();
 
@@ -214,6 +216,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     leaveMatch: async () => undefined,
     matchError: null,
     requestMatch: async () => "",
+    sendMove: async () => undefined,
     session: null,
     socket: null,
     socketStatus: "disconnected",
@@ -349,6 +352,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  const sendMove = useCallback(async (position: number) => {
+    const socket = socketRef.current;
+    const activeMatch = activeMatchRef.current;
+
+    if (!socket || !activeMatch) {
+      throw new Error("No active match is joined.");
+    }
+
+    await socket.sendMatchState(
+      activeMatch.matchId,
+      MOVE_OPCODE,
+      JSON.stringify({ position }),
+      undefined,
+      true
+    );
+  }, []);
+
   useEffect(() => {
     let disposed = false;
 
@@ -364,6 +384,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         joinExistingMatch,
         leaveMatch,
         requestMatch,
+        sendMove,
         socketStatus: "connecting",
         status: "booting",
       }));
@@ -491,6 +512,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             leaveMatch,
             matchError: null,
             requestMatch,
+            sendMove,
             session,
             socket,
             socketStatus: "connected",
@@ -555,6 +577,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             leaveMatch,
             matchError: null,
             requestMatch,
+            sendMove,
             session: null,
             socket: null,
             socketStatus: "disconnected",
@@ -578,7 +601,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         socketRef.current = null;
       }
     };
-  }, [clearMatchError, joinExistingMatch, leaveMatch, requestMatch]);
+  }, [clearMatchError, joinExistingMatch, leaveMatch, requestMatch, sendMove]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
