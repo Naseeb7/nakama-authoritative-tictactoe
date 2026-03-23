@@ -126,7 +126,7 @@ var matchJoin = function (
   tick: number,
   state: MatchState,
   presences: Presence[]
-): MatchState {
+): MatchJoinResult<MatchState> {
   var updatedPlayers: string[] = state.players.slice();
   var updatedSymbols: Record<string, "X" | "O"> = {};
   var updatedDisconnectedPlayers: Record<string, number> = {};
@@ -231,7 +231,9 @@ var matchJoin = function (
 
   broadcastMatchState(dispatcher, updatedState);
 
-  return updatedState;
+  return {
+    state: updatedState
+  };
 };
 
 var matchLeave = function (
@@ -242,7 +244,7 @@ var matchLeave = function (
   tick: number,
   state: MatchState,
   presences: Presence[]
-): MatchState {
+): MatchLeaveResult<MatchState> {
   var updatedDisconnectedPlayers: Record<string, number> = {};
   var turnDeadlineTick = state.turnDeadlineTick;
   var pausedTurnRemainingSeconds = state.pausedTurnRemainingSeconds;
@@ -308,7 +310,9 @@ var matchLeave = function (
 
   broadcastMatchState(_dispatcher, updatedState);
 
-  return updatedState;
+  return {
+    state: updatedState
+  };
 };
 
 var matchLoop = function (
@@ -539,12 +543,14 @@ var matchTerminate = function (
   _tick: number,
   state: MatchState,
   graceSeconds: number
-): MatchState {
+): MatchStateResult<MatchState> {
   logger.info("matchTerminate executed.", {
     graceSeconds: graceSeconds
   });
 
-  return state;
+  return {
+    state: state
+  };
 };
 
 var matchSignal = function (
