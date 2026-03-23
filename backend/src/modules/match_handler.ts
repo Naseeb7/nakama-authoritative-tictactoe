@@ -229,7 +229,7 @@ var matchJoin = function (
 
   updateMatchLabelIfNeeded(dispatcher, previousLabel, updatedState.label);
 
-  broadcastMatchState(dispatcher, updatedState);
+  broadcastMatchState(dispatcher, updatedState, tick);
 
   return {
     state: updatedState
@@ -308,7 +308,7 @@ var matchLeave = function (
     historyPersisted: state.historyPersisted
   };
 
-  broadcastMatchState(_dispatcher, updatedState);
+  broadcastMatchState(_dispatcher, updatedState, tick);
 
   return {
     state: updatedState
@@ -388,7 +388,7 @@ var matchLoop = function (
 
     updateMatchLabelIfNeeded(dispatcher, previousLabel, state.label);
     persistCompletedMatchIfNeeded(_nk, logger, state);
-    broadcastMatchState(dispatcher, state);
+    broadcastMatchState(dispatcher, state, tick);
 
     return {
       state: state
@@ -528,7 +528,7 @@ var matchLoop = function (
       state.turnDeadlineTick = state.mode === "timed" ? tick + TURN_TIMEOUT_SECONDS : null;
     }
 
-    broadcastMatchState(dispatcher, state);
+    broadcastMatchState(dispatcher, state, tick);
   }
 
   return {
@@ -797,7 +797,11 @@ function hasWinningLine(
   return false;
 }
 
-function broadcastMatchState(dispatcher: MatchDispatcher, state: MatchState): void {
+function broadcastMatchState(
+  dispatcher: MatchDispatcher,
+  state: MatchState,
+  tick?: number
+): void {
   dispatcher.broadcastMessage(
     STATE_UPDATE_OPCODE,
     JSON.stringify({
@@ -814,9 +818,44 @@ function broadcastMatchState(dispatcher: MatchDispatcher, state: MatchState): vo
       mode: state.mode,
       disconnectedPlayers: state.disconnectedPlayers,
       disconnectTimeoutSeconds: state.disconnectTimeoutSeconds,
-      turnDeadlineTick: state.turnDeadlineTick
+      turnDeadlineTick: state.turnDeadlineTick,
+      turnSecondsRemaining: getTurnSecondsRemainingForBroadcast(state, tick),
+      turnExpiresAt: getTurnExpiresAtForBroadcast(state, tick),
+      serverTime: getCurrentUnixTimestamp()
     })
   );
+}
+
+function getTurnSecondsRemainingForBroadcast(
+  state: MatchState,
+  tick?: number
+): number | null {
+  if (state.mode !== "timed" || state.status !== "active") {
+    return null;
+  }
+
+  if (state.turnDeadlineTick !== null && tick !== undefined) {
+    return getRemainingTurnSeconds(state.turnDeadlineTick, tick);
+  }
+
+  if (state.pausedTurnRemainingSeconds !== null) {
+    return state.pausedTurnRemainingSeconds;
+  }
+
+  return null;
+}
+
+function getTurnExpiresAtForBroadcast(
+  state: MatchState,
+  tick?: number
+): number | null {
+  var remainingSeconds = getTurnSecondsRemainingForBroadcast(state, tick);
+
+  if (remainingSeconds === null) {
+    return null;
+  }
+
+  return getCurrentUnixTimestamp() + remainingSeconds;
 }
 
 function updatePlayerStats(nk: Nakama, userId: string, didWin: boolean): void {
