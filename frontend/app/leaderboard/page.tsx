@@ -301,7 +301,6 @@ export default function LeaderboardPage() {
 
           <div className="mt-6 rounded-[1.35rem] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-6 text-slate-300">
             <p>Player: {username ?? "Unknown"}</p>
-            <p>Profile: {userId ?? "Unavailable"}</p>
             <p className="mt-2 text-xs uppercase tracking-[0.18em] text-slate-500">
               Leaderboard ID: {GLOBAL_WINS_LEADERBOARD_ID}
             </p>

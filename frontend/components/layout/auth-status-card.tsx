@@ -19,7 +19,6 @@ function getStatusTone(status: "booting" | "ready" | "error") {
 
 export function AuthStatusCard() {
   const {
-    account,
     error,
     logout,
     renameNickname,
@@ -75,7 +74,7 @@ export function AuthStatusCard() {
           {username ? username : "Connecting..."}
         </p>
         <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-          {account?.user?.id ?? "Waiting for account"}
+          {status === "ready" ? "Identity online" : "Waiting for account"}
         </p>
       </div>
 

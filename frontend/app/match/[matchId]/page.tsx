@@ -31,13 +31,20 @@ function getResultText(
 
 function getWinnerText(
   winner: string | null,
-  status: "waiting" | "active" | "finished"
+  status: "waiting" | "active" | "finished",
+  userId: string | null,
+  playerNames: Record<string, string>,
+  symbols: Record<string, "X" | "O">
 ) {
   if (status !== "finished") {
     return "Pending";
   }
 
-  return winner ?? "Draw";
+  if (!winner) {
+    return "Draw";
+  }
+
+  return getPlayerLabel(winner, userId, playerNames, symbols);
 }
 
 function getPlayerLabel(
@@ -109,13 +116,16 @@ function TurnTimer({
   secondsRemaining: number | null;
 }) {
   const [now, setNow] = useState<number | null>(null);
-  const clockOffset =
-    Number.isFinite(serverTime) && now !== null ? serverTime * 1000 - now : 0;
+  const [clockOffsetMs, setClockOffsetMs] = useState(0);
 
   useEffect(() => {
     if (secondsRemaining === null || isPaused) {
       return;
     }
+
+    setClockOffsetMs(
+      Number.isFinite(serverTime) ? serverTime * 1000 - Date.now() : 0
+    );
 
     const syncId = window.setTimeout(() => {
       setNow(Date.now());
@@ -129,7 +139,7 @@ function TurnTimer({
       window.clearTimeout(syncId);
       window.clearInterval(intervalId);
     };
-  }, [isPaused, secondsRemaining]);
+  }, [isPaused, secondsRemaining, serverTime, turnExpiresAt]);
 
   if (secondsRemaining === null) {
     return <>Unavailable</>;
@@ -149,7 +159,7 @@ function TurnTimer({
   }
 
   const remainingSeconds = Math.ceil(
-    (turnExpiresAt * 1000 - (now + clockOffset)) / 1000
+    (turnExpiresAt * 1000 - (now + clockOffsetMs)) / 1000
   );
 
   return (
@@ -395,70 +405,6 @@ export default function MatchRoomPage() {
   return (
     <div className="grid gap-6 xl:grid-cols-[0.88fr_1.12fr]">
       <div className="grid gap-6 xl:sticky xl:top-8 xl:self-start">
-        <SectionCard className="bg-[linear-gradient(180deg,_rgba(8,12,28,0.96),_rgba(13,19,43,0.92))] text-slate-50">
-          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-fuchsia-300">
-            Arena
-          </p>
-          <h2 className="mt-3 break-all text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-            {matchId}
-          </h2>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-            <div className="rounded-[1.35rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-4">
-              <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-300">
-                Pilot
-              </p>
-              <p className="mt-2 text-base font-semibold text-white">
-                {username ?? "Unknown"}
-              </p>
-            </div>
-            <div className="rounded-[1.35rem] border border-fuchsia-400/18 bg-slate-950/70 px-4 py-4">
-              <p className="text-[11px] uppercase tracking-[0.24em] text-fuchsia-300">
-                Symbol
-              </p>
-              <p className="mt-2 text-base font-semibold text-white">
-                {assignedSymbol ?? "Pending"}
-              </p>
-            </div>
-            <div className="rounded-[1.35rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-4">
-              <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-300">
-                Ruleset
-              </p>
-              <p className="mt-2 text-base font-semibold text-white">
-                {activeMatch?.mode ?? "Unknown"}
-              </p>
-            </div>
-            <div className="rounded-[1.35rem] border border-fuchsia-400/18 bg-slate-950/70 px-4 py-4">
-              <p className="text-[11px] uppercase tracking-[0.24em] text-fuchsia-300">
-                Result
-              </p>
-              <p className="mt-2 text-base font-semibold text-white">
-                {matchResult}
-              </p>
-              <p className="mt-1 text-xs leading-5 text-slate-400">
-                {matchOutcome}
-              </p>
-            </div>
-            {isTimedMatch ? (
-              <div className="rounded-[1.35rem] border border-cyan-400/28 bg-cyan-400/10 px-4 py-4 text-cyan-100 shadow-[0_0_20px_rgba(0,183,255,0.1)] sm:col-span-2 xl:col-span-1">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-200">
-                  Turn Clock
-                </p>
-                <p className="mt-2 text-2xl font-semibold tracking-[0.12em]">
-                <TurnTimer
-                  key={`hero-${latestMatchState?.turnExpiresAt ?? "none"}-${
-                    hasDisconnectedPlayers ? "paused" : "live"
-                  }`}
-                  serverTime={latestMatchState.serverTime}
-                  turnExpiresAt={latestMatchState.turnExpiresAt}
-                  isPaused={hasDisconnectedPlayers}
-                  secondsRemaining={latestMatchState?.turnSecondsRemaining ?? null}
-                />
-                </p>
-              </div>
-            ) : null}
-          </div>
-        </SectionCard>
-
         {latestMatchState ? (
           <SectionCard>
             <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-300">
@@ -472,7 +418,14 @@ export default function MatchRoomPage() {
                 Turn {latestMatchState.currentTurn ? getPlayerLabel(latestMatchState.currentTurn, userId, latestMatchState.playerNames, latestMatchState.symbols) : "none"}
               </span>
               <span className="rounded-full border border-slate-700 bg-slate-950/70 px-3 py-2 text-slate-300">
-                Winner {getWinnerText(latestMatchState.winner, latestMatchState.status)}
+                Winner{" "}
+                {getWinnerText(
+                  latestMatchState.winner,
+                  latestMatchState.status,
+                  userId,
+                  latestMatchState.playerNames,
+                  latestMatchState.symbols
+                )}
               </span>
               <span className="rounded-full border border-slate-700 bg-slate-950/70 px-3 py-2 text-slate-300">
                 Moves {latestMatchState.moveHistory.length}
@@ -552,6 +505,82 @@ export default function MatchRoomPage() {
             </div>
           </SectionCard>
         ) : null}
+
+        <SectionCard className="bg-[linear-gradient(180deg,_rgba(8,12,28,0.96),_rgba(13,19,43,0.92))] text-slate-50">
+          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-fuchsia-300">
+            Arena
+          </p>
+          <h2 className="mt-3 break-all text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+            {matchId}
+          </h2>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+            <div className="rounded-[1.35rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-4">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-300">
+                Pilot
+              </p>
+              <p className="mt-2 text-base font-semibold text-white">
+                {username ?? "Unknown"}
+              </p>
+            </div>
+            <div className="rounded-[1.35rem] border border-fuchsia-400/18 bg-slate-950/70 px-4 py-4">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-fuchsia-300">
+                Symbol
+              </p>
+              <p className="mt-2 text-base font-semibold text-white">
+                {assignedSymbol ?? "Pending"}
+              </p>
+            </div>
+            <div className="rounded-[1.35rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-4">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-300">
+                Ruleset
+              </p>
+              <p className="mt-2 text-base font-semibold text-white">
+                {currentMode}
+              </p>
+            </div>
+            <div className="rounded-[1.35rem] border border-fuchsia-400/18 bg-slate-950/70 px-4 py-4">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-fuchsia-300">
+                Result
+              </p>
+              <p className="mt-2 text-base font-semibold text-white">
+                {matchResult}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-slate-400">
+                {matchOutcome}
+              </p>
+            </div>
+            {isTimedMatch ? (
+              <div className="rounded-[1.35rem] border border-cyan-400/30 bg-[linear-gradient(180deg,_rgba(0,183,255,0.14),_rgba(0,183,255,0.08))] px-4 py-4 text-cyan-50 shadow-[0_0_24px_rgba(0,183,255,0.16)] sm:col-span-2 xl:col-span-1">
+                <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-200">
+                  Turn Clock
+                </p>
+                <p className="mt-2 text-3xl font-semibold tracking-[0.16em]">
+                  <TurnTimer
+                    key={`hero-${latestMatchState?.turnExpiresAt ?? "none"}-${
+                      hasDisconnectedPlayers ? "paused" : "live"
+                    }`}
+                    serverTime={latestMatchState.serverTime}
+                    turnExpiresAt={latestMatchState.turnExpiresAt}
+                    isPaused={hasDisconnectedPlayers}
+                    secondsRemaining={latestMatchState?.turnSecondsRemaining ?? null}
+                  />
+                </p>
+                <p className="mt-2 text-xs uppercase tracking-[0.18em] text-cyan-100/80">
+                  {hasDisconnectedPlayers
+                    ? "Paused while waiting for reconnect"
+                    : latestMatchState?.currentTurn
+                      ? `${getPlayerLabel(
+                          latestMatchState.currentTurn,
+                          userId,
+                          latestMatchState.playerNames,
+                          latestMatchState.symbols
+                        )} is on the clock`
+                      : "Clock ready"}
+                </p>
+              </div>
+            ) : null}
+          </div>
+        </SectionCard>
       </div>
 
       <SectionCard className="relative overflow-hidden">
@@ -562,6 +591,44 @@ export default function MatchRoomPage() {
 
         {latestMatchState ? (
           <>
+            {isTimedMatch ? (
+              <div className="mt-4 rounded-[1.6rem] border border-cyan-400/35 bg-[linear-gradient(135deg,_rgba(0,183,255,0.16),_rgba(11,18,42,0.94))] px-5 py-5 text-cyan-50 shadow-[0_0_28px_rgba(0,183,255,0.16)]">
+                <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-200">
+                  Active Turn Clock
+                </p>
+                <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
+                  <div>
+                    <p className="text-4xl font-semibold tracking-[0.18em] text-white sm:text-5xl">
+                      <TurnTimer
+                        key={`banner-${latestMatchState.turnExpiresAt ?? "none"}-${
+                          hasDisconnectedPlayers ? "paused" : "live"
+                        }`}
+                        serverTime={latestMatchState.serverTime}
+                        turnExpiresAt={latestMatchState.turnExpiresAt}
+                        isPaused={hasDisconnectedPlayers}
+                        secondsRemaining={latestMatchState.turnSecondsRemaining}
+                      />
+                    </p>
+                    <p className="mt-2 text-sm text-cyan-100/80">
+                      {hasDisconnectedPlayers
+                        ? "Clock paused while the reconnect window is active."
+                        : latestMatchState.currentTurn
+                          ? `${getPlayerLabel(
+                              latestMatchState.currentTurn,
+                              userId,
+                              latestMatchState.playerNames,
+                              latestMatchState.symbols
+                            )} must play before time runs out.`
+                          : "Waiting for the next turn."}
+                    </p>
+                  </div>
+                  <div className="rounded-full border border-cyan-200/20 bg-slate-950/35 px-4 py-2 text-xs uppercase tracking-[0.2em] text-cyan-100">
+                    {hasDisconnectedPlayers ? "Paused" : "Live"}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
             <div
               className={`mt-4 rounded-[1.6rem] border px-5 py-5 ${
                 latestMatchState.status === "finished"
@@ -631,7 +698,14 @@ export default function MatchRoomPage() {
                     Result: {matchResult}
                   </div>
                   <div className="rounded-[1.2rem] border border-fuchsia-400/18 bg-slate-950/70 px-4 py-4 text-sm text-slate-200">
-                    Winner: {getWinnerText(latestMatchState.winner, latestMatchState.status)}
+                    Winner:{" "}
+                    {getWinnerText(
+                      latestMatchState.winner,
+                      latestMatchState.status,
+                      userId,
+                      latestMatchState.playerNames,
+                      latestMatchState.symbols
+                    )}
                   </div>
                   <div className="rounded-[1.2rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-4 text-sm text-slate-200">
                     Duration: {finishedDuration}

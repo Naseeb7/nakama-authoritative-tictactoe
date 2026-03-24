@@ -175,7 +175,6 @@ export default function HistoryPage() {
 
         <div className="mt-6 rounded-[1.35rem] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-6 text-slate-300">
           <p>Player: {username ?? "Unknown"}</p>
-          <p>Account: {userId ?? "Unavailable"}</p>
           <p className="mt-2 text-xs uppercase tracking-[0.18em] text-slate-500">
             {status === "ready" ? "History is live." : "Waiting for app bootstrap."}
           </p>

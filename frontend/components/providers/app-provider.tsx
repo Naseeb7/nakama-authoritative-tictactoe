@@ -328,13 +328,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
 
     await client.updateAccount(session, { username: trimmedUsername });
-    session.username = trimmedUsername;
-    writeStoredSession(session);
-    const account = await client.getAccount(session);
+    let nextSession = session;
+
+    try {
+      nextSession = await client.sessionRefresh(session);
+      sessionRef.current = nextSession;
+      writeStoredSession(nextSession);
+    } catch {
+      session.username = trimmedUsername;
+      writeStoredSession(session);
+    }
+
+    const account = await client.getAccount(nextSession);
 
     setValue((current) => ({
       ...current,
       account,
+      session: nextSession,
       username: account.user?.username ?? trimmedUsername,
     }));
   }, []);
@@ -640,7 +650,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             socketStatus: "connected",
             status: "ready",
             userId: session.user_id ?? account.user?.id ?? null,
-            username: session.username ?? account.user?.username ?? null,
+            username: account.user?.username ?? session.username ?? null,
             switchUser,
           });
         });
