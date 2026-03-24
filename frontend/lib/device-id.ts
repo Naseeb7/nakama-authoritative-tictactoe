@@ -20,3 +20,7 @@ export function getOrCreateDeviceId(): string {
 
   return next;
 }
+
+export function clearStoredDeviceId(): void {
+  window.localStorage.removeItem(DEVICE_ID_KEY);
+}

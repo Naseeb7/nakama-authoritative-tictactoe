@@ -8,12 +8,15 @@ export type MatchStatePayload = {
   disconnectedPlayers: Record<string, number>;
   disconnectTimeoutSeconds: number;
   endTime: number | null;
+  endReason: string | null;
+  endReasonText: string | null;
   label: string;
   mode: MatchMode;
   moveHistory: Array<{
     playerId: string;
     position: number;
   }>;
+  playerNames: Record<string, string>;
   players: string[];
   startTime: number;
   status: MatchLifecycleStatus;

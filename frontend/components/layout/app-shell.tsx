@@ -5,6 +5,7 @@ import { AuthStatusCard } from "@/components/layout/auth-status-card";
 const navItems = [
   { href: "/", label: "Home" },
   { href: "/play", label: "Play Now" },
+  { href: "/history", label: "Match History" },
   { href: "/leaderboard", label: "Hall of Fame" },
 ];
 

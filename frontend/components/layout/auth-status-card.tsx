@@ -1,5 +1,7 @@
 "use client";
 
+import { type FormEvent, useEffect, useState } from "react";
+
 import { useApp } from "@/components/providers/app-provider";
 import { getNakamaHttpUrl } from "@/lib/env";
 
@@ -16,7 +18,41 @@ function getStatusTone(status: "booting" | "ready" | "error") {
 }
 
 export function AuthStatusCard() {
-  const { error, socketStatus, status, username } = useApp();
+  const {
+    account,
+    error,
+    logout,
+    renameNickname,
+    retryConnection,
+    socketStatus,
+    status,
+    switchUser,
+    username,
+  } = useApp();
+  const [draftUsername, setDraftUsername] = useState(username ?? "");
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    setDraftUsername(username ?? "");
+  }, [username]);
+
+  async function handleNicknameSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setActionError(null);
+    setActionMessage(null);
+    setIsSaving(true);
+
+    try {
+      await renameNickname(draftUsername);
+      setActionMessage("Nickname updated.");
+    } catch (nextError) {
+      setActionError(nextError instanceof Error ? nextError.message : "Failed to update nickname.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   return (
     <section className="w-full rounded-[1.75rem] border border-cyan-400/20 bg-[linear-gradient(180deg,_rgba(5,10,24,0.96),_rgba(9,16,37,0.92))] px-4 py-4 text-slate-50 shadow-[0_0_0_1px_rgba(77,226,255,0.08),0_0_30px_rgba(0,183,255,0.14)] sm:max-w-sm">
@@ -38,11 +74,66 @@ export function AuthStatusCard() {
         <p className="text-lg font-semibold tracking-tight text-white">
           {username ? username : "Connecting..."}
         </p>
+        <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+          {account?.user?.id ?? "Waiting for account"}
+        </p>
+      </div>
+
+      <form onSubmit={handleNicknameSubmit} className="mt-4 space-y-3">
+        <label className="block text-xs uppercase tracking-[0.2em] text-cyan-200">
+          Change nickname
+        </label>
+        <div className="flex gap-2">
+          <input
+            value={draftUsername}
+            onChange={(event) => setDraftUsername(event.target.value)}
+            placeholder="Enter a new nickname"
+            className="min-w-0 flex-1 rounded-full border border-white/10 bg-slate-950/70 px-4 py-2 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400/40"
+          />
+          <button
+            type="submit"
+            disabled={isSaving || draftUsername.trim().length === 0}
+            className="rounded-full border border-cyan-400/35 bg-cyan-400/12 px-4 py-2 text-sm font-medium text-cyan-100 transition hover:bg-cyan-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-800 disabled:text-slate-500"
+          >
+            {isSaving ? "Saving" : "Save"}
+          </button>
+        </div>
+      </form>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {status !== "ready" || socketStatus !== "connected" ? (
+          <button
+            type="button"
+            onClick={() => void retryConnection()}
+            className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-3 py-2 text-xs font-medium text-fuchsia-100 transition hover:bg-fuchsia-500/16"
+          >
+            Retry connection
+          </button>
+        ) : null}
+        <button
+          type="button"
+          onClick={() => void logout()}
+          className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-slate-200 transition hover:border-cyan-400/30 hover:bg-white/8"
+        >
+          Log out
+        </button>
+        <button
+          type="button"
+          onClick={() => void switchUser()}
+          className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-slate-200 transition hover:border-cyan-400/30 hover:bg-white/8"
+        >
+          Switch user
+        </button>
       </div>
 
       <div className="mt-4 rounded-[1.35rem] border border-white/8 bg-white/5 px-3 py-3 text-xs text-slate-300">
         <p>Game link: {getNakamaHttpUrl()}</p>
         {error ? <p className="mt-2 text-rose-200">{error}</p> : null}
+        {socketStatus !== "connected" ? (
+          <p className="mt-2 text-fuchsia-200">Connection: {socketStatus}</p>
+        ) : null}
+        {actionError ? <p className="mt-2 text-rose-200">{actionError}</p> : null}
+        {actionMessage ? <p className="mt-2 text-cyan-200">{actionMessage}</p> : null}
       </div>
     </section>
   );

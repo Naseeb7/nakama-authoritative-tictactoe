@@ -35,6 +35,7 @@ import {
   readStoredSession,
   writeStoredSession,
 } from "@/lib/session-store";
+import { clearStoredDeviceId } from "@/lib/device-id";
 
 type BootstrapStatus = "booting" | "ready" | "error";
 type SocketStatus = "disconnected" | "connecting" | "connected";
@@ -56,8 +57,11 @@ type AppContextValue = {
   joinStatus: MatchStatus;
   latestMatchState: MatchStatePayload | null;
   leaveMatch: () => Promise<void>;
+  logout: () => Promise<void>;
   matchError: string | null;
+  renameNickname: (username: string) => Promise<void>;
   requestMatch: (action: MatchAction, mode: MatchMode) => Promise<string>;
+  retryConnection: () => void;
   sendMove: (position: number) => Promise<void>;
   session: Session | null;
   socket: Socket | null;
@@ -65,6 +69,7 @@ type AppContextValue = {
   status: BootstrapStatus;
   userId: string | null;
   username: string | null;
+  switchUser: () => Promise<void>;
 };
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -214,8 +219,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     joinStatus: "idle",
     latestMatchState: null,
     leaveMatch: async () => undefined,
+    logout: async () => undefined,
     matchError: null,
+    renameNickname: async () => undefined,
     requestMatch: async () => "",
+    retryConnection: () => undefined,
     sendMove: async () => undefined,
     session: null,
     socket: null,
@@ -223,16 +231,111 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     status: "booting",
     userId: null,
     username: null,
+    switchUser: async () => undefined,
   });
   const socketRef = useRef<Socket | null>(null);
   const clientRef = useRef<Client | null>(null);
   const sessionRef = useRef<Session | null>(null);
   const activeMatchRef = useRef<ActiveMatch | null>(null);
+  const [bootstrapNonce, setBootstrapNonce] = useState(0);
 
   const clearMatchError = useCallback(() => {
     setValue((current) => ({
       ...current,
       matchError: null,
+    }));
+  }, []);
+
+  const retryConnection = useCallback(() => {
+    setValue((current) => ({
+      ...current,
+      error: null,
+      joinStatus: "idle",
+      matchError: null,
+      status: "booting",
+      socketStatus: "connecting",
+    }));
+
+    setBootstrapNonce((current) => current + 1);
+  }, []);
+
+  const logout = useCallback(async () => {
+    clearStoredSession();
+    clearStoredMatchSession();
+
+    activeMatchRef.current = null;
+    sessionRef.current = null;
+
+    setValue((current) => ({
+      ...current,
+      activeMatch: null,
+      account: null,
+      error: null,
+      isAuthenticated: false,
+      joinStatus: "idle",
+      latestMatchState: null,
+      matchError: null,
+      session: null,
+      socket: null,
+      socketStatus: "disconnected",
+      status: "booting",
+      userId: null,
+      username: null,
+    }));
+
+    setBootstrapNonce((current) => current + 1);
+  }, []);
+
+  const switchUser = useCallback(async () => {
+    clearStoredSession();
+    clearStoredMatchSession();
+    clearStoredDeviceId();
+
+    activeMatchRef.current = null;
+    sessionRef.current = null;
+
+    setValue((current) => ({
+      ...current,
+      activeMatch: null,
+      account: null,
+      error: null,
+      isAuthenticated: false,
+      joinStatus: "idle",
+      latestMatchState: null,
+      matchError: null,
+      session: null,
+      socket: null,
+      socketStatus: "disconnected",
+      status: "booting",
+      userId: null,
+      username: null,
+    }));
+
+    setBootstrapNonce((current) => current + 1);
+  }, []);
+
+  const renameNickname = useCallback(async (nextUsername: string) => {
+    const client = clientRef.current;
+    const session = sessionRef.current;
+    const trimmedUsername = nextUsername.trim();
+
+    if (!client || !session) {
+      throw new Error("App is not connected to Nakama yet.");
+    }
+
+    if (!trimmedUsername) {
+      throw new Error("Nickname cannot be empty.");
+    }
+
+    await client.updateAccount(session, { username: trimmedUsername });
+    session.username = trimmedUsername;
+    writeStoredSession(session);
+    const account = await client.getAccount(session);
+
+    setValue((current) => ({
+      ...current,
+      account,
+      username: account.user?.username ?? trimmedUsername,
     }));
   }, []);
 
@@ -391,10 +494,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         error: null,
         joinExistingMatch,
         leaveMatch,
+        logout,
+        renameNickname,
         requestMatch,
+        retryConnection,
         sendMove,
         socketStatus: "connecting",
         status: "booting",
+        switchUser,
       }));
 
       try {
@@ -518,12 +625,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             client,
             error: null,
             joinExistingMatch,
+            logout,
             isAuthenticated: true,
             joinStatus: "idle",
             latestMatchState: null,
             leaveMatch,
             matchError: null,
+            renameNickname,
             requestMatch,
+            retryConnection,
             sendMove,
             session,
             socket,
@@ -531,6 +641,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             status: "ready",
             userId: session.user_id ?? account.user?.id ?? null,
             username: session.username ?? account.user?.username ?? null,
+            switchUser,
           });
         });
 
@@ -583,12 +694,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             client,
             error: toErrorMessage(error),
             joinExistingMatch,
+            logout,
             isAuthenticated: false,
             joinStatus: "error",
             latestMatchState: null,
             leaveMatch,
             matchError: null,
+            renameNickname,
             requestMatch,
+            retryConnection,
             sendMove,
             session: null,
             socket: null,
@@ -596,6 +710,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             status: "error",
             userId: null,
             username: null,
+            switchUser,
           });
         });
       }
@@ -617,9 +732,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     clearMatchError,
     joinExistingMatch,
     leaveMatch,
+    logout,
+    renameNickname,
     requestMatch,
     resetActiveMatchState,
+    retryConnection,
     sendMove,
+    switchUser,
+    bootstrapNonce,
   ]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
