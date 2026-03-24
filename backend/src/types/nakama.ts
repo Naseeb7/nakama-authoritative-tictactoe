@@ -40,6 +40,32 @@ interface StorageWriteRequest {
   permissionWrite?: number;
 }
 
+interface MatchHistoryIndexEntry {
+  historyKey: string;
+  matchId: string;
+  timestamp: number;
+  mode: "classic" | "timed";
+}
+
+interface MatchHistoryRecord {
+  historyKey: string;
+  matchId: string;
+  timestamp: number;
+  durationSeconds: number;
+  mode: "classic" | "timed";
+  winner: string | null;
+  players: string[];
+  playerNames: Record<string, string>;
+  moveHistory: MatchHistoryMove[];
+  endReason: string;
+  endReasonText: string;
+}
+
+interface MatchHistoryMove {
+  playerId: string;
+  position: number;
+}
+
 interface Nakama {
   matchCreate(moduleName: string, params?: Record<string, string>): string;
   matchList(

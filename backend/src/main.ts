@@ -3,6 +3,10 @@ var DEFAULT_MATCH_MODE = "classic";
 var TIMED_MATCH_MODE = "timed";
 var MATCH_LABEL_PREFIX = "tic_tac_toe_match";
 var MATCH_LIST_LIMIT = 1000;
+var MATCH_HISTORY_COLLECTION = "match_history";
+var MATCH_HISTORY_INDEX_COLLECTION = "match_history_index";
+var MATCH_HISTORY_INDEX_KEY = "recent";
+var MATCH_HISTORY_PAGE_SIZE = 12;
 
 function createMatchRpc(
   _ctx: RpcContext,
@@ -86,6 +90,52 @@ function findMatchRpc(
   return JSON.stringify({ matchId: matchId });
 }
 
+function listMatchHistoryRpc(
+  _ctx: RpcContext,
+  logger: Logger,
+  nk: Nakama,
+  payload: string
+): string {
+  var request = parseMatchHistoryPayload(payload);
+  var limit = clampHistoryLimit(request.limit);
+  var offset = clampHistoryOffset(request.offset);
+  var indexedEntries = readMatchHistoryIndex(nk);
+  var selectedEntries = indexedEntries.slice(offset, offset + limit);
+  var readRequests: StorageReadRequest[] = [];
+  var i: number;
+  var historyObjects: StorageObject[] = [];
+  var records: MatchHistoryRecord[] = [];
+  var historyObject: StorageObject;
+
+  for (i = 0; i < selectedEntries.length; i += 1) {
+    readRequests.push({
+      collection: MATCH_HISTORY_COLLECTION,
+      key: selectedEntries[i].historyKey
+    });
+  }
+
+  try {
+    historyObjects = readRequests.length > 0 ? nk.storageRead(readRequests) : [];
+
+    for (i = 0; i < historyObjects.length; i += 1) {
+      historyObject = historyObjects[i];
+      records.push(normalizeMatchHistoryRecord(historyObject));
+    }
+  } catch (error) {
+    logger.error("Failed to read match history entries.", {
+      error: String(error)
+    });
+  }
+
+  return JSON.stringify({
+    records: records,
+    total: indexedEntries.length,
+    limit: limit,
+    offset: offset,
+    hasMore: offset + limit < indexedEntries.length
+  });
+}
+
 function InitModule(
   _ctx: RpcContext,
   logger: Logger,
@@ -109,6 +159,7 @@ function InitModule(
   initializer.registerMatch("tic_tac_toe_match", createMatchHandler);
   initializer.registerRpc("create_match", createMatchRpc);
   initializer.registerRpc("find_match", findMatchRpc);
+  initializer.registerRpc("list_match_history", listMatchHistoryRpc);
 
   logger.info("Nakama runtime module wiring complete.");
 }
@@ -141,6 +192,200 @@ function parseMatchmakingPayload(payload: string): any {
   } catch (_error) {
     return null;
   }
+}
+
+function parseMatchHistoryPayload(payload: string): any {
+  if (!payload) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(payload);
+  } catch (_error) {
+    return {};
+  }
+}
+
+function clampHistoryLimit(limit: any): number {
+  var parsed = typeof limit === "number" ? limit : Number(limit);
+
+  if (!isFiniteNumber(parsed) || parsed < 1) {
+    return MATCH_HISTORY_PAGE_SIZE;
+  }
+
+  if (parsed > 50) {
+    return 50;
+  }
+
+  return Math.floor(parsed);
+}
+
+function clampHistoryOffset(offset: any): number {
+  var parsed = typeof offset === "number" ? offset : Number(offset);
+
+  if (!isFiniteNumber(parsed) || parsed < 0) {
+    return 0;
+  }
+
+  return Math.floor(parsed);
+}
+
+function readMatchHistoryIndex(nk: Nakama): MatchHistoryIndexEntry[] {
+  var objects = nk.storageRead([
+    {
+      collection: MATCH_HISTORY_INDEX_COLLECTION,
+      key: MATCH_HISTORY_INDEX_KEY
+    }
+  ]);
+
+  if (!objects || objects.length === 0) {
+    return [];
+  }
+
+  return normalizeMatchHistoryIndex(objects[0].value);
+}
+
+function normalizeMatchHistoryIndex(value: any): MatchHistoryIndexEntry[] {
+  var parsed = typeof value === "string" ? parseJsonValue(value) : value;
+  var entries: MatchHistoryIndexEntry[] = [];
+  var i: number;
+  var rawEntry: any;
+
+  if (!parsed || !parsed.entries || typeof parsed.entries.length !== "number") {
+    return [];
+  }
+
+  for (i = 0; i < parsed.entries.length; i += 1) {
+    rawEntry = parsed.entries[i];
+
+    if (isValidHistoryIndexEntry(rawEntry)) {
+      entries.push({
+        historyKey: String(rawEntry.historyKey),
+        matchId: String(rawEntry.matchId),
+        timestamp: clampTimestamp(rawEntry.timestamp),
+        mode: rawEntry.mode === "timed" ? "timed" : "classic"
+      });
+    }
+  }
+
+  return entries;
+}
+
+function isValidHistoryIndexEntry(value: any): boolean {
+  return !!value && typeof value.historyKey === "string" && typeof value.matchId === "string";
+}
+
+function clampTimestamp(value: any): number {
+  var parsed = typeof value === "number" ? value : Number(value);
+
+  if (!isFiniteNumber(parsed) || parsed < 0) {
+    return getCurrentUnixTimestamp();
+  }
+
+  return Math.floor(parsed);
+}
+
+function parseJsonValue(value: string): any {
+  try {
+    return JSON.parse(value);
+  } catch (_error) {
+    return null;
+  }
+}
+
+function normalizeMatchHistoryRecord(object: StorageObject): MatchHistoryRecord {
+  var value = typeof object.value === "string" ? parseJsonValue(object.value) : object.value;
+
+  return {
+    historyKey: object.key,
+    matchId: value && typeof value.matchId === "string" ? value.matchId : object.key,
+    timestamp: clampTimestamp(value && value.timestamp),
+    durationSeconds: clampDuration(value && value.durationSeconds),
+    mode: value && value.mode === "timed" ? "timed" : "classic",
+    winner: value && typeof value.winner === "string" ? value.winner : null,
+    players: Array.isArray(value && value.players) ? value.players : [],
+    playerNames: normalizePlayerNameMap(value && value.playerNames),
+    moveHistory: Array.isArray(value && value.moveHistory) ? value.moveHistory : [],
+    endReason: typeof (value && value.endReason) === "string" ? value.endReason : "unknown",
+    endReasonText:
+      typeof (value && value.endReasonText) === "string"
+        ? value.endReasonText
+        : "Match outcome unavailable."
+  };
+}
+
+function clampDuration(value: any): number {
+  var parsed = typeof value === "number" ? value : Number(value);
+
+  if (!isFiniteNumber(parsed) || parsed < 0) {
+    return 0;
+  }
+
+  return Math.floor(parsed);
+}
+
+function normalizePlayerNameMap(value: any): Record<string, string> {
+  var parsed = typeof value === "string" ? parseJsonValue(value) : value;
+  var output: Record<string, string> = {};
+  var playerId: string;
+
+  if (!parsed || typeof parsed !== "object") {
+    return output;
+  }
+
+  for (playerId in parsed) {
+    if (parsed.hasOwnProperty(playerId) && typeof parsed[playerId] === "string") {
+      output[playerId] = parsed[playerId];
+    }
+  }
+
+  return output;
+}
+
+function upsertMatchHistoryIndex(
+  nk: Nakama,
+  state: MatchState,
+  durationSeconds: number
+): void {
+  var entries = readMatchHistoryIndex(nk);
+  var nextEntry: MatchHistoryIndexEntry = {
+    historyKey: state.historyKey,
+    matchId: state.matchId,
+    timestamp: state.endTime || getCurrentUnixTimestamp(),
+    mode: state.mode
+  };
+  var filteredEntries: MatchHistoryIndexEntry[] = [];
+  var i: number;
+
+  for (i = 0; i < entries.length; i += 1) {
+    if (entries[i].historyKey !== state.historyKey) {
+      filteredEntries.push(entries[i]);
+    }
+  }
+
+  filteredEntries.unshift(nextEntry);
+
+  if (filteredEntries.length > 50) {
+    filteredEntries = filteredEntries.slice(0, 50);
+  }
+
+  nk.storageWrite([
+    {
+      collection: MATCH_HISTORY_INDEX_COLLECTION,
+      key: MATCH_HISTORY_INDEX_KEY,
+      value: {
+        entries: filteredEntries,
+        lastUpdatedAt: state.endTime || getCurrentUnixTimestamp(),
+        lastDurationSeconds: durationSeconds
+      } as any,
+      permissionRead: 0,
+      permissionWrite: 0
+    }
+  ]);
+}
+
+function isFiniteNumber(value: any): boolean {
+  return typeof value === "number" && isFinite(value);
 }
 
 function hasCompatibleMatchLabel(label: string | undefined, mode: string): boolean {
