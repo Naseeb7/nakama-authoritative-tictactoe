@@ -163,7 +163,7 @@ interface MatchHandler<TState = unknown> {
     tick: number,
     state: TState,
     presences: Presence[]
-  ): MatchJoinResult<TState>;
+  ): MatchJoinResult<TState> | null;
   matchLeave(
     ctx: RpcContext,
     logger: Logger,
@@ -172,7 +172,7 @@ interface MatchHandler<TState = unknown> {
     tick: number,
     state: TState,
     presences: Presence[]
-  ): MatchLeaveResult<TState>;
+  ): MatchLeaveResult<TState> | null;
   matchLoop(
     ctx: RpcContext,
     logger: Logger,
@@ -181,7 +181,7 @@ interface MatchHandler<TState = unknown> {
     tick: number,
     state: TState,
     messages: MatchMessage[]
-  ): MatchStateResult<TState>;
+  ): MatchStateResult<TState> | null;
   matchTerminate(
     ctx: RpcContext,
     logger: Logger,
@@ -190,7 +190,7 @@ interface MatchHandler<TState = unknown> {
     tick: number,
     state: TState,
     graceSeconds: number
-  ): MatchStateResult<TState>;
+  ): MatchStateResult<TState> | null;
   matchSignal?(
     ctx: RpcContext,
     logger: Logger,
@@ -199,7 +199,7 @@ interface MatchHandler<TState = unknown> {
     tick: number,
     state: TState,
     data: string
-  ): MatchSignalResult<TState>;
+  ): MatchSignalResult<TState> | null;
 }
 
 interface RpcFunction {

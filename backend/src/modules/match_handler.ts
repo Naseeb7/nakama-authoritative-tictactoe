@@ -9,6 +9,7 @@ var PLAYER_STATS_KEY = "stats";
 var MATCH_HISTORY_COLLECTION = "match_history";
 var TURN_TIMEOUT_SECONDS = 30;
 var DISCONNECT_TIMEOUT_SECONDS = 30;
+var FINISHED_MATCH_TTL_SECONDS = 15;
 var MATCH_LABEL_PREFIX = "tic_tac_toe_match";
 
 interface MoveHistoryEntry {
@@ -46,6 +47,7 @@ interface MatchState {
   endReason: MatchEndReason | null;
   endReasonText: string | null;
   historyPersisted: boolean;
+  finishedTick: number | null;
 }
 
 interface MovePayload {
@@ -91,7 +93,8 @@ var matchInit = function (
       pausedTurnRemainingSeconds: null,
       endReason: null,
       endReasonText: null,
-      historyPersisted: false
+      historyPersisted: false,
+      finishedTick: null
     },
     tickRate: 1,
     label: label
@@ -109,7 +112,7 @@ var matchJoinAttempt = function (
   _metadata?: Record<string, string>
 ): MatchJoinAttemptResult<MatchState> {
   var isReturningPlayer = state.players.indexOf(presence.userId) !== -1;
-  var accept = isReturningPlayer || (state.players.length < 2 && state.status !== "finished");
+  var accept = state.status !== "finished" && (isReturningPlayer || state.players.length < 2);
 
   logger.info("matchJoinAttempt executed.", {
     userId: presence.userId,
@@ -121,7 +124,11 @@ var matchJoinAttempt = function (
   return {
     state: state,
     accept: accept,
-    rejectMessage: accept ? undefined : "Match is full."
+    rejectMessage: accept
+      ? undefined
+      : state.status === "finished"
+        ? "Match has already ended."
+        : "Match is full."
   };
 };
 
@@ -247,7 +254,8 @@ var matchJoin = function (
     pausedTurnRemainingSeconds: pausedTurnRemainingSeconds,
     endReason: state.endReason,
     endReasonText: state.endReasonText,
-    historyPersisted: state.historyPersisted
+    historyPersisted: state.historyPersisted,
+    finishedTick: state.finishedTick
   };
 
   updateMatchLabelIfNeeded(dispatcher, previousLabel, updatedState.label);
@@ -267,7 +275,7 @@ var matchLeave = function (
   tick: number,
   state: MatchState,
   presences: Presence[]
-): MatchLeaveResult<MatchState> {
+): MatchLeaveResult<MatchState> | null {
   var updatedDisconnectedPlayers: Record<string, number> = {};
   var updatedPlayerNames: Record<string, string> = {};
   var turnDeadlineTick = state.turnDeadlineTick;
@@ -338,8 +346,17 @@ var matchLeave = function (
     pausedTurnRemainingSeconds: pausedTurnRemainingSeconds,
     endReason: state.endReason,
     endReasonText: state.endReasonText,
-    historyPersisted: state.historyPersisted
+    historyPersisted: state.historyPersisted,
+    finishedTick: state.finishedTick
   };
+
+  if (updatedState.status === "finished" && haveAllPlayersDisconnected(updatedState)) {
+    logger.info("Stopping finished match after all players left.", {
+      matchId: updatedState.matchId
+    });
+
+    return null;
+  }
 
   broadcastMatchState(_dispatcher, updatedState, tick);
 
@@ -356,7 +373,7 @@ var matchLoop = function (
   tick: number,
   state: MatchState,
   messages: MatchMessage[]
-): MatchStateResult<MatchState> {
+): MatchStateResult<MatchState> | null {
   var i: number;
   var message: MatchMessage;
   var payload: MovePayload | null;
@@ -371,6 +388,16 @@ var matchLoop = function (
     tick: tick,
     messageCount: messages.length
   });
+
+  if (state.status === "finished" && shouldStopFinishedMatch(state, tick)) {
+    logger.info("Stopping finished match after grace period.", {
+      matchId: state.matchId,
+      tick: tick,
+      finishedTick: state.finishedTick
+    });
+
+    return null;
+  }
 
   if (state.status !== "finished" && hasDisconnectedPlayers(state.disconnectedPlayers)) {
     if (finalizeExpiredDisconnects(state, tick, logger, _nk, dispatcher)) {
@@ -401,6 +428,7 @@ var matchLoop = function (
     state.endReason = "turn-timeout";
     state.endReasonText = buildTurnTimeoutText(state, timedOutPlayerId, timeoutWinnerId);
     state.label = getLifecycleLabel(state.mode, state.status);
+    state.finishedTick = tick;
 
     logger.info("Turn timer expired. Auto-forfeit applied.", {
       timedOutPlayerId: timedOutPlayerId,
@@ -522,6 +550,7 @@ var matchLoop = function (
       state.endReason = "win";
       state.endReasonText = buildWinText(state, playerId, loserId);
       state.label = getLifecycleLabel(state.mode, state.status);
+      state.finishedTick = tick;
 
       try {
         updatePlayerStats(_nk, playerId, true);
@@ -559,6 +588,7 @@ var matchLoop = function (
       state.endReason = "draw";
       state.endReasonText = "The match ended in a draw.";
       state.label = getLifecycleLabel(state.mode, state.status);
+      state.finishedTick = tick;
 
       try {
         if (state.players.length > 0) {
@@ -1194,6 +1224,7 @@ function finalizeExpiredDisconnects(
   state.endReason = "reconnect-timeout";
   state.endReasonText = buildReconnectTimeoutText(state, winner, expiredDisconnectedPlayers);
   state.label = getLifecycleLabel(state.mode, state.status);
+  state.finishedTick = tick;
 
   logger.info("Reconnect timeout expired. Finalizing match.", {
     expiredDisconnectedPlayers: expiredDisconnectedPlayers,
@@ -1288,6 +1319,37 @@ function haveAllDisconnectedPlayersExpired(
   }
 
   return players.length > 0;
+}
+
+function haveAllPlayersDisconnected(state: MatchState): boolean {
+  var i: number;
+  var playerId: string;
+
+  if (state.players.length === 0) {
+    return true;
+  }
+
+  for (i = 0; i < state.players.length; i += 1) {
+    playerId = state.players[i];
+
+    if (state.disconnectedPlayers[playerId] === undefined) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function shouldStopFinishedMatch(state: MatchState, tick: number): boolean {
+  if (haveAllPlayersDisconnected(state)) {
+    return true;
+  }
+
+  if (state.finishedTick === null) {
+    return false;
+  }
+
+  return tick - state.finishedTick >= FINISHED_MATCH_TTL_SECONDS;
 }
 
 function persistCompletedMatchIfNeeded(nk: Nakama, logger: Logger, state: MatchState): void {
