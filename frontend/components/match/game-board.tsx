@@ -14,7 +14,7 @@ export function GameBoard({
   pendingPosition,
 }: GameBoardProps) {
   return (
-    <div className="grid grid-cols-3 gap-3 rounded-[2rem] border border-cyan-400/20 bg-[linear-gradient(180deg,_rgba(7,11,25,0.98),_rgba(11,17,37,0.95))] p-3 shadow-[0_0_0_1px_rgba(77,226,255,0.05),0_0_36px_rgba(0,183,255,0.12)]">
+    <div className="mx-auto grid w-full max-w-[320px] grid-cols-3 gap-1.5 rounded-[1.25rem] border border-cyan-400/20 bg-[linear-gradient(180deg,_rgba(7,11,25,0.98),_rgba(11,17,37,0.95))] p-1.5 shadow-[0_0_0_1px_rgba(77,226,255,0.05),0_0_28px_rgba(0,183,255,0.12)] sm:max-w-[420px] sm:gap-2 sm:rounded-[1.6rem] sm:p-2 lg:max-w-[480px] lg:gap-3 lg:p-3">
       {board.map((cell, index) => {
         const isPending = pendingPosition === index;
 
@@ -24,7 +24,7 @@ export function GameBoard({
             type="button"
             disabled={!canPlay || cell !== "" || isPending}
             onClick={() => onSelectCell(index)}
-            className={`flex aspect-square items-center justify-center rounded-[1.4rem] border text-4xl font-semibold tracking-tight transition sm:text-5xl ${
+            className={`flex aspect-square items-center justify-center rounded-[0.9rem] border text-[1.7rem] font-semibold tracking-tight transition sm:rounded-[1.1rem] sm:text-3xl lg:rounded-[1.35rem] lg:text-4xl ${
               cell !== ""
                 ? cell === "X"
                   ? "border-cyan-400/40 bg-cyan-400/10 text-cyan-200 shadow-[0_0_20px_rgba(0,183,255,0.16)]"

@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { AuthStatusCard } from "@/components/layout/auth-status-card";
 
@@ -10,6 +13,52 @@ const navItems = [
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isMatchRoute = pathname.startsWith("/match/");
+
+  if (isMatchRoute) {
+    return (
+      <div className="min-h-screen text-[color:var(--foreground)]">
+        <div className="mx-auto flex min-h-screen w-full max-w-[1500px] flex-col px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
+          <header className="relative overflow-hidden rounded-[1.5rem] border border-cyan-400/18 bg-[linear-gradient(135deg,_rgba(8,12,28,0.92),_rgba(12,18,38,0.86))] px-3 py-3 shadow-[0_0_0_1px_rgba(77,226,255,0.05),0_22px_70px_rgba(0,0,0,0.42)] backdrop-blur-xl sm:rounded-[1.75rem] sm:px-4 sm:py-4">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(77,226,255,0.12),_transparent_28%),radial-gradient(circle_at_top_right,_rgba(255,79,216,0.08),_transparent_24%)]" />
+            <div className="relative flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <Link
+                    href="/"
+                    className="inline-flex w-fit rounded-full border border-cyan-400/35 bg-cyan-400/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-cyan-200 shadow-[0_0_18px_rgba(0,183,255,0.16)] sm:text-xs sm:tracking-[0.32em]"
+                  >
+                    PulseGrid
+                  </Link>
+                  <p className="hidden text-sm text-[color:var(--ink-soft)] sm:block">
+                    Match focus mode. Core controls and live game state stay above the fold.
+                  </p>
+                </div>
+
+                <nav className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
+                  {navItems.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="shrink-0 rounded-full border border-slate-700/90 bg-slate-900/70 px-3 py-2 text-xs font-medium text-slate-200 transition hover:-translate-y-0.5 hover:border-cyan-400/40 hover:bg-slate-950 hover:text-cyan-200 hover:shadow-[0_0_18px_rgba(0,183,255,0.16)] sm:px-4 sm:text-sm"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </nav>
+              </div>
+
+              <AuthStatusCard compact />
+            </div>
+          </header>
+
+          <main className="flex-1 py-3 sm:py-4">{children}</main>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen text-[color:var(--foreground)]">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-5 py-6 sm:px-8 lg:px-10">
