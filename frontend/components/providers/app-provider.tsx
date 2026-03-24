@@ -111,6 +111,37 @@ function toErrorMessage(error: unknown): string {
   return "Unknown error";
 }
 
+function getErrorCode(error: unknown): number | null {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    typeof error.code === "number"
+  ) {
+    return error.code;
+  }
+
+  return null;
+}
+
+function isMatchNotFoundError(error: unknown): boolean {
+  const message = toErrorMessage(error).toLowerCase();
+
+  return getErrorCode(error) === 4 || message.includes("match not found");
+}
+
+function isExpiredMatchError(error: unknown): boolean {
+  const message = toErrorMessage(error).toLowerCase();
+  const code = getErrorCode(error);
+
+  return (
+    code === 4 ||
+    code === 5 ||
+    message.includes("match not found") ||
+    message.includes("match has already ended")
+  );
+}
+
 function buildGuestUsername(deviceId: string): string {
   return `guest-${deviceId.replace(/[^a-zA-Z0-9]/g, "").slice(-8)}`;
 }
@@ -407,12 +438,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           matchError: null,
         }));
       } catch (error) {
-        console.error("joinExistingMatch failed", error);
-        const message = toErrorMessage(error);
+        const message = isExpiredMatchError(error)
+          ? "That match is no longer available."
+          : toErrorMessage(error);
+
+        if (!isExpiredMatchError(error)) {
+          console.error("joinExistingMatch failed", error);
+        }
+
+        if (isExpiredMatchError(error)) {
+          activeMatchRef.current = null;
+          clearStoredMatchSession();
+        }
 
         setValue((current) => ({
           ...current,
+          activeMatch: isExpiredMatchError(error) ? null : current.activeMatch,
           joinStatus: "error",
+          latestMatchState: isExpiredMatchError(error) ? null : current.latestMatchState,
           matchError: message,
         }));
 

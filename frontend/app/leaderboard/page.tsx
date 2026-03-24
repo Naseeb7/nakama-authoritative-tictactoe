@@ -248,12 +248,11 @@ export default function LeaderboardPage() {
             Hall of Fame
           </p>
           <h2 className="mt-3 max-w-3xl text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
-            The scoreboard, styled for the latest arena theme.
+            Track your run and see who is leading the arena.
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
-            Wins are written by the backend, then shown here with the current streak,
-            best streak, and total games played. This page now matches the newer dark
-            cyan/fuchsia visual language used across the app.
+            This page shows your overall record, your current form, and the players
+            climbing fastest through the Hall of Fame.
           </p>
 
           <div className="mt-7 grid gap-3 sm:grid-cols-2">
@@ -302,7 +301,7 @@ export default function LeaderboardPage() {
           <div className="mt-6 rounded-[1.35rem] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-6 text-slate-300">
             <p>Player: {username ?? "Unknown"}</p>
             <p className="mt-2 text-xs uppercase tracking-[0.18em] text-slate-500">
-              Leaderboard ID: {GLOBAL_WINS_LEADERBOARD_ID}
+              Every finished match can move you up the table.
             </p>
           </div>
 
@@ -340,11 +339,11 @@ export default function LeaderboardPage() {
             Top Wins
           </p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-            The players with the strongest run right now.
+            The players setting the pace right now.
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
-            The list below is pulled from Nakama&apos;s leaderboard records and styled
-            to match the rest of the current UI.
+            Win matches, build momentum, and keep climbing. The top of the table is
+            reserved for the players closing games most consistently.
           </p>
 
           <div className="mt-6 grid gap-3">
@@ -406,8 +405,8 @@ export default function LeaderboardPage() {
 
           <div className="mt-6 rounded-[1.35rem] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-6 text-slate-300">
             {leaderboardEntries.length > 0
-              ? "Ranked wins update as the backend writes new completed matches."
-              : "Play a few games to populate the leaderboard."}
+              ? "Keep winning to protect your place or break into the next rank."
+              : "Play a few games to put your name on the board."}
           </div>
         </div>
       </SectionCard>

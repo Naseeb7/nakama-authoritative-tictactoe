@@ -9,6 +9,43 @@ import { useApp } from "@/components/providers/app-provider";
 import { SectionCard } from "@/components/ui/section-card";
 import type { MatchMode } from "@/lib/match-types";
 
+function isExpiredMatchError(error: unknown) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    typeof error.code === "number" &&
+    (error.code === 4 || error.code === 5)
+  ) {
+    return true;
+  }
+
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+
+    return (
+      message.includes("match not found") ||
+      message.includes("match has already ended")
+    );
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    const message = error.message.toLowerCase();
+
+    return (
+      message.includes("match not found") ||
+      message.includes("match has already ended")
+    );
+  }
+
+  return false;
+}
+
 function getResultText(
   winner: string | null,
   userId: string | null,
@@ -312,9 +349,11 @@ export default function MatchRoomPage() {
 
         setIsJoiningRouteMatch(false);
         setJoinRouteError(
-          error instanceof Error
-            ? error.message
-            : "Unable to join the match from the current route."
+          isExpiredMatchError(error)
+            ? "This room has already closed. Start a new game from the lobby."
+            : error instanceof Error
+              ? error.message
+              : "Unable to join the match from the current route."
         );
       }
     }
@@ -796,6 +835,25 @@ export default function MatchRoomPage() {
               </div>
             </div>
           </>
+        ) : joinRouteError ? (
+          <div className="mt-4 rounded-[1.4rem] border border-rose-400/30 bg-rose-500/10 px-4 py-5 text-sm leading-6 text-rose-100">
+            <p className="text-base font-semibold text-white">Match unavailable</p>
+            <p className="mt-2">{joinRouteError}</p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link
+                href="/play"
+                className="rounded-full border border-cyan-400/35 bg-cyan-400/10 px-5 py-3 text-sm font-medium text-cyan-100 transition hover:-translate-y-0.5 hover:bg-cyan-400/16"
+              >
+                Back to Lobby
+              </Link>
+              <Link
+                href="/history"
+                className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-slate-200 transition hover:border-cyan-400/30 hover:bg-white/8"
+              >
+                Open History
+              </Link>
+            </div>
+          </div>
         ) : (
           <div className="mt-4 rounded-[1.4rem] border border-slate-800 bg-slate-950/75 px-4 py-4 text-sm leading-6 text-slate-400">
             Waiting for authoritative state broadcast from the backend.

@@ -136,7 +136,7 @@ export default function HistoryPage() {
   }, [client, offset, session, status]);
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[0.88fr_1.12fr]">
+    <div className="grid items-start gap-6 xl:grid-cols-[0.88fr_1.12fr]">
       <SectionCard className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(0,183,255,0.14),_transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(255,79,216,0.1),_transparent_22%)]" />
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-300">
