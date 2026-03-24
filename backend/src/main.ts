@@ -91,21 +91,35 @@ function findMatchRpc(
 }
 
 function listMatchHistoryRpc(
-  _ctx: RpcContext,
+  ctx: RpcContext,
   logger: Logger,
   nk: Nakama,
   payload: string
 ): string {
+  var userId = ctx.userId;
   var request = parseMatchHistoryPayload(payload);
   var limit = clampHistoryLimit(request.limit);
   var offset = clampHistoryOffset(request.offset);
-  var indexedEntries = readMatchHistoryIndex(nk);
+  var indexedEntries: MatchHistoryIndexEntry[] = [];
   var selectedEntries = indexedEntries.slice(offset, offset + limit);
   var readRequests: StorageReadRequest[] = [];
   var i: number;
   var historyObjects: StorageObject[] = [];
   var records: MatchHistoryRecord[] = [];
   var historyObject: StorageObject;
+
+  if (!userId) {
+    return JSON.stringify({
+      records: [],
+      total: 0,
+      limit: limit,
+      offset: offset,
+      hasMore: false
+    });
+  }
+
+  indexedEntries = readMatchHistoryIndex(nk, userId);
+  selectedEntries = indexedEntries.slice(offset, offset + limit);
 
   for (i = 0; i < selectedEntries.length; i += 1) {
     readRequests.push({
@@ -230,11 +244,12 @@ function clampHistoryOffset(offset: any): number {
   return Math.floor(parsed);
 }
 
-function readMatchHistoryIndex(nk: Nakama): MatchHistoryIndexEntry[] {
+function readMatchHistoryIndex(nk: Nakama, userId: string): MatchHistoryIndexEntry[] {
   var objects = nk.storageRead([
     {
       collection: MATCH_HISTORY_INDEX_COLLECTION,
-      key: MATCH_HISTORY_INDEX_KEY
+      key: MATCH_HISTORY_INDEX_KEY,
+      userId: userId
     }
   ]);
 
@@ -347,32 +362,40 @@ function upsertMatchHistoryIndex(
   state: MatchState,
   durationSeconds: number
 ): void {
-  var entries = readMatchHistoryIndex(nk);
   var nextEntry: MatchHistoryIndexEntry = {
     historyKey: state.historyKey,
     matchId: state.matchId,
     timestamp: state.endTime || getCurrentUnixTimestamp(),
     mode: state.mode
   };
+  var writeRequests: StorageWriteRequest[] = [];
+  var playerEntries: MatchHistoryIndexEntry[] = [];
   var filteredEntries: MatchHistoryIndexEntry[] = [];
   var i: number;
+  var j: number;
+  var playerId: string;
 
-  for (i = 0; i < entries.length; i += 1) {
-    if (entries[i].historyKey !== state.historyKey) {
-      filteredEntries.push(entries[i]);
+  for (i = 0; i < state.players.length; i += 1) {
+    playerId = state.players[i];
+    playerEntries = readMatchHistoryIndex(nk, playerId);
+    filteredEntries = [];
+
+    for (j = 0; j < playerEntries.length; j += 1) {
+      if (playerEntries[j].historyKey !== state.historyKey) {
+        filteredEntries.push(playerEntries[j]);
+      }
     }
-  }
 
-  filteredEntries.unshift(nextEntry);
+    filteredEntries.unshift(nextEntry);
 
-  if (filteredEntries.length > 50) {
-    filteredEntries = filteredEntries.slice(0, 50);
-  }
+    if (filteredEntries.length > 50) {
+      filteredEntries = filteredEntries.slice(0, 50);
+    }
 
-  nk.storageWrite([
-    {
+    writeRequests.push({
       collection: MATCH_HISTORY_INDEX_COLLECTION,
       key: MATCH_HISTORY_INDEX_KEY,
+      userId: playerId,
       value: {
         entries: filteredEntries,
         lastUpdatedAt: state.endTime || getCurrentUnixTimestamp(),
@@ -380,8 +403,12 @@ function upsertMatchHistoryIndex(
       } as any,
       permissionRead: 0,
       permissionWrite: 0
-    }
-  ]);
+    });
+  }
+
+  if (writeRequests.length > 0) {
+    nk.storageWrite(writeRequests);
+  }
 }
 
 function isFiniteNumber(value: any): boolean {
