@@ -29,6 +29,7 @@ import type {
   MatchMode,
   MatchStatePayload,
 } from "@/lib/match-types";
+import { nakamaEnv } from "@/lib/env";
 import { createNakamaClient } from "@/lib/nakama";
 import {
   clearStoredSession,
@@ -559,7 +560,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const session = await restoreOrCreateSession(client);
-        socket = client.createSocket(undefined, process.env.NODE_ENV === "development");
+        socket = client.createSocket(
+          nakamaEnv.useSSL,
+          process.env.NODE_ENV === "development"
+        );
 
         socket.ondisconnect = () => {
           if (disposed) {
