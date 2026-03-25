@@ -22,8 +22,8 @@ This architecture prevents clients from cheating by locally forcing turns, overw
 
 ## Live Deployment Links
 
-- Frontend URL:
-- Nakama server endpoint:
+- Frontend URL: https://nakama-authoritative-tictactoe.vercel.app/
+- Nakama server endpoint: https://nakama-authoritative-tictactoe-production.up.railway.app/
 
 ## Tech Stack
 
