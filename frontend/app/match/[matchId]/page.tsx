@@ -630,44 +630,6 @@ export default function MatchRoomPage() {
 
         {latestMatchState ? (
           <>
-            {isTimedMatch ? (
-              <div className="mt-4 rounded-[1.25rem] border border-cyan-400/35 bg-[linear-gradient(135deg,_rgba(0,183,255,0.16),_rgba(11,18,42,0.94))] px-4 py-4 text-cyan-50 shadow-[0_0_28px_rgba(0,183,255,0.16)] sm:rounded-[1.6rem] sm:px-5 sm:py-5">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-200">
-                  Active Turn Clock
-                </p>
-                <div className="mt-2 flex flex-wrap items-end justify-between gap-3 sm:gap-4">
-                  <div>
-                    <p className="text-3xl font-semibold tracking-[0.12em] text-white sm:text-5xl sm:tracking-[0.18em]">
-                      <TurnTimer
-                        key={`banner-${latestMatchState.turnExpiresAt ?? "none"}-${
-                          hasDisconnectedPlayers ? "paused" : "live"
-                        }`}
-                        serverTime={latestMatchState.serverTime}
-                        turnExpiresAt={latestMatchState.turnExpiresAt}
-                        isPaused={hasDisconnectedPlayers}
-                        secondsRemaining={latestMatchState.turnSecondsRemaining}
-                      />
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-cyan-100/80">
-                      {hasDisconnectedPlayers
-                        ? "Clock paused while the reconnect window is active."
-                        : latestMatchState.currentTurn
-                          ? `${getPlayerLabel(
-                              latestMatchState.currentTurn,
-                              userId,
-                              latestMatchState.playerNames,
-                              latestMatchState.symbols
-                            )} must play before time runs out.`
-                          : "Waiting for the next turn."}
-                    </p>
-                  </div>
-                  <div className="rounded-full border border-cyan-200/20 bg-slate-950/35 px-4 py-2 text-xs uppercase tracking-[0.2em] text-cyan-100">
-                    {hasDisconnectedPlayers ? "Paused" : "Live"}
-                  </div>
-                </div>
-              </div>
-            ) : null}
-
             <div
               className={`mt-4 rounded-[1.25rem] border px-4 py-4 sm:rounded-[1.6rem] sm:px-5 sm:py-5 ${
                 latestMatchState.status === "finished"
@@ -792,6 +754,44 @@ export default function MatchRoomPage() {
                 </div>
               ) : null}
             </div>
+
+            {isTimedMatch ? (
+              <div className="mt-4 rounded-[1.25rem] border border-cyan-400/35 bg-[linear-gradient(135deg,_rgba(0,183,255,0.16),_rgba(11,18,42,0.94))] px-4 py-4 text-cyan-50 shadow-[0_0_28px_rgba(0,183,255,0.16)] sm:rounded-[1.6rem] sm:px-5 sm:py-5">
+                <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-200">
+                  Active Turn Clock
+                </p>
+                <div className="mt-2 flex flex-wrap items-end justify-between gap-3 sm:gap-4">
+                  <div>
+                    <p className="text-3xl font-semibold tracking-[0.12em] text-white sm:text-5xl sm:tracking-[0.18em]">
+                      <TurnTimer
+                        key={`banner-${latestMatchState.turnExpiresAt ?? "none"}-${
+                          hasDisconnectedPlayers ? "paused" : "live"
+                        }`}
+                        serverTime={latestMatchState.serverTime}
+                        turnExpiresAt={latestMatchState.turnExpiresAt}
+                        isPaused={hasDisconnectedPlayers}
+                        secondsRemaining={latestMatchState.turnSecondsRemaining}
+                      />
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-cyan-100/80">
+                      {hasDisconnectedPlayers
+                        ? "Clock paused while the reconnect window is active."
+                        : latestMatchState.currentTurn
+                          ? `${getPlayerLabel(
+                              latestMatchState.currentTurn,
+                              userId,
+                              latestMatchState.playerNames,
+                              latestMatchState.symbols
+                            )} must play before time runs out.`
+                          : "Waiting for the next turn."}
+                    </p>
+                  </div>
+                  <div className="rounded-full border border-cyan-200/20 bg-slate-950/35 px-4 py-2 text-xs uppercase tracking-[0.2em] text-cyan-100">
+                    {hasDisconnectedPlayers ? "Paused" : "Live"}
+                  </div>
+                </div>
+              </div>
+            ) : null}
 
             <div className="mt-4">
               <GameBoard

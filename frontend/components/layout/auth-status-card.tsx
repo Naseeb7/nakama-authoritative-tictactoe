@@ -3,7 +3,6 @@
 import { type FormEvent, useEffect, useState } from "react";
 
 import { useApp } from "@/components/providers/app-provider";
-import { getNakamaHttpUrl } from "@/lib/env";
 
 function getStatusTone(status: "booting" | "ready" | "error") {
   if (status === "ready") {
@@ -32,6 +31,9 @@ export function AuthStatusCard({ compact = false }: { compact?: boolean }) {
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const connectionMessage =
+    error ?? (socketStatus !== "connected" ? `Connection: ${socketStatus}` : "Connection stable");
+  const connectionTone = error ? "text-rose-200" : socketStatus !== "connected" ? "text-fuchsia-200" : "text-slate-500";
 
   useEffect(() => {
     setDraftUsername(username ?? "");
@@ -47,7 +49,11 @@ export function AuthStatusCard({ compact = false }: { compact?: boolean }) {
       await renameNickname(draftUsername);
       setActionMessage("Nickname updated.");
     } catch (nextError) {
-      setActionError(nextError instanceof Error ? nextError.message : "Failed to update nickname.");
+      setActionError(
+        nextError instanceof Error && nextError.message
+          ? nextError.message
+          : "Failed to update nickname."
+      );
     } finally {
       setIsSaving(false);
     }
@@ -105,13 +111,14 @@ export function AuthStatusCard({ compact = false }: { compact?: boolean }) {
           </button>
         </div>
 
-        {(error || actionError || actionMessage) && (
-          <div className="mt-3 rounded-[1.1rem] border border-white/8 bg-white/5 px-3 py-3 text-xs text-slate-300">
-            {error ? <p className="text-rose-200">{error}</p> : null}
-            {actionError ? <p className="text-rose-200">{actionError}</p> : null}
-            {actionMessage ? <p className="text-cyan-200">{actionMessage}</p> : null}
-          </div>
-        )}
+        <div className={`mt-3 min-h-5 text-xs ${connectionTone}`}>
+          <p>{connectionMessage}</p>
+        </div>
+
+        <div className="mt-2 min-h-5 text-xs">
+          {actionError ? <p className="text-rose-200">{actionError}</p> : null}
+          {actionMessage ? <p className="text-cyan-200">{actionMessage}</p> : null}
+        </div>
       </section>
     );
   }
@@ -162,6 +169,15 @@ export function AuthStatusCard({ compact = false }: { compact?: boolean }) {
         </div>
       </form>
 
+      <div className={`mt-3 min-h-5 text-xs ${connectionTone}`}>
+        <p>{connectionMessage}</p>
+      </div>
+
+      <div className="mt-2 min-h-5 text-xs">
+        {actionError ? <p className="text-rose-200">{actionError}</p> : null}
+        {actionMessage ? <p className="text-cyan-200">{actionMessage}</p> : null}
+      </div>
+
       <div className="mt-4 flex flex-wrap gap-2">
         {status !== "ready" || socketStatus !== "connected" ? (
           <button
@@ -188,15 +204,6 @@ export function AuthStatusCard({ compact = false }: { compact?: boolean }) {
         </button>
       </div>
 
-      <div className="mt-4 rounded-[1.35rem] border border-white/8 bg-white/5 px-3 py-3 text-xs text-slate-300">
-        <p>Game link: {getNakamaHttpUrl()}</p>
-        {error ? <p className="mt-2 text-rose-200">{error}</p> : null}
-        {socketStatus !== "connected" ? (
-          <p className="mt-2 text-fuchsia-200">Connection: {socketStatus}</p>
-        ) : null}
-        {actionError ? <p className="mt-2 text-rose-200">{actionError}</p> : null}
-        {actionMessage ? <p className="mt-2 text-cyan-200">{actionMessage}</p> : null}
-      </div>
     </section>
   );
 }

@@ -143,6 +143,63 @@ function isExpiredMatchError(error: unknown): boolean {
   );
 }
 
+function isMatchLeaveSafeToIgnore(error: unknown): boolean {
+  const message = toErrorMessage(error).toLowerCase();
+  const code = getErrorCode(error);
+
+  return (
+    code === 4 ||
+    code === 5 ||
+    message.includes("match not found") ||
+    message.includes("match has already ended") ||
+    message.includes("socket is not connected")
+  );
+}
+
+function toNicknameErrorMessage(error: unknown): string {
+  const directMessage = toErrorMessage(error);
+  const message = directMessage.toLowerCase();
+  const rawError =
+    typeof error === "object" && error !== null ? JSON.stringify(error).toLowerCase() : "";
+  const combinedMessage = `${message} ${rawError}`;
+  const code = getErrorCode(error);
+
+  if (
+    code === 6 ||
+    combinedMessage.includes("409") ||
+    combinedMessage.includes("conflict") ||
+    combinedMessage.includes("duplicate") ||
+    combinedMessage.includes("unique") ||
+    combinedMessage.includes("already exists") ||
+    combinedMessage.includes("already in use") ||
+    combinedMessage.includes("username is already") ||
+    combinedMessage.includes("username already") ||
+    combinedMessage.includes("username exists") ||
+    combinedMessage.includes("username taken") ||
+    combinedMessage.includes("nickname taken") ||
+    combinedMessage.includes("already taken") ||
+    combinedMessage.includes("taken")
+  ) {
+    return "That nickname is already taken. Try another one.";
+  }
+
+  if (
+    combinedMessage.includes("username invalid") ||
+    combinedMessage.includes("invalid username") ||
+    combinedMessage.includes("nickname invalid") ||
+    combinedMessage.includes("must be") ||
+    combinedMessage.includes("not valid")
+  ) {
+    return "That nickname is not valid. Use letters or numbers and try again.";
+  }
+
+  if (directMessage && directMessage !== "Unknown error" && directMessage !== "{}") {
+    return directMessage;
+  }
+
+  return "Failed to update nickname.";
+}
+
 function buildGuestUsername(deviceId: string): string {
   return `guest-${deviceId.replace(/[^a-zA-Z0-9]/g, "").slice(-8)}`;
 }
@@ -359,7 +416,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       throw new Error("Nickname cannot be empty.");
     }
 
-    await client.updateAccount(session, { username: trimmedUsername });
+    try {
+      await client.updateAccount(session, { username: trimmedUsername });
+    } catch (error) {
+      throw new Error(toNicknameErrorMessage(error));
+    }
     let nextSession = session;
 
     try {
@@ -399,11 +460,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const activeMatch = activeMatchRef.current;
 
     if (!socket || !activeMatch) {
+      resetActiveMatchState();
       return;
     }
 
-    await socket.leaveMatch(activeMatch.matchId);
-    resetActiveMatchState();
+    try {
+      await socket.leaveMatch(activeMatch.matchId);
+    } catch (error) {
+      if (!isMatchLeaveSafeToIgnore(error)) {
+        throw error;
+      }
+    } finally {
+      resetActiveMatchState();
+    }
   }, [resetActiveMatchState]);
 
   const leaveMatch = useCallback(async () => {

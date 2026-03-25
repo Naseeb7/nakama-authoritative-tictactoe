@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 import { useApp } from "@/components/providers/app-provider";
 import { SectionCard } from "@/components/ui/section-card";
@@ -28,10 +28,21 @@ const modes = [
 
 export default function PlayPage() {
   const router = useRouter();
-  const { activeMatch, joinStatus, matchError, requestMatch, socketStatus, status } =
-    useApp();
+  const {
+    activeMatch,
+    clearMatchError,
+    joinStatus,
+    matchError,
+    requestMatch,
+    socketStatus,
+    status,
+  } = useApp();
   const [selectedMode, setSelectedMode] = useState<MatchMode>("classic");
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    clearMatchError();
+  }, [clearMatchError]);
 
   function handleMatchRequest(action: "create_match" | "find_match") {
     startTransition(async () => {
