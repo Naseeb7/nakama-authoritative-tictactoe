@@ -1,124 +1,136 @@
-# nakama-authoritative-tictactoe
+# Nakama Authoritative Tic-Tac-Toe
 
-Server-authoritative multiplayer Tic-Tac-Toe built with Nakama runtime modules and real-time matchmaking.
+Server-authoritative multiplayer Tic-Tac-Toe built with Nakama authoritative matches, a Next.js frontend, realtime websocket state sync, per-player match history, leaderboard progression, reconnect recovery, and a timed game mode.
 
-## Overview
+## Project Overview
 
-This project provides the backend foundation for a real-time multiplayer Tic-Tac-Toe game using Nakama's authoritative runtime model. Game rules, turn validation, and state transitions are enforced on the server to keep all clients synchronized around a single trusted game state.
+This project implements a two-player multiplayer Tic-Tac-Toe game where all gameplay rules are enforced on the server.
+
+The frontend does not own the board state. It only sends gameplay intents, such as a requested move, and renders the state broadcast back from Nakama. The authoritative game state lives inside the Nakama match handler, which controls:
+
+- player admission into matches
+- symbol assignment
+- turn order
+- move validation
+- win and draw detection
+- timed-turn expiry
+- reconnect timeout resolution
+- leaderboard updates
+- match history persistence
+
+This architecture prevents clients from cheating by locally forcing turns, overwriting board state, or claiming invalid wins.
+
+## Live Deployment Links
+
+- Frontend URL:
+- Nakama server endpoint:
 
 ## Tech Stack
 
-- Nakama 3.22.0
-- TypeScript runtime modules
-- Node.js for module compilation
-- Docker and Docker Compose
-- PostgreSQL 13
+- Frontend: Next.js App Router, React, Tailwind CSS
+- Backend: Nakama TypeScript runtime modules
+- Realtime: Nakama WebSocket transport
+- Database: PostgreSQL
+- Deployment: Railway + Vercel
+
+## Features Implemented
+
+- Automatic matchmaking through `find_match`
+- Manual room creation through `create_match`
+- Realtime authoritative state sync over Nakama sockets
+- Server-side move validation
+- Reconnect handling with timeout-based resolution
+- Leaderboard tracking wins and streak-related stats
+- Match history persistence per player
+- Timed mode with turn deadlines and auto-forfeit
+- Concurrent authoritative match support
 
 ## Architecture Summary
 
-The backend uses Nakama authoritative matches to host server-owned game sessions. Clients connect over Nakama's real-time transport, submit gameplay intents, and receive authoritative state updates broadcast from the match loop. Matchmaking is designed to route compatible players into isolated match instances managed entirely by the server runtime.
+The core gameplay loop is server authoritative:
 
-## Setup Instructions
+1. Client joins or creates a match through an RPC.
+2. Client sends a move intent with opcode `1`.
+3. Server validates the move inside the Nakama match loop.
+4. Server updates the authoritative board state.
+5. Server checks win, draw, timeout, or reconnect outcomes.
+6. Server broadcasts the authoritative state to both players with opcode `2`.
+7. Frontend rerenders from that server state.
 
-Setup steps will be documented here as the local development workflow is finalized.
-
-## Deployment Plan
-
-Deployment steps for container build, registry publishing, and environment-specific Nakama configuration will be documented here.
-
-## Architecture Overview
-
-The backend is organized as a Nakama JavaScript runtime module compiled from TypeScript into a single ES5-compatible bundle at `backend/build/main.js`. Runtime registration happens in `backend/src/main.ts`, and authoritative gameplay rules live in `backend/src/modules/match_handler.ts`.
-
-The match handler owns:
-
-- authoritative board state
-- turn order and symbol assignment
-- mode-aware matchmaking labels
-- reconnect tracking
-- leaderboard and per-player stats persistence
-- completed match history persistence
-
-## Authoritative Match Lifecycle
-
-Each match follows the same server-owned lifecycle:
-
-1. `create_match` or `find_match` creates an authoritative match with mode params.
-2. `matchInit` creates the initial board, timestamps, lifecycle label, and reconnect settings.
-3. Players join and are assigned `X` then `O`.
-4. Once two players are present, the match transitions from `waiting` to `active`.
-5. Players send move messages with opcode `1`, and the server validates and applies them.
-6. The server broadcasts authoritative state updates with opcode `2`.
-7. The match finishes on win, draw, timed-mode turn timeout, or reconnect timeout expiry.
-8. On completion, leaderboard/stats updates are persisted and match history is written to storage.
+The browser never becomes the source of truth for the match.
 
 ## Matchmaking Flow
 
-Both RPCs accept an optional mode payload:
+The backend exposes two RPCs:
+
+- `create_match`
+- `find_match`
+
+### `create_match`
+
+Creates a new authoritative Nakama match immediately for the selected mode.
+
+### `find_match`
+
+Looks for an existing compatible waiting room first, then falls back to creating a new one if none exists.
+
+Compatibility is based on:
+
+- authoritative match type
+- room size less than 2
+- mode-specific match label
+- lifecycle label in `waiting`
+
+Supported modes:
+
+- `classic`
+- `timed`
+
+Example RPC payload:
 
 ```json
 {
-  "mode": "classic"
+  "mode": "timed"
 }
 ```
 
-Supported modes are `classic` and `timed`. If no payload is provided, the backend defaults to `classic`.
+## Server Authoritative Enforcement
 
-`create_match` always creates a new authoritative match using the requested mode.
+Gameplay validation lives inside the Nakama match handler in the backend runtime.
 
-`find_match` lists authoritative matches and reuses one only when all of the following are true:
+Each incoming move is processed in `matchLoop` and rejected unless all conditions are true:
 
-- label starts with `tic_tac_toe_match:<mode>`
-- lifecycle label is still `:waiting`
-- size is less than `2`
+- match is active
+- player is part of the match
+- player is the current turn owner
+- payload is valid JSON
+- position is between `0` and `8`
+- target cell is empty
+- player has an assigned symbol
+- no reconnect pause is currently blocking move processing
 
-If no compatible waiting match exists, `find_match` creates a new one with the requested mode.
+Only after validation succeeds does the server:
 
-## Reconnect Handling Strategy
+- update the board
+- append move history
+- detect wins or draws
+- rotate the turn
+- broadcast the next state
 
-Disconnects do not immediately end the match anymore.
+This makes illegal client-side moves harmless because invalid messages are ignored.
 
-When a player leaves:
+## Leaderboard and Stats System
 
-- the player stays in `state.players`
-- `state.disconnectedPlayers[userId]` is set to the disconnect timestamp
-- the match keeps the current board, symbols, move history, and turn order
+The backend creates and updates a global leaderboard:
 
-The reconnect timeout is `30` seconds and is exposed in match state as `disconnectTimeoutSeconds`.
+- leaderboard id: `global_wins`
 
-If the disconnected player rejoins within the timeout:
+Per-player stats are stored in Nakama storage:
 
-- the player is removed from `disconnectedPlayers`
-- the match resumes using the same authoritative board and turn data
+- collection: `player_stats`
+- key: `stats`
 
-If the timeout expires:
-
-- the connected remaining player wins automatically
-- if every player is disconnected and all reconnect windows expire, the match is closed without a winner
-
-## Timed Mode Logic
-
-Timed mode uses a `30` second turn timer.
-
-Behavior:
-
-- mode is set with `{"mode":"timed"}`
-- when the second player joins, the first active turn gets a 30-second deadline
-- after each valid move, the next turn receives a fresh 30-second deadline
-- if the active player does not move before the deadline, the other player wins automatically
-
-Disconnects pause the timed-mode turn deadline. If the disconnected player reconnects in time, the paused turn window is restored and the match continues without resetting board state or turn ownership.
-
-## Leaderboard Persistence
-
-The runtime ensures a global leaderboard named `global_wins` exists during module initialization.
-
-On match completion:
-
-- wins are written to `global_wins`
-- per-player stats are written to Nakama storage under collection `player_stats`, key `stats`
-
-Tracked stats include:
+Tracked stats:
 
 - wins
 - losses
@@ -126,112 +138,263 @@ Tracked stats include:
 - current streak
 - best streak
 
-## Match History Storage
+Stats are updated when a match ends through:
 
-Every completed match is written once to Nakama storage in collection `match_history`.
+- normal win
+- draw
+- timed-mode forfeit
+- reconnect-timeout forfeit
 
-Stored object shape:
+The frontend leaderboard page displays:
 
-```json
-{
-  "players": ["user-id-1", "user-id-2"],
-  "winner": "user-id-1",
-  "mode": "classic",
-  "moveHistory": [
-    { "playerId": "user-id-1", "position": 0 }
-  ],
-  "durationSeconds": 18,
-  "timestamp": 1710000000
-}
-```
+- top global wins
+- current player stats
+- streak progress
 
-The storage key is the Nakama `matchId` when available, with a timestamp fallback if the runtime does not provide one.
+## Match History Persistence
+
+Completed matches are persisted to Nakama storage and indexed per player.
+
+Stored match history includes:
+
+- match id
+- timestamp
+- duration
+- mode
+- winner
+- participating players
+- player display names
+- move history
+- end reason
+- end reason text
+
+The frontend history page loads this data via the `list_match_history` RPC and renders a paginated archive.
+
+## Timed Mode Logic
+
+Timed mode is implemented on the server.
+
+Rules:
+
+- each active turn gets a 30-second deadline
+- the turn clock starts when the second player joins
+- after every valid move, the next turn receives a fresh deadline
+- if the active player runs out of time, the other player wins automatically
+
+Timed mode is pause-aware:
+
+- if a player disconnects during a timed match, the turn timer pauses
+- if the player reconnects in time, the remaining turn time is restored
+- if the reconnect window expires, the match is resolved on the server
+
+## Reconnect Handling
+
+Disconnects do not immediately destroy the match.
+
+Behavior:
+
+- disconnected players remain part of the match state
+- a reconnect timeout window is tracked on the server
+- the current game can resume if the player returns before expiry
+- if the timeout expires, the server resolves the match automatically
+
+This allows:
+
+- page refresh recovery
+- temporary network loss recovery
+- fair timeout-based match closure
 
 ## Deployment Instructions
 
-The local runtime flow expects the TypeScript backend to be compiled before Nakama starts.
+### Backend on Railway
 
-Typical local steps:
+The backend is deployed as a Dockerized Nakama service.
 
-1. Build the runtime bundle from `backend/`.
-2. Start PostgreSQL and Nakama with Docker Compose.
-3. Connect a Nakama client to `127.0.0.1:7350`.
+Key backend files:
 
-The Docker Compose setup does not change the runtime wiring. Nakama still loads the compiled module bundle from `/nakama/data/modules/build/`.
+- `backend/Dockerfile`
+- `backend/local.yml`
 
-## Docker Setup
+Deployment behavior:
 
-`docker-compose.yml` starts:
+1. TypeScript runtime is compiled to `backend/build/main.js`
+2. Docker image copies compiled JS into Nakama runtime path
+3. Docker entry command runs database migrations
+4. Nakama starts using `local.yml`
+
+Required backend environment variable:
+
+```env
+DATABASE_ADDRESS=username:password@host:port/database
+```
+
+Nakama loads the runtime from:
+
+- `runtime.path: /nakama/data/modules`
+- `runtime.js_entrypoint: build/main.js`
+
+### Frontend on Vercel
+
+The frontend is deployed as a separate Vercel project with `frontend/` as the project root.
+
+Recommended frontend environment variables:
+
+```env
+NEXT_PUBLIC_NAKAMA_URL=https://your-nakama-host
+NEXT_PUBLIC_NAKAMA_SERVER_KEY=defaultkey
+```
+
+Alternative split env format:
+
+```env
+NEXT_PUBLIC_NAKAMA_HOST=your-host
+NEXT_PUBLIC_NAKAMA_PORT=443
+NEXT_PUBLIC_NAKAMA_USE_SSL=true
+NEXT_PUBLIC_NAKAMA_SERVER_KEY=defaultkey
+```
+
+## Local Setup Instructions
+
+### 1. Build the backend runtime
+
+From `backend/`:
+
+```bash
+npm install
+npm run build
+```
+
+### 2. Start Nakama and PostgreSQL
+
+From the repository root:
+
+```bash
+docker compose up --build
+```
+
+This starts:
 
 - PostgreSQL 13
 - Nakama 3.22.0
 
 Exposed ports:
 
-- `7349` for gRPC
-- `7350` for the client API
-- `7351` for the Nakama console
+- `5432` PostgreSQL
+- `7349` Nakama gRPC
+- `7350` Nakama HTTP and websocket API
+- `7351` Nakama console
 
-Mounted runtime paths:
+### 3. Start the frontend
 
-- `./backend/build` -> `/nakama/data/modules/build`
-- `./backend/local.yml` -> `/nakama/data/local.yml`
+From `frontend/`:
 
-The TypeScript compiler configuration remains aligned with Nakama JS runtime requirements:
-
-- `"module": "none"`
-- `"target": "ES5"`
-
-## Testing Multiplayer Locally
-
-For a local multiplayer sanity check:
-
-1. Build the backend bundle.
-2. Run `docker compose up`.
-3. Open two clients and authenticate two different users.
-4. Call `find_match` or `create_match` with the same mode.
-5. Join the returned match id over Nakama realtime.
-6. Send move messages with opcode `1`.
-7. Confirm both clients receive opcode `2` state broadcasts.
-8. Disconnect one client and reconnect within 30 seconds to verify restoration.
-9. Repeat with a disconnect longer than 30 seconds to verify reconnect-timeout forfeits.
-
-## RPC Usage Examples
-
-Create a classic match:
-
-```json
-{}
+```bash
+npm install
+npm run dev
 ```
 
-Create a timed match:
+Default local frontend URL:
 
-```json
-{
-  "mode": "timed"
-}
+- `http://localhost:3000`
+
+Default local Nakama configuration:
+
+```env
+NEXT_PUBLIC_NAKAMA_HOST=127.0.0.1
+NEXT_PUBLIC_NAKAMA_PORT=7350
+NEXT_PUBLIC_NAKAMA_SERVER_KEY=defaultkey
+NEXT_PUBLIC_NAKAMA_USE_SSL=false
 ```
 
-Find or create a classic match:
+## Multiplayer Testing Instructions
 
-```json
-{
-  "mode": "classic"
-}
+Recommended local multiplayer testing options:
+
+1. one normal browser window plus one incognito window
+2. two separate browsers
+3. two devices on the same deployed environment
+
+Suggested test plan:
+
+1. Open two clients
+2. Let both authenticate as different device users
+3. Use `find_match` in the same mode
+4. Confirm both clients join the same room
+5. Submit alternating moves
+6. Confirm invalid out-of-turn moves are ignored
+7. Test win and draw flows
+8. Test timed mode timeout resolution
+9. Refresh one client and verify reconnect recovery
+10. Leave one client disconnected longer than 30 seconds and verify reconnect-timeout resolution
+
+## Repository Structure Overview
+
+```text
+.
+├── backend/
+│   ├── build/              # Compiled Nakama runtime bundle
+│   ├── src/
+│   │   ├── main.ts         # RPC and match registration
+│   │   └── modules/
+│   │       └── match_handler.ts
+│   ├── Dockerfile
+│   ├── local.yml
+│   └── package.json
+├── frontend/
+│   ├── app/                # Next.js App Router pages
+│   ├── components/         # Layout, board, provider, UI components
+│   ├── lib/                # Nakama client setup, env parsing, storage helpers
+│   ├── public/
+│   └── package.json
+├── docker-compose.yml      # Local Nakama + Postgres stack
+└── README.md
 ```
 
-Find or create a timed match:
+## Design Decisions
 
-```json
-{
-  "mode": "timed"
-}
-```
+### 1. Server authoritative gameplay
 
-Valid move message payload sent with opcode `1`:
+The main design goal is fairness and consistency. The frontend is intentionally thin and reactive, while the backend owns rules and state transitions.
 
-```json
-{
-  "position": 4
-}
-```
+### 2. RPC-driven matchmaking
+
+Instead of exposing raw room management to the client, the frontend requests matchmaking through controlled backend RPCs.
+
+### 3. Per-match isolated state
+
+Each authoritative Nakama match owns its own state object, which allows many matches to run concurrently without sharing gameplay state.
+
+### 4. Persistence beyond the live room
+
+The project persists:
+
+- wins leaderboard
+- per-player stats
+- completed match history
+
+This allows the app to continue providing value after a match ends.
+
+### 5. Disconnect-aware gameplay
+
+Instead of immediately ending a match on disconnect, the backend gives players a reconnect window and resolves the outcome only when needed.
+
+## Future Improvements
+
+- friend invites or private room codes
+- spectating support
+- rematch handshake between both players
+- richer player profiles and account management
+- richer analytics for match history
+- leaderboard filtering by mode
+- observability and match telemetry
+- automated integration tests around match state transitions
+
+## Submission Notes
+
+This repository is structured as a monorepo:
+
+- `frontend/` is deployed on Vercel
+- `backend/` is deployed on Railway using Docker
+- PostgreSQL is used by Nakama as the persistent storage layer
+
+The project demonstrates a complete server-authoritative multiplayer flow rather than a client-simulated board with server relay.
