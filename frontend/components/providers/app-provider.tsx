@@ -156,42 +156,98 @@ function isMatchLeaveSafeToIgnore(error: unknown): boolean {
   );
 }
 
-function toNicknameErrorMessage(error: unknown): string {
+type HttpErrorResponse = {
+  clone?: () => HttpErrorResponse;
+  json?: () => Promise<unknown>;
+  status: number;
+  statusText?: string;
+  text?: () => Promise<string>;
+};
+
+function isHttpErrorResponse(error: unknown): error is HttpErrorResponse {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    typeof error.status === "number"
+  );
+}
+
+function extractNicknameServerMessage(payload: unknown): string | null {
+  if (typeof payload === "string") {
+    const trimmedPayload = payload.trim();
+
+    if (!trimmedPayload || trimmedPayload === "{}") {
+      return null;
+    }
+
+    try {
+      return extractNicknameServerMessage(JSON.parse(trimmedPayload));
+    } catch {
+      return trimmedPayload;
+    }
+  }
+
+  if (!payload || typeof payload !== "object") {
+    return null;
+  }
+
+  if ("message" in payload && typeof payload.message === "string") {
+    const trimmedMessage = payload.message.trim();
+    return trimmedMessage ? trimmedMessage : null;
+  }
+
+  if ("error" in payload && typeof payload.error === "string") {
+    const trimmedError = payload.error.trim();
+    return trimmedError ? trimmedError : null;
+  }
+
+  return null;
+}
+
+async function readNicknameServerMessage(response: HttpErrorResponse): Promise<string | null> {
+  const readableResponse =
+    typeof response.clone === "function" ? response.clone() : response;
+
+  if (typeof readableResponse.text === "function") {
+    try {
+      return extractNicknameServerMessage(await readableResponse.text());
+    } catch {
+      return null;
+    }
+  }
+
+  if (typeof readableResponse.json === "function") {
+    try {
+      return extractNicknameServerMessage(await readableResponse.json());
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+async function toNicknameErrorMessage(error: unknown): Promise<string> {
+  if (isHttpErrorResponse(error)) {
+    const serverMessage = await readNicknameServerMessage(error);
+
+    if (error.status === 409) {
+      return "That nickname is already taken. Try another one.";
+    }
+
+    if (serverMessage) {
+      return serverMessage;
+    }
+
+    if (error.statusText) {
+      return error.statusText;
+    }
+
+    return "Failed to update nickname.";
+  }
+
   const directMessage = toErrorMessage(error);
-  const message = directMessage.toLowerCase();
-  const rawError =
-    typeof error === "object" && error !== null ? JSON.stringify(error).toLowerCase() : "";
-  const combinedMessage = `${message} ${rawError}`;
-  const code = getErrorCode(error);
-
-  if (
-    code === 6 ||
-    combinedMessage.includes("409") ||
-    combinedMessage.includes("conflict") ||
-    combinedMessage.includes("duplicate") ||
-    combinedMessage.includes("unique") ||
-    combinedMessage.includes("already exists") ||
-    combinedMessage.includes("already in use") ||
-    combinedMessage.includes("username is already") ||
-    combinedMessage.includes("username already") ||
-    combinedMessage.includes("username exists") ||
-    combinedMessage.includes("username taken") ||
-    combinedMessage.includes("nickname taken") ||
-    combinedMessage.includes("already taken") ||
-    combinedMessage.includes("taken")
-  ) {
-    return "That nickname is already taken. Try another one.";
-  }
-
-  if (
-    combinedMessage.includes("username invalid") ||
-    combinedMessage.includes("invalid username") ||
-    combinedMessage.includes("nickname invalid") ||
-    combinedMessage.includes("must be") ||
-    combinedMessage.includes("not valid")
-  ) {
-    return "That nickname is not valid. Use letters or numbers and try again.";
-  }
 
   if (directMessage && directMessage !== "Unknown error" && directMessage !== "{}") {
     return directMessage;
@@ -419,7 +475,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       await client.updateAccount(session, { username: trimmedUsername });
     } catch (error) {
-      throw new Error(toNicknameErrorMessage(error));
+      throw new Error(await toNicknameErrorMessage(error));
     }
     let nextSession = session;
 
