@@ -292,30 +292,8 @@ var matchLoop = function (
       winner: timeoutWinnerId
     });
 
-    if (timeoutWinnerId !== null) {
-      try {
-        updatePlayerStats(_nk, timeoutWinnerId, true);
-        updatePlayerStats(_nk, timedOutPlayerId, false);
-        _nk.leaderboardRecordWrite(
-          GLOBAL_WINS_LEADERBOARD_ID,
-          timeoutWinnerId,
-          getLeaderboardUsername(state, timeoutWinnerId),
-          1,
-          0,
-          {},
-          null
-        );
-      } catch (error) {
-        logger.error("Failed to persist timeout result.", {
-          winner: timeoutWinnerId,
-          loser: timedOutPlayerId,
-          error: String(error)
-        });
-      }
-    }
-
     updateMatchLabelIfNeeded(dispatcher, previousLabel, state.label);
-    persistCompletedMatchIfNeeded(_nk, logger, state);
+    persistTurnTimeoutResult(_nk, logger, state, timedOutPlayerId, timeoutWinnerId);
     broadcastMatchState(dispatcher, state, tick);
 
     return {
@@ -400,53 +378,14 @@ var matchLoop = function (
       loserId = getOtherPlayerId(state.players, playerId);
       finalizeMatchState(state, tick, playerId, "win", buildWinText(state, playerId, loserId));
 
-      try {
-        updatePlayerStats(_nk, playerId, true);
-
-        if (loserId !== null) {
-          updatePlayerStats(_nk, loserId, false);
-        }
-
-        _nk.leaderboardRecordWrite(
-          GLOBAL_WINS_LEADERBOARD_ID,
-          playerId,
-          getLeaderboardUsername(state, playerId),
-          1,
-          0,
-          {},
-          null
-        );
-      } catch (error) {
-        logger.error("Failed to persist win result.", {
-          winner: playerId,
-          error: String(error)
-        });
-      }
-
       updateMatchLabelIfNeeded(dispatcher, previousWinLabel, state.label);
-      persistCompletedMatchIfNeeded(_nk, logger, state);
+      persistWinResult(_nk, logger, state, playerId, loserId);
     } else if (isBoardFull(state.board)) {
       var previousDrawLabel = state.label;
       finalizeMatchState(state, tick, null, "draw", "The match ended in a draw.");
 
-      try {
-        if (state.players.length > 0) {
-          updateDrawStats(_nk, state.players[0]);
-          resetPlayerStreak(_nk, state.players[0]);
-        }
-
-        if (state.players.length > 1) {
-          updateDrawStats(_nk, state.players[1]);
-          resetPlayerStreak(_nk, state.players[1]);
-        }
-      } catch (error) {
-        logger.error("Failed to persist draw result.", {
-          error: String(error)
-        });
-      }
-
       updateMatchLabelIfNeeded(dispatcher, previousDrawLabel, state.label);
-      persistCompletedMatchIfNeeded(_nk, logger, state);
+      persistDrawResult(_nk, logger, state);
     } else {
       nextPlayer = getOtherPlayerId(state.players, playerId);
       state.currentTurn = nextPlayer;
@@ -550,79 +489,9 @@ function finalizeExpiredDisconnects(
     tick: tick
   });
 
-  if (winner !== null) {
-    try {
-      updatePlayerStats(nk, winner, true);
-      nk.leaderboardRecordWrite(
-        GLOBAL_WINS_LEADERBOARD_ID,
-        winner,
-        getLeaderboardUsername(state, winner),
-        1,
-        0,
-        {},
-        null
-      );
-
-      for (i = 0; i < state.players.length; i += 1) {
-        if (state.players[i] !== winner) {
-          updatePlayerStats(nk, state.players[i], false);
-        }
-      }
-    } catch (error) {
-      logger.error("Failed to persist reconnect-timeout result.", {
-        winner: winner,
-        error: String(error)
-      });
-    }
-  }
-
   updateMatchLabelIfNeeded(dispatcher, previousLabel, state.label);
-  persistCompletedMatchIfNeeded(nk, logger, state);
+  persistReconnectTimeoutResult(nk, logger, state, winner);
   broadcastMatchState(dispatcher, state);
 
   return true;
-}
-
-function persistCompletedMatchIfNeeded(nk: Nakama, logger: Logger, state: MatchState): void {
-  var durationSeconds: number;
-  var historyRecord: Record<string, unknown>;
-
-  if (state.status !== "finished" || state.historyPersisted) {
-    return;
-  }
-
-  durationSeconds = getMatchDurationSeconds(state.startTime, state.endTime);
-  historyRecord = {
-    matchId: state.matchId,
-    timestamp: state.endTime || getCurrentUnixTimestamp(),
-    durationSeconds: durationSeconds,
-    mode: state.mode,
-    winner: state.winner,
-    players: state.players,
-    playerNames: state.playerNames,
-    moveHistory: state.moveHistory,
-    endReason: state.endReason,
-    endReasonText: state.endReasonText
-  };
-
-  try {
-    nk.storageWrite([
-      {
-        collection: MATCH_HISTORY_COLLECTION,
-        key: state.historyKey,
-        value: historyRecord as any,
-        permissionRead: 0,
-        permissionWrite: 0
-      }
-    ]);
-
-    upsertMatchHistoryIndex(nk, state, durationSeconds);
-
-    state.historyPersisted = true;
-  } catch (error) {
-    logger.error("Failed to persist match history.", {
-      matchId: state.matchId,
-      error: String(error)
-    });
-  }
 }

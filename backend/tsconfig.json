@@ -18,6 +18,7 @@
     "src/modules/match_broadcast.ts",
     "src/modules/match_state.ts",
     "src/modules/player_stats.ts",
+    "src/modules/match_results.ts",
     "src/modules/match_handler.ts",
     "src/main.ts"
   ],
