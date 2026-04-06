@@ -13,6 +13,8 @@
     "src/modules/match_constants.ts",
     "src/modules/match_payload.ts",
     "src/modules/match_helpers.ts",
+    "src/modules/match_history.ts",
+    "src/modules/matchmaking.ts",
     "src/modules/match_handler.ts",
     "src/main.ts"
   ],
