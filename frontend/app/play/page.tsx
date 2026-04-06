@@ -58,28 +58,27 @@ export default function PlayPage() {
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.12fr_0.88fr]">
+    <div className="grid gap-6 xl:grid-cols-[1.18fr_0.82fr]">
       <SectionCard className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(0,183,255,0.12),_transparent_26%),radial-gradient(circle_at_bottom_right,_rgba(255,79,216,0.12),_transparent_24%)]" />
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-300">
           Start here
         </p>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-          Find a live game or open your own room.
+          Choose how you want to play.
         </h2>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-[color:var(--ink-soft)] sm:text-base">
-          The default path is simple: pick a mode and press the main play
-          button. Create a room only when you want to start a fresh match
-          yourself.
+          Pick your preferred style, then start a game. You can jump into the
+          next available match, or open a fresh room if you want to wait there.
         </p>
-        <div className="mt-5 flex flex-wrap gap-2 text-xs uppercase tracking-[0.22em]">
-          <StatusPill tone="cyan">Game {status}</StatusPill>
-          <StatusPill tone="fuchsia">Live {socketStatus}</StatusPill>
-          <StatusPill>Mode {selectedMode}</StatusPill>
-          <StatusPill>Queue {isPending ? "working" : joinStatus}</StatusPill>
+
+        <div className="mt-5 flex flex-wrap gap-2">
+          <StatusPill tone="cyan">Ready: {status}</StatusPill>
+          <StatusPill tone="fuchsia">Socket: {socketStatus}</StatusPill>
+          <StatusPill>Mode: {selectedMode}</StatusPill>
         </div>
 
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <div className="mt-7 grid gap-4 sm:grid-cols-2">
           {modes.map((mode) => (
             <ChoiceCard
               key={mode.id}
@@ -92,29 +91,41 @@ export default function PlayPage() {
           ))}
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={() => handleMatchRequest("find_match")}
-            disabled={isPending || joinStatus === "working" || status !== "ready"}
-            className="rounded-full border border-cyan-400/40 bg-cyan-400/12 px-6 py-3 text-sm font-semibold text-cyan-100 shadow-[0_0_22px_rgba(0,183,255,0.14)] transition hover:-translate-y-0.5 hover:bg-cyan-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-800 disabled:text-slate-500 disabled:shadow-none"
-          >
-            Find match now
-          </button>
+        <div className="mt-8 rounded-[1.6rem] border border-cyan-400/22 bg-[linear-gradient(180deg,_rgba(3,11,26,0.82),_rgba(8,16,35,0.92))] p-5 shadow-[0_0_28px_rgba(0,183,255,0.08)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-300">
+            Quick start
+          </p>
+          <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-lg font-semibold text-white">Find me a game</p>
+              <p className="mt-1 max-w-xl text-sm leading-6 text-slate-300">
+                We will place you into the next available {selectedMode} match.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleMatchRequest("find_match")}
+              disabled={isPending || joinStatus === "working" || status !== "ready"}
+              className="rounded-full border border-cyan-400/40 bg-cyan-400/12 px-6 py-3 text-sm font-semibold text-cyan-100 shadow-[0_0_22px_rgba(0,183,255,0.14)] transition hover:-translate-y-0.5 hover:bg-cyan-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-800 disabled:text-slate-500 disabled:shadow-none"
+            >
+              {isPending || joinStatus === "working" ? "Joining..." : "Start game"}
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-3">
           <button
             type="button"
             onClick={() => handleMatchRequest("create_match")}
             disabled={isPending || joinStatus === "working" || status !== "ready"}
             className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-5 py-3 text-sm font-medium text-fuchsia-100 transition hover:-translate-y-0.5 hover:bg-fuchsia-500/16 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-800 disabled:text-slate-500"
           >
-            Create private room
+            Start a new room
           </button>
+          <p className="self-center text-sm text-slate-400">
+            Use this if you want to open your own room first.
+          </p>
         </div>
-
-        <p className="mt-4 text-sm leading-6 text-slate-400">
-          `Find match now` is the normal play path. Use `Create private room`
-          when you specifically want a brand-new room.
-        </p>
 
         {matchError ? (
           <div className="mt-6 rounded-[1.35rem] border border-rose-400/30 bg-rose-500/10 px-4 py-4 text-sm text-rose-200">
@@ -125,31 +136,31 @@ export default function PlayPage() {
 
       <SectionCard className="bg-[linear-gradient(180deg,_rgba(8,12,28,0.96),_rgba(13,19,43,0.92))] text-slate-50">
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-fuchsia-300">
-          What happens next
+          Need help choosing?
         </p>
         <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-          {activeMatch ? "You already have a live room" : "One clear route to play"}
+          {activeMatch ? "You already have a game open" : "Two simple ways to start"}
         </h2>
         <p className="mt-3 text-sm leading-7 text-slate-300">
           {activeMatch
             ? `You are in ${activeMatch.mode} mode with ${activeMatch.presences.length} player slot(s) filled.`
-            : "Pick a mode, press the main play button, and the app will join the next open room for you."}
+            : "Pick the option that matches what you want to do next."}
         </p>
         <div className="mt-6 grid gap-3">
           <div className="rounded-[1.35rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-4">
             <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-300">
-              Default path
+              Start game
             </p>
             <p className="mt-2 text-sm text-slate-200">
-              `Find match now` looks for a room that already needs one more player.
+              Best when you just want to play right away.
             </p>
           </div>
           <div className="rounded-[1.35rem] border border-fuchsia-400/18 bg-slate-950/70 px-4 py-4">
             <p className="text-[11px] uppercase tracking-[0.24em] text-fuchsia-300">
-              Alternate path
+              Start a new room
             </p>
             <p className="mt-2 text-sm text-slate-200">
-              `Create private room` starts a new room first and then joins it.
+              Best when you want to open a fresh room and wait there.
             </p>
           </div>
         </div>
@@ -161,7 +172,7 @@ export default function PlayPage() {
             }
             className="mt-6 inline-flex rounded-full border border-cyan-400/35 bg-cyan-400/10 px-4 py-2 text-sm font-medium text-cyan-100 transition hover:-translate-y-0.5 hover:bg-cyan-400/16"
           >
-            Enter Room
+            Go back to your game
           </button>
         ) : null}
       </SectionCard>

@@ -61,63 +61,36 @@ export function AuthStatusCard({ compact = false }: { compact?: boolean }) {
 
   if (compact) {
     return (
-      <section className="w-full rounded-[1.25rem] border border-cyan-400/18 bg-[linear-gradient(180deg,_rgba(5,10,24,0.96),_rgba(9,16,37,0.92))] px-3 py-3 text-slate-50 shadow-[0_0_0_1px_rgba(77,226,255,0.06),0_0_20px_rgba(0,183,255,0.12)] sm:rounded-[1.4rem] sm:px-4 lg:max-w-md">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
-              Pilot
-            </p>
-            <p className="truncate text-sm font-semibold text-white">
-              {username ? username : "Connecting..."}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.18em]">
-            <span
-              className={`rounded-full border px-3 py-1 font-semibold ${getStatusTone(
-                status
-              )}`}
-            >
-              {status}
-            </span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-slate-300">
-              {socketStatus}
-            </span>
-          </div>
-        </div>
-
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+      <section className="rounded-full border border-white/10 bg-slate-950/72 px-3 py-2 text-slate-50 shadow-[0_10px_30px_rgba(0,0,0,0.24)]">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="max-w-[10rem] truncate text-xs font-medium text-slate-200">
+            {username ? username : "Connecting..."}
+          </span>
+          <span
+            className={`rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${getStatusTone(
+              status
+            )}`}
+          >
+            {status}
+          </span>
+          <span className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-slate-300">
+            {socketStatus}
+          </span>
           {status !== "ready" || socketStatus !== "connected" ? (
             <button
               type="button"
               onClick={() => void retryConnection()}
-              className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-3 py-2 text-xs font-medium text-fuchsia-100 transition hover:bg-fuchsia-500/16"
+              className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-fuchsia-100 transition hover:bg-fuchsia-500/16"
             >
               Retry
             </button>
           ) : null}
-          <button
-            type="button"
-            onClick={() => void logout()}
-            className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-slate-200 transition hover:border-cyan-400/30 hover:bg-white/8"
+          <a
+            href="/account"
+            className="rounded-full border border-cyan-400/20 bg-cyan-400/8 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-100 transition hover:bg-cyan-400/14"
           >
-            Log out
-          </button>
-          <button
-            type="button"
-            onClick={() => void switchUser()}
-            className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-slate-200 transition hover:border-cyan-400/30 hover:bg-white/8"
-          >
-            Switch user
-          </button>
-        </div>
-
-        <div className={`mt-3 min-h-5 text-xs ${connectionTone}`}>
-          <p>{connectionMessage}</p>
-        </div>
-
-        <div className="mt-2 min-h-5 text-xs">
-          {actionError ? <p className="text-rose-200">{actionError}</p> : null}
-          {actionMessage ? <p className="text-cyan-200">{actionMessage}</p> : null}
+            Account
+          </a>
         </div>
       </section>
     );

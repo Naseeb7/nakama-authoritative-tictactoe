@@ -5,16 +5,16 @@ import { StepCard } from "@/components/ui/step-card";
 
 const foundationItems = [
   {
-    title: "Live matchmaking",
-    body: "Find a room that is already waiting for another player and get into the board fast.",
+    title: "Jump in fast",
+    body: "Press Play to join the next open game without setting anything up first.",
   },
   {
-    title: "Authoritative state",
-    body: "Both players see the same board, the same turn order, and the same result.",
+    title: "Choose your pace",
+    body: "Play Classic for a calm round or Rush when you want a timer on every turn.",
   },
   {
-    title: "Quick rematches",
-    body: "Run it back from the match screen instead of starting the whole flow again.",
+    title: "Track your games",
+    body: "Check match history and leaderboard whenever you want to review your results.",
   },
 ];
 
@@ -24,14 +24,14 @@ export default function Home() {
       <SectionCard className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(0,183,255,0.16),_transparent_28%),radial-gradient(circle_at_20%_80%,_rgba(255,79,216,0.12),_transparent_22%)]" />
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-300">
-          Play-first lobby
+          Welcome
         </p>
         <h2 className="mt-3 max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl">
-          Get into a match without hunting for the right button.
+          Quick online tic-tac-toe, built for instant play.
         </h2>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-[color:var(--ink-soft)] sm:text-base">
-          PulseGrid is built for a fast two-player loop: pick a mode, hit play,
-          and step straight into a live room. No setup maze, no guesswork.
+          Start a match in a couple of clicks, play live against another
+          player, and jump back in for another round when the game ends.
         </p>
 
         <div className="mt-8 flex flex-wrap gap-3">
@@ -52,18 +52,18 @@ export default function Home() {
         <div className="mt-8 grid gap-3 sm:grid-cols-3">
           <StepCard
             step="Step 1"
-            title="Choose a mode"
-            body="Classic for open play, or Rush when you want a turn timer."
+            title="Open Play"
+            body="Head to the Play screen to start a new game or join one that is waiting."
           />
           <StepCard
             step="Step 2"
-            title="Hit play"
-            body="Use the main play action to find the next open game immediately."
+            title="Pick a mode"
+            body="Choose Classic for standard games or Rush for timed turns."
           />
           <StepCard
             step="Step 3"
-            title="Join the board"
-            body="If a room is ready, you move straight into the live match screen."
+            title="Start playing"
+            body="You are taken straight to the live board as soon as your match is ready."
           />
         </div>
       </SectionCard>
@@ -90,12 +90,11 @@ export default function Home() {
 
         <div className="mt-6 rounded-[1.6rem] border border-white/10 bg-white/6 px-5 py-5">
           <p className="text-xs uppercase tracking-[0.24em] text-fuchsia-300">
-            Fastest route
+            Where to begin
           </p>
           <p className="mt-3 text-sm leading-7 text-slate-300">
-            If someone asks where to start, the answer should be obvious: use
-            the `Play` route in the main nav or the `Play now` button here on
-            the home screen.
+            If you are here to play, use `Play now`. If you want to review past
+            games first, open `View past matches`.
           </p>
         </div>
       </SectionCard>
