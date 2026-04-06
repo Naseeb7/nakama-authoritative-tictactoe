@@ -1,19 +1,20 @@
 import Link from "next/link";
 
 import { SectionCard } from "@/components/ui/section-card";
+import { StepCard } from "@/components/ui/step-card";
 
 const foundationItems = [
   {
-    title: "Fast Matchups",
-    body: "Jump into a game fast or start a fresh round right away.",
+    title: "Live matchmaking",
+    body: "Find a room that is already waiting for another player and get into the board fast.",
   },
   {
-    title: "Fair Turns",
-    body: "Both players see the same board and the same result.",
+    title: "Authoritative state",
+    body: "Both players see the same board, the same turn order, and the same result.",
   },
   {
-    title: "Rush Mode",
-    body: "Add a clock when you want faster, sharper rounds.",
+    title: "Quick rematches",
+    body: "Run it back from the match screen instead of starting the whole flow again.",
   },
 ];
 
@@ -23,14 +24,14 @@ export default function Home() {
       <SectionCard className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(0,183,255,0.16),_transparent_28%),radial-gradient(circle_at_20%_80%,_rgba(255,79,216,0.12),_transparent_22%)]" />
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-300">
-          PulseGrid
+          Play-first lobby
         </p>
         <h2 className="mt-3 max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl">
-          Read the board. Own the lane. Win the grid.
+          Get into a match without hunting for the right button.
         </h2>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-[color:var(--ink-soft)] sm:text-base">
-          PulseGrid turns tic-tac-toe into a quick head-to-head duel. Step in,
-          make your move, and run it back.
+          PulseGrid is built for a fast two-player loop: pick a mode, hit play,
+          and step straight into a live room. No setup maze, no guesswork.
         </p>
 
         <div className="mt-8 flex flex-wrap gap-3">
@@ -38,38 +39,32 @@ export default function Home() {
             href="/play"
             className="rounded-full border border-cyan-400/40 bg-cyan-400/12 px-5 py-3 text-sm font-medium text-cyan-100 shadow-[0_0_26px_rgba(0,183,255,0.16)] transition hover:-translate-y-0.5 hover:bg-cyan-400/18"
           >
-            Start a Match
+            Play now
           </Link>
           <Link
-            href="/leaderboard"
+            href="/history"
             className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-5 py-3 text-sm font-medium text-fuchsia-100 transition hover:-translate-y-0.5 hover:bg-fuchsia-500/16"
           >
-            Enter the Hall of Fame
+            View past matches
           </Link>
         </div>
 
         <div className="mt-8 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-[1.5rem] border border-cyan-400/18 bg-slate-950/55 px-4 py-4">
-            <p className="text-xs uppercase tracking-[0.24em] text-cyan-300">
-              Modes
-            </p>
-            <p className="mt-2 text-2xl font-semibold text-white">2</p>
-            <p className="mt-1 text-sm text-[color:var(--ink-soft)]">Classic play or a timed showdown.</p>
-          </div>
-          <div className="rounded-[1.5rem] border border-cyan-400/18 bg-slate-950/55 px-4 py-4">
-            <p className="text-xs uppercase tracking-[0.24em] text-cyan-300">
-              Board
-            </p>
-            <p className="mt-2 text-2xl font-semibold text-white">1 source</p>
-            <p className="mt-1 text-sm text-[color:var(--ink-soft)]">One shared board for both players.</p>
-          </div>
-          <div className="rounded-[1.5rem] border border-cyan-400/18 bg-slate-950/55 px-4 py-4">
-            <p className="text-xs uppercase tracking-[0.24em] text-cyan-300">
-              Rejoin
-            </p>
-            <p className="mt-2 text-2xl font-semibold text-white">30 sec</p>
-            <p className="mt-1 text-sm text-[color:var(--ink-soft)]">A short window to jump back into the game.</p>
-          </div>
+          <StepCard
+            step="Step 1"
+            title="Choose a mode"
+            body="Classic for open play, or Rush when you want a turn timer."
+          />
+          <StepCard
+            step="Step 2"
+            title="Hit play"
+            body="Use the main play action to find the next open game immediately."
+          />
+          <StepCard
+            step="Step 3"
+            title="Join the board"
+            body="If a room is ready, you move straight into the live match screen."
+          />
         </div>
       </SectionCard>
 
@@ -95,11 +90,12 @@ export default function Home() {
 
         <div className="mt-6 rounded-[1.6rem] border border-white/10 bg-white/6 px-5 py-5">
           <p className="text-xs uppercase tracking-[0.24em] text-fuchsia-300">
-            Match Flow
+            Fastest route
           </p>
           <p className="mt-3 text-sm leading-7 text-slate-300">
-            Open the lobby, find a match, and play a clean round without setup clutter
-            getting in the way.
+            If someone asks where to start, the answer should be obvious: use
+            the `Play` route in the main nav or the `Play now` button here on
+            the home screen.
           </p>
         </div>
       </SectionCard>

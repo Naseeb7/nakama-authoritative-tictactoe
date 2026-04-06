@@ -7,10 +7,18 @@ import { AuthStatusCard } from "@/components/layout/auth-status-card";
 
 const navItems = [
   { href: "/", label: "Home" },
-  { href: "/play", label: "Play Now" },
+  { href: "/play", label: "Play" },
   { href: "/history", label: "Match History" },
   { href: "/leaderboard", label: "Hall of Fame" },
 ];
+
+function isNavItemActive(pathname: string, href: string) {
+  if (href === "/") {
+    return pathname === "/";
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -41,11 +49,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className="shrink-0 rounded-full border border-slate-700/90 bg-slate-900/70 px-3 py-2 text-xs font-medium text-slate-200 transition hover:-translate-y-0.5 hover:border-cyan-400/40 hover:bg-slate-950 hover:text-cyan-200 hover:shadow-[0_0_18px_rgba(0,183,255,0.16)] sm:px-4 sm:text-sm"
+                      className={`shrink-0 rounded-full border px-3 py-2 text-xs font-medium transition sm:px-4 sm:text-sm ${
+                        isNavItemActive(pathname, item.href)
+                          ? "border-cyan-400/40 bg-cyan-400/12 text-cyan-100 shadow-[0_0_18px_rgba(0,183,255,0.16)]"
+                          : "border-slate-700/90 bg-slate-900/70 text-slate-200 hover:-translate-y-0.5 hover:border-cyan-400/40 hover:bg-slate-950 hover:text-cyan-200 hover:shadow-[0_0_18px_rgba(0,183,255,0.16)]"
+                      }`}
                     >
                       {item.label}
                     </Link>
                   ))}
+                  <Link
+                    href="/play"
+                    className="shrink-0 rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-3 py-2 text-xs font-semibold text-fuchsia-100 transition hover:-translate-y-0.5 hover:bg-fuchsia-500/16 sm:px-4 sm:text-sm"
+                  >
+                    Start playing
+                  </Link>
                 </nav>
               </div>
 
@@ -77,25 +95,37 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   PulseGrid
                 </h1>
                 <p className="max-w-2xl text-sm leading-6 text-[color:var(--ink-soft)] sm:text-base">
-                  A fast two-player game with fair turns, quick rematches, and a board
-                  that stays the same for both players from start to finish.
+                  Pick a mode, join a live room, and start playing in seconds.
+                  The board stays server-authoritative from first move to final result.
                 </p>
               </div>
             </div>
             <AuthStatusCard />
           </div>
 
-          <nav className="mt-5 flex flex-wrap gap-2">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="rounded-full border border-slate-700/90 bg-slate-900/70 px-4 py-2 text-sm font-medium text-slate-200 transition hover:-translate-y-0.5 hover:border-cyan-400/40 hover:bg-slate-950 hover:text-cyan-200 hover:shadow-[0_0_18px_rgba(0,183,255,0.16)]"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <nav className="flex flex-wrap gap-2">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+                    isNavItemActive(pathname, item.href)
+                      ? "border-cyan-400/40 bg-cyan-400/12 text-cyan-100 shadow-[0_0_18px_rgba(0,183,255,0.16)]"
+                      : "border-slate-700/90 bg-slate-900/70 text-slate-200 hover:-translate-y-0.5 hover:border-cyan-400/40 hover:bg-slate-950 hover:text-cyan-200 hover:shadow-[0_0_18px_rgba(0,183,255,0.16)]"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+            <Link
+              href="/play"
+              className="inline-flex w-fit rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-5 py-3 text-sm font-semibold text-fuchsia-100 transition hover:-translate-y-0.5 hover:bg-fuchsia-500/16"
+            >
+              Go to play
+            </Link>
+          </div>
         </header>
 
         <main className="flex-1 py-6 sm:py-8">{children}</main>
