@@ -5,9 +5,9 @@ var matchInit = function (
   params: Record<string, string>
 ): MatchInitResult<MatchState> {
   var mode = getMatchModeFromParams(params);
-  var label = getLifecycleLabel(mode, "waiting");
   var startTime = getCurrentUnixTimestamp();
   var matchId = params.matchId || "";
+  var initialState = createInitialMatchState(matchId, mode, startTime);
 
   logger.info("matchInit executed.", {
     node: ctx.node,
@@ -16,32 +16,9 @@ var matchInit = function (
   });
 
   return {
-    state: {
-      matchId: matchId,
-      historyKey: createHistoryKey(matchId, mode, startTime),
-      board: ["", "", "", "", "", "", "", "", ""],
-      players: [],
-      symbols: {},
-      currentTurn: null,
-      winner: null,
-      status: "waiting",
-      label: label,
-      startTime: startTime,
-      endTime: null,
-      moveHistory: [],
-      mode: mode,
-      disconnectedPlayers: {},
-      playerNames: {},
-      disconnectTimeoutSeconds: DISCONNECT_TIMEOUT_SECONDS,
-      turnDeadlineTick: null,
-      pausedTurnRemainingSeconds: null,
-      endReason: null,
-      endReasonText: null,
-      historyPersisted: false,
-      finishedTick: null
-    },
+    state: initialState,
     tickRate: 1,
-    label: label
+    label: initialState.label
   };
 };
 
@@ -86,9 +63,9 @@ var matchJoin = function (
   presences: Presence[]
 ): MatchJoinResult<MatchState> {
   var updatedPlayers: string[] = state.players.slice();
-  var updatedSymbols: Record<string, "X" | "O"> = {};
-  var updatedDisconnectedPlayers: Record<string, number> = {};
-  var updatedPlayerNames: Record<string, string> = {};
+  var updatedSymbols = cloneSymbolMap(state.symbols);
+  var updatedDisconnectedPlayers = cloneNumberMap(state.disconnectedPlayers);
+  var updatedPlayerNames = cloneStringMap(state.playerNames);
   var currentTurn = state.currentTurn;
   var status: MatchStatus = state.status;
   var turnDeadlineTick = state.turnDeadlineTick;
@@ -97,24 +74,6 @@ var matchJoin = function (
   var playerId: string;
   var wasDisconnected = false;
   var previousLabel = state.label;
-
-  for (playerId in state.symbols) {
-    if (state.symbols.hasOwnProperty(playerId)) {
-      updatedSymbols[playerId] = state.symbols[playerId];
-    }
-  }
-
-  for (playerId in state.disconnectedPlayers) {
-    if (state.disconnectedPlayers.hasOwnProperty(playerId)) {
-      updatedDisconnectedPlayers[playerId] = state.disconnectedPlayers[playerId];
-    }
-  }
-
-  for (playerId in state.playerNames) {
-    if (state.playerNames.hasOwnProperty(playerId)) {
-      updatedPlayerNames[playerId] = state.playerNames[playerId];
-    }
-  }
 
   logger.info("matchJoin executed.", {
     joinedCount: presences.length
@@ -177,30 +136,17 @@ var matchJoin = function (
     }
   }
 
-  var updatedState: MatchState = {
-    matchId: state.matchId,
-    historyKey: state.historyKey,
-    board: state.board,
+  var updatedState = createNextMatchState(state, {
     players: updatedPlayers,
     symbols: updatedSymbols,
     currentTurn: currentTurn,
-    winner: state.winner,
     status: status,
     label: getLifecycleLabel(state.mode, status),
-    startTime: state.startTime,
-    endTime: state.endTime,
-    moveHistory: state.moveHistory,
-    mode: state.mode,
     disconnectedPlayers: updatedDisconnectedPlayers,
     playerNames: updatedPlayerNames,
-    disconnectTimeoutSeconds: state.disconnectTimeoutSeconds,
     turnDeadlineTick: turnDeadlineTick,
-    pausedTurnRemainingSeconds: pausedTurnRemainingSeconds,
-    endReason: state.endReason,
-    endReasonText: state.endReasonText,
-    historyPersisted: state.historyPersisted,
-    finishedTick: state.finishedTick
-  };
+    pausedTurnRemainingSeconds: pausedTurnRemainingSeconds
+  });
 
   updateMatchLabelIfNeeded(dispatcher, previousLabel, updatedState.label);
 
@@ -220,8 +166,8 @@ var matchLeave = function (
   state: MatchState,
   presences: Presence[]
 ): MatchLeaveResult<MatchState> | null {
-  var updatedDisconnectedPlayers: Record<string, number> = {};
-  var updatedPlayerNames: Record<string, string> = {};
+  var updatedDisconnectedPlayers = cloneNumberMap(state.disconnectedPlayers);
+  var updatedPlayerNames = cloneStringMap(state.playerNames);
   var turnDeadlineTick = state.turnDeadlineTick;
   var pausedTurnRemainingSeconds = state.pausedTurnRemainingSeconds;
   var i: number;
@@ -232,18 +178,6 @@ var matchLeave = function (
   logger.info("matchLeave executed.", {
     leftCount: presences.length
   });
-
-  for (playerId in state.disconnectedPlayers) {
-    if (state.disconnectedPlayers.hasOwnProperty(playerId)) {
-      updatedDisconnectedPlayers[playerId] = state.disconnectedPlayers[playerId];
-    }
-  }
-
-  for (playerId in state.playerNames) {
-    if (state.playerNames.hasOwnProperty(playerId)) {
-      updatedPlayerNames[playerId] = state.playerNames[playerId];
-    }
-  }
 
   for (i = 0; i < presences.length; i += 1) {
     playerId = presences[i].userId;
@@ -269,30 +203,12 @@ var matchLeave = function (
     });
   }
 
-  var updatedState: MatchState = {
-    matchId: state.matchId,
-    historyKey: state.historyKey,
-    board: state.board,
-    players: state.players,
-    symbols: state.symbols,
-    currentTurn: state.currentTurn,
-    winner: state.winner,
-    status: state.status,
-    label: state.label,
-    startTime: state.startTime,
-    endTime: state.endTime,
-    moveHistory: state.moveHistory,
-    mode: state.mode,
+  var updatedState = createNextMatchState(state, {
     disconnectedPlayers: updatedDisconnectedPlayers,
     playerNames: updatedPlayerNames,
-    disconnectTimeoutSeconds: state.disconnectTimeoutSeconds,
     turnDeadlineTick: turnDeadlineTick,
-    pausedTurnRemainingSeconds: pausedTurnRemainingSeconds,
-    endReason: state.endReason,
-    endReasonText: state.endReasonText,
-    historyPersisted: state.historyPersisted,
-    finishedTick: state.finishedTick
-  };
+    pausedTurnRemainingSeconds: pausedTurnRemainingSeconds
+  });
 
   if (updatedState.status === "finished" && haveAllPlayersDisconnected(updatedState)) {
     logger.info("Stopping finished match after all players left.", {
@@ -363,16 +279,13 @@ var matchLoop = function (
     timedOutPlayerId = state.currentTurn;
     timeoutWinnerId = getOtherPlayerId(state.players, timedOutPlayerId);
 
-    state.status = "finished";
-    state.currentTurn = null;
-    state.turnDeadlineTick = null;
-    state.pausedTurnRemainingSeconds = null;
-    state.endTime = getCurrentUnixTimestamp();
-    state.winner = timeoutWinnerId;
-    state.endReason = "turn-timeout";
-    state.endReasonText = buildTurnTimeoutText(state, timedOutPlayerId, timeoutWinnerId);
-    state.label = getLifecycleLabel(state.mode, state.status);
-    state.finishedTick = tick;
+    finalizeMatchState(
+      state,
+      tick,
+      timeoutWinnerId,
+      "turn-timeout",
+      buildTurnTimeoutText(state, timedOutPlayerId, timeoutWinnerId)
+    );
 
     logger.info("Turn timer expired. Auto-forfeit applied.", {
       timedOutPlayerId: timedOutPlayerId,
@@ -485,16 +398,7 @@ var matchLoop = function (
     if (hasWinningLine(state.board, playerSymbol)) {
       var previousWinLabel = state.label;
       loserId = getOtherPlayerId(state.players, playerId);
-      state.winner = playerId;
-      state.status = "finished";
-      state.currentTurn = null;
-      state.turnDeadlineTick = null;
-      state.pausedTurnRemainingSeconds = null;
-      state.endTime = getCurrentUnixTimestamp();
-      state.endReason = "win";
-      state.endReasonText = buildWinText(state, playerId, loserId);
-      state.label = getLifecycleLabel(state.mode, state.status);
-      state.finishedTick = tick;
+      finalizeMatchState(state, tick, playerId, "win", buildWinText(state, playerId, loserId));
 
       try {
         updatePlayerStats(_nk, playerId, true);
@@ -523,16 +427,7 @@ var matchLoop = function (
       persistCompletedMatchIfNeeded(_nk, logger, state);
     } else if (isBoardFull(state.board)) {
       var previousDrawLabel = state.label;
-      state.status = "finished";
-      state.currentTurn = null;
-      state.turnDeadlineTick = null;
-      state.pausedTurnRemainingSeconds = null;
-      state.endTime = getCurrentUnixTimestamp();
-      state.winner = null;
-      state.endReason = "draw";
-      state.endReasonText = "The match ended in a draw.";
-      state.label = getLifecycleLabel(state.mode, state.status);
-      state.finishedTick = tick;
+      finalizeMatchState(state, tick, null, "draw", "The match ended in a draw.");
 
       try {
         if (state.players.length > 0) {
@@ -640,16 +535,14 @@ function finalizeExpiredDisconnects(
     return false;
   }
 
-  state.status = "finished";
-  state.currentTurn = null;
-  state.turnDeadlineTick = null;
-  state.pausedTurnRemainingSeconds = null;
+  finalizeMatchState(
+    state,
+    tick,
+    winner,
+    "reconnect-timeout",
+    buildReconnectTimeoutText(state, winner, expiredDisconnectedPlayers)
+  );
   state.endTime = now;
-  state.winner = winner;
-  state.endReason = "reconnect-timeout";
-  state.endReasonText = buildReconnectTimeoutText(state, winner, expiredDisconnectedPlayers);
-  state.label = getLifecycleLabel(state.mode, state.status);
-  state.finishedTick = tick;
 
   logger.info("Reconnect timeout expired. Finalizing match.", {
     expiredDisconnectedPlayers: expiredDisconnectedPlayers,
