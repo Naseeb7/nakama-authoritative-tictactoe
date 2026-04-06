@@ -160,11 +160,10 @@ function TurnTimer({
       return;
     }
 
-    setClockOffsetMs(
-      Number.isFinite(serverTime) ? serverTime * 1000 - Date.now() : 0
-    );
-
     const syncId = window.setTimeout(() => {
+      setClockOffsetMs(
+        Number.isFinite(serverTime) ? serverTime * 1000 - Date.now() : 0
+      );
       setNow(Date.now());
     }, 0);
 
@@ -316,12 +315,6 @@ export default function MatchRoomPage() {
     isJoiningRouteMatch;
 
   useEffect(() => {
-    if (socketStatus === "connected" && activeMatch?.matchId === matchId) {
-      setJoinRouteError(null);
-    }
-  }, [activeMatch?.matchId, matchId, socketStatus]);
-
-  useEffect(() => {
     if (!matchId || socketStatus !== "connected") {
       return;
     }
@@ -400,10 +393,15 @@ export default function MatchRoomPage() {
       latestMatchState.status === "finished" ||
       latestMatchState.moveHistory.length > pendingMoveCount
     ) {
-      setPendingPosition(null);
-      setPendingMoveCount(null);
-      setIsSubmittingMove(false);
-      return;
+      const settleId = window.setTimeout(() => {
+        setPendingPosition(null);
+        setPendingMoveCount(null);
+        setIsSubmittingMove(false);
+      }, 0);
+
+      return () => {
+        window.clearTimeout(settleId);
+      };
     }
 
     const timeoutId = window.setTimeout(() => {

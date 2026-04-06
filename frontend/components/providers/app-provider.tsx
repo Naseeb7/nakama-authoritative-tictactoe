@@ -2,8 +2,6 @@
 
 import {
   type Client,
-  type Match,
-  type MatchData,
   type MatchPresenceEvent,
   type Socket,
   Session,
@@ -18,7 +16,7 @@ import {
   useState,
 } from "react";
 
-import { getOrCreateDeviceId } from "@/lib/device-id";
+import { clearStoredDeviceId } from "@/lib/device-id";
 import {
   clearStoredMatchSession,
   readStoredMatchSession,
@@ -30,22 +28,26 @@ import type {
   MatchStatePayload,
 } from "@/lib/match-types";
 import { nakamaEnv } from "@/lib/env";
-import { createNakamaClient } from "@/lib/nakama";
+import { createNakamaClient } from "@/lib/client/nakama-client";
 import {
-  clearStoredSession,
-  readStoredSession,
-  writeStoredSession,
-} from "@/lib/session-store";
-import { clearStoredDeviceId } from "@/lib/device-id";
+  restoreOrCreateSession,
+  toNicknameErrorMessage,
+} from "@/lib/services/auth-service";
+import { toErrorMessage } from "@/lib/services/app-errors";
+import {
+  isExpiredMatchError,
+  isMatchLeaveSafeToIgnore,
+  mapRealtimeMatch,
+  parseMatchData,
+  runMatchRpc,
+} from "@/lib/services/match-service";
+import { clearStoredSession, writeStoredSession } from "@/lib/session-store";
 
 type BootstrapStatus = "booting" | "ready" | "error";
 type SocketStatus = "disconnected" | "connecting" | "connected";
 type Account = Awaited<ReturnType<Client["getAccount"]>>;
 type MatchAction = "create_match" | "find_match";
 type MatchStatus = "idle" | "working" | "joined" | "error";
-type MatchRpcPayload = {
-  matchId: string | null;
-};
 
 type AppContextValue = {
   activeMatch: ActiveMatch | null;
@@ -74,283 +76,7 @@ type AppContextValue = {
 };
 
 const AppContext = createContext<AppContextValue | null>(null);
-const SESSION_REFRESH_WINDOW_MS = 5 * 60 * 1000;
 const MOVE_OPCODE = 1;
-const STATE_UPDATE_OPCODE = 2;
-const textDecoder = new TextDecoder();
-
-function toErrorMessage(error: unknown): string {
-  if (typeof error === "string") {
-    return error;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "message" in error &&
-    typeof error.message === "string"
-  ) {
-    if ("code" in error && typeof error.code === "number") {
-      return `${error.message} (code ${error.code})`;
-    }
-
-    return error.message;
-  }
-
-  if (typeof error === "object" && error !== null) {
-    try {
-      return JSON.stringify(error);
-    } catch {
-      return "Unknown error";
-    }
-  }
-
-  return "Unknown error";
-}
-
-function getErrorCode(error: unknown): number | null {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    typeof error.code === "number"
-  ) {
-    return error.code;
-  }
-
-  return null;
-}
-
-function isMatchNotFoundError(error: unknown): boolean {
-  const message = toErrorMessage(error).toLowerCase();
-
-  return getErrorCode(error) === 4 || message.includes("match not found");
-}
-
-function isExpiredMatchError(error: unknown): boolean {
-  const message = toErrorMessage(error).toLowerCase();
-  const code = getErrorCode(error);
-
-  return (
-    code === 4 ||
-    code === 5 ||
-    message.includes("match not found") ||
-    message.includes("match has already ended")
-  );
-}
-
-function isMatchLeaveSafeToIgnore(error: unknown): boolean {
-  const message = toErrorMessage(error).toLowerCase();
-  const code = getErrorCode(error);
-
-  return (
-    code === 4 ||
-    code === 5 ||
-    message.includes("match not found") ||
-    message.includes("match has already ended") ||
-    message.includes("socket is not connected")
-  );
-}
-
-type HttpErrorResponse = {
-  clone?: () => HttpErrorResponse;
-  json?: () => Promise<unknown>;
-  status: number;
-  statusText?: string;
-  text?: () => Promise<string>;
-};
-
-function isHttpErrorResponse(error: unknown): error is HttpErrorResponse {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "status" in error &&
-    typeof error.status === "number"
-  );
-}
-
-function extractNicknameServerMessage(payload: unknown): string | null {
-  if (typeof payload === "string") {
-    const trimmedPayload = payload.trim();
-
-    if (!trimmedPayload || trimmedPayload === "{}") {
-      return null;
-    }
-
-    try {
-      return extractNicknameServerMessage(JSON.parse(trimmedPayload));
-    } catch {
-      return trimmedPayload;
-    }
-  }
-
-  if (!payload || typeof payload !== "object") {
-    return null;
-  }
-
-  if ("message" in payload && typeof payload.message === "string") {
-    const trimmedMessage = payload.message.trim();
-    return trimmedMessage ? trimmedMessage : null;
-  }
-
-  if ("error" in payload && typeof payload.error === "string") {
-    const trimmedError = payload.error.trim();
-    return trimmedError ? trimmedError : null;
-  }
-
-  return null;
-}
-
-async function readNicknameServerMessage(response: HttpErrorResponse): Promise<string | null> {
-  const readableResponse =
-    typeof response.clone === "function" ? response.clone() : response;
-
-  if (typeof readableResponse.text === "function") {
-    try {
-      return extractNicknameServerMessage(await readableResponse.text());
-    } catch {
-      return null;
-    }
-  }
-
-  if (typeof readableResponse.json === "function") {
-    try {
-      return extractNicknameServerMessage(await readableResponse.json());
-    } catch {
-      return null;
-    }
-  }
-
-  return null;
-}
-
-async function toNicknameErrorMessage(error: unknown): Promise<string> {
-  if (isHttpErrorResponse(error)) {
-    const serverMessage = await readNicknameServerMessage(error);
-
-    if (error.status === 409) {
-      return "That nickname is already taken. Try another one.";
-    }
-
-    if (serverMessage) {
-      return serverMessage;
-    }
-
-    if (error.statusText) {
-      return error.statusText;
-    }
-
-    return "Failed to update nickname.";
-  }
-
-  const directMessage = toErrorMessage(error);
-
-  if (directMessage && directMessage !== "Unknown error" && directMessage !== "{}") {
-    return directMessage;
-  }
-
-  return "Failed to update nickname.";
-}
-
-function buildGuestUsername(deviceId: string): string {
-  return `guest-${deviceId.replace(/[^a-zA-Z0-9]/g, "").slice(-8)}`;
-}
-
-function mapRealtimeMatch(
-  match: Match,
-  mode: MatchMode,
-  createdByCurrentAction: boolean
-): ActiveMatch {
-  const presences = Array.isArray(match.presences) ? match.presences : [];
-
-  return {
-    createdByCurrentAction,
-    matchId: match.match_id,
-    mode,
-    presences: presences.map((presence) => ({
-      sessionId: presence.session_id,
-      userId: presence.user_id,
-      username: presence.username,
-    })),
-    self: match.self
-      ? {
-          sessionId: match.self.session_id,
-          userId: match.self.user_id,
-          username: match.self.username,
-        }
-      : null,
-  };
-}
-
-function parseMatchData(matchData: MatchData): MatchStatePayload | null {
-  if (matchData.op_code !== STATE_UPDATE_OPCODE) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(textDecoder.decode(matchData.data)) as MatchStatePayload;
-  } catch {
-    return null;
-  }
-}
-
-async function runMatchRpc(
-  client: Client,
-  session: Session,
-  action: MatchAction,
-  mode: MatchMode
-): Promise<string> {
-  const response = await client.rpc(session, action, { mode });
-  const payload = response.payload as MatchRpcPayload | undefined;
-  const matchId = payload?.matchId;
-
-  if (!matchId) {
-    throw new Error("The server did not return a match id.");
-  }
-
-  return matchId;
-}
-
-async function restoreOrCreateSession(client: Client): Promise<Session> {
-  const storedSession = readStoredSession();
-  const nowInSeconds = Date.now() / 1000;
-  const refreshCutoffInSeconds =
-    (Date.now() + SESSION_REFRESH_WINDOW_MS) / 1000;
-
-  if (storedSession && !storedSession.isrefreshexpired(nowInSeconds)) {
-    let session = storedSession;
-
-    if (storedSession.isexpired(refreshCutoffInSeconds)) {
-      try {
-        session = await client.sessionRefresh(storedSession);
-        writeStoredSession(session);
-      } catch {
-        clearStoredSession();
-      }
-    }
-
-    if (!session.isexpired(nowInSeconds)) {
-      return session;
-    }
-  }
-
-  clearStoredSession();
-
-  const deviceId = getOrCreateDeviceId();
-  const session = await client.authenticateDevice(
-    deviceId,
-    true,
-    buildGuestUsername(deviceId)
-  );
-
-  writeStoredSession(session);
-
-  return session;
-}
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [value, setValue] = useState<AppContextValue>({
