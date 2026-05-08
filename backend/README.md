@@ -386,16 +386,16 @@ Build flow:
 4. Run database migrations on startup
 5. Start Nakama using the copied config
 
-### Railway deployment
+### Render deployment
 
 Recommended deployment model:
 
-1. Create a Railway service for the backend
-2. Use `backend/` as the root directory
-3. Build using the provided Dockerfile
-4. Provide a PostgreSQL service in the same Railway project
-5. Set `DATABASE_ADDRESS`
-6. Start Nakama via the Docker command already defined in the image
+1. Create a Render Web Service for the backend
+2. Use `backend/` as the root directory if you are deploying from the monorepo
+3. Deploy with the provided Dockerfile
+4. Attach a Render PostgreSQL instance or provide another PostgreSQL host
+5. Set `DATABASE_ADDRESS` in Nakama format, or use Render's `DATABASE_URL` if you prefer
+6. Leave the container startup command as-is so it can run migrations and bind to Render's `PORT`
 
 The runtime entrypoint expected by Nakama is:
 
@@ -410,7 +410,7 @@ Configured by:
 
 ### `DATABASE_ADDRESS`
 
-Required by the deployed Nakama container.
+Preferred by the deployed Nakama container, but `DATABASE_URL` is also accepted and normalized at startup.
 
 Expected format:
 
@@ -422,6 +422,12 @@ This value is passed to:
 
 - `nakama migrate up`
 - Nakama server startup command
+
+### `PORT`
+
+Optional on Render.
+
+When present, the container binds Nakama's public HTTP and websocket listener to that port. If the variable is absent, the backend falls back to `7350` for local and non-Render runs.
 
 The backend does not require a large application-level env surface beyond database connectivity because most runtime behavior is encoded directly in the match handler and Nakama config.
 
