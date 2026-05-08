@@ -11,7 +11,6 @@ fi
 case "$db_address" in
   postgres://*|postgresql://*)
     db_address="${db_address#*://}"
-    db_address="${db_address%%\?*}"
     ;;
 esac
 

@@ -411,6 +411,7 @@ Configured by:
 ### `DATABASE_ADDRESS`
 
 Preferred by the deployed Nakama container, but `DATABASE_URL` is also accepted and normalized at startup.
+Keep any query string parameters, such as `?sslmode=require`, because Render Postgres commonly needs them.
 
 Expected format:
 
