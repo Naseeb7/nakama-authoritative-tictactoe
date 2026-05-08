@@ -16,4 +16,4 @@ COPY docker-entrypoint.sh /nakama/data/docker-entrypoint.sh
 
 EXPOSE 7349 7350 7351
 
-CMD ["/bin/sh", "/nakama/data/docker-entrypoint.sh"]
+ENTRYPOINT ["/bin/sh", "/nakama/data/docker-entrypoint.sh"]
