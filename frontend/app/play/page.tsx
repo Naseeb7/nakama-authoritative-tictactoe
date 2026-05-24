@@ -60,11 +60,11 @@ export default function PlayPage() {
   return (
     <div className="grid gap-6 xl:grid-cols-[1.18fr_0.82fr]">
       <SectionCard className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(0,183,255,0.12),_transparent_26%),radial-gradient(circle_at_bottom_right,_rgba(255,79,216,0.12),_transparent_24%)]" />
-        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-300">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(185,90,66,0.08),_transparent_26%),radial-gradient(circle_at_bottom_right,_rgba(214,164,93,0.12),_transparent_24%)]" />
+        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--accent)]">
           Start here
         </p>
-        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+        <h2 className="paper-heading mt-3 text-3xl font-semibold tracking-tight text-[color:var(--foreground)] sm:text-4xl">
           Choose how you want to play.
         </h2>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-[color:var(--ink-soft)] sm:text-base">
@@ -91,14 +91,16 @@ export default function PlayPage() {
           ))}
         </div>
 
-        <div className="mt-8 rounded-[1.6rem] border border-cyan-400/22 bg-[linear-gradient(180deg,_rgba(3,11,26,0.82),_rgba(8,16,35,0.92))] p-5 shadow-[0_0_28px_rgba(0,183,255,0.08)]">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-300">
+        <div className="mt-8 rounded-[1.6rem] border border-[rgba(95,71,48,0.16)] bg-[rgba(255,250,244,0.88)] p-5 shadow-[0_18px_30px_rgba(78,54,35,0.1)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--accent-deep)]">
             Quick start
           </p>
           <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-lg font-semibold text-white">Find me a game</p>
-              <p className="mt-1 max-w-xl text-sm leading-6 text-slate-300">
+              <p className="text-lg font-semibold text-[color:var(--foreground)]">
+                Find me a game
+              </p>
+              <p className="mt-1 max-w-xl text-sm leading-6 text-[color:var(--ink-soft)]">
                 We will place you into the next available {selectedMode} match.
               </p>
             </div>
@@ -106,7 +108,7 @@ export default function PlayPage() {
               type="button"
               onClick={() => handleMatchRequest("find_match")}
               disabled={isPending || joinStatus === "working" || status !== "ready"}
-              className="rounded-full border border-cyan-400/40 bg-cyan-400/12 px-6 py-3 text-sm font-semibold text-cyan-100 shadow-[0_0_22px_rgba(0,183,255,0.14)] transition hover:-translate-y-0.5 hover:bg-cyan-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-800 disabled:text-slate-500 disabled:shadow-none"
+              className="rounded-full border border-[rgba(95,71,48,0.22)] bg-[linear-gradient(180deg,rgba(255,248,241,0.98),rgba(241,224,203,0.96))] px-6 py-3 text-sm font-semibold text-[color:var(--foreground)] shadow-[0_12px_22px_rgba(78,54,35,0.12)] transition hover:-translate-y-0.5 hover:border-[rgba(185,90,66,0.3)] hover:text-[color:var(--accent)] disabled:cursor-not-allowed disabled:border-[rgba(95,71,48,0.12)] disabled:bg-[rgba(250,246,239,0.75)] disabled:text-[rgba(107,91,77,0.6)] disabled:shadow-none"
             >
               {isPending || joinStatus === "working" ? "Joining..." : "Start game"}
             </button>
@@ -118,48 +120,48 @@ export default function PlayPage() {
             type="button"
             onClick={() => handleMatchRequest("create_match")}
             disabled={isPending || joinStatus === "working" || status !== "ready"}
-            className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-5 py-3 text-sm font-medium text-fuchsia-100 transition hover:-translate-y-0.5 hover:bg-fuchsia-500/16 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-800 disabled:text-slate-500"
+            className="rounded-full border border-[rgba(185,90,66,0.22)] bg-[rgba(248,226,219,0.92)] px-5 py-3 text-sm font-medium text-[color:var(--accent)] transition hover:-translate-y-0.5 hover:bg-[rgba(243,214,203,0.98)] disabled:cursor-not-allowed disabled:border-[rgba(95,71,48,0.12)] disabled:bg-[rgba(250,246,239,0.75)] disabled:text-[rgba(107,91,77,0.6)]"
           >
             Start a new room
           </button>
-          <p className="self-center text-sm text-slate-400">
+          <p className="self-center text-sm text-[color:var(--ink-soft)]">
             Use this if you want to open your own room first.
           </p>
         </div>
 
         {matchError ? (
-          <div className="mt-6 rounded-[1.35rem] border border-rose-400/30 bg-rose-500/10 px-4 py-4 text-sm text-rose-200">
+          <div className="mt-6 rounded-[1.35rem] border border-[rgba(185,90,66,0.28)] bg-[rgba(248,226,219,0.92)] px-4 py-4 text-sm text-[color:var(--accent)]">
             {matchError}
           </div>
         ) : null}
       </SectionCard>
 
-      <SectionCard className="bg-[linear-gradient(180deg,_rgba(8,12,28,0.96),_rgba(13,19,43,0.92))] text-slate-50">
-        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-fuchsia-300">
+      <SectionCard>
+        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--accent-deep)]">
           Need help choosing?
         </p>
-        <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+        <h2 className="paper-heading mt-3 text-2xl font-semibold tracking-tight text-[color:var(--foreground)] sm:text-3xl">
           {activeMatch ? "You already have a game open" : "Two simple ways to start"}
         </h2>
-        <p className="mt-3 text-sm leading-7 text-slate-300">
+        <p className="mt-3 text-sm leading-7 text-[color:var(--ink-soft)]">
           {activeMatch
             ? `You are in ${activeMatch.mode} mode with ${activeMatch.presences.length} player slot(s) filled.`
             : "Pick the option that matches what you want to do next."}
         </p>
         <div className="mt-6 grid gap-3">
-          <div className="rounded-[1.35rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-4">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-300">
+          <div className="rounded-[1.35rem] border border-[rgba(95,71,48,0.16)] bg-[rgba(255,250,244,0.88)] px-4 py-4">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--accent)]">
               Start game
             </p>
-            <p className="mt-2 text-sm text-slate-200">
+            <p className="mt-2 text-sm text-[color:var(--foreground)]">
               Best when you just want to play right away.
             </p>
           </div>
-          <div className="rounded-[1.35rem] border border-fuchsia-400/18 bg-slate-950/70 px-4 py-4">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-fuchsia-300">
+          <div className="rounded-[1.35rem] border border-[rgba(185,90,66,0.16)] bg-[rgba(255,245,239,0.88)] px-4 py-4">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--accent-deep)]">
               Start a new room
             </p>
-            <p className="mt-2 text-sm text-slate-200">
+            <p className="mt-2 text-sm text-[color:var(--foreground)]">
               Best when you want to open a fresh room and wait there.
             </p>
           </div>
@@ -170,7 +172,7 @@ export default function PlayPage() {
             onClick={() =>
               router.push(`/match/${encodeURIComponent(activeMatch.matchId)}`)
             }
-            className="mt-6 inline-flex rounded-full border border-cyan-400/35 bg-cyan-400/10 px-4 py-2 text-sm font-medium text-cyan-100 transition hover:-translate-y-0.5 hover:bg-cyan-400/16"
+            className="mt-6 inline-flex rounded-full border border-[rgba(95,71,48,0.18)] bg-[rgba(255,250,243,0.92)] px-4 py-2 text-sm font-medium text-[color:var(--accent-deep)] transition hover:-translate-y-0.5 hover:bg-[rgba(249,240,227,0.98)]"
           >
             Go back to your game
           </button>

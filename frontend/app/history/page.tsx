@@ -138,11 +138,11 @@ export default function HistoryPage() {
   return (
     <div className="grid items-start gap-6 xl:grid-cols-[0.88fr_1.12fr]">
       <SectionCard className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(0,183,255,0.14),_transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(255,79,216,0.1),_transparent_22%)]" />
-        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-300">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(185,90,66,0.08),_transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(214,164,93,0.12),_transparent_22%)]" />
+        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--accent)]">
           Match Archive
         </p>
-        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+        <h2 className="paper-heading mt-3 text-3xl font-semibold tracking-tight text-[color:var(--foreground)] sm:text-4xl">
           Review the last games, not just the last board.
         </h2>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-[color:var(--ink-soft)] sm:text-base">
@@ -151,42 +151,46 @@ export default function HistoryPage() {
         </p>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-[1.35rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-4">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-300">
+          <div className="rounded-[1.35rem] border border-[rgba(95,71,48,0.16)] bg-[rgba(255,250,244,0.88)] px-4 py-4">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--accent)]">
               Stored
             </p>
-            <p className="mt-2 text-2xl font-semibold text-white">{total}</p>
+            <p className="mt-2 text-2xl font-semibold text-[color:var(--foreground)]">
+              {total}
+            </p>
           </div>
-          <div className="rounded-[1.35rem] border border-fuchsia-400/18 bg-slate-950/70 px-4 py-4">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-fuchsia-300">
+          <div className="rounded-[1.35rem] border border-[rgba(185,90,66,0.16)] bg-[rgba(255,245,239,0.88)] px-4 py-4">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--accent-deep)]">
               Visible
             </p>
-            <p className="mt-2 text-2xl font-semibold text-white">{records.length}</p>
+            <p className="mt-2 text-2xl font-semibold text-[color:var(--foreground)]">
+              {records.length}
+            </p>
           </div>
-          <div className="rounded-[1.35rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-4">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-300">
+          <div className="rounded-[1.35rem] border border-[rgba(95,71,48,0.16)] bg-[rgba(255,250,244,0.88)] px-4 py-4">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--accent)]">
               More
             </p>
-            <p className="mt-2 text-2xl font-semibold text-white">
+            <p className="mt-2 text-2xl font-semibold text-[color:var(--foreground)]">
               {hasMore ? "Yes" : "No"}
             </p>
           </div>
         </div>
 
-        <div className="mt-6 rounded-[1.35rem] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-6 text-slate-300">
+        <div className="mt-6 rounded-[1.35rem] border border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.86)] px-4 py-4 text-sm leading-6 text-[color:var(--foreground)]">
           <p>Player: {username ?? "Unknown"}</p>
-          <p className="mt-2 text-xs uppercase tracking-[0.18em] text-slate-500">
+          <p className="mt-2 text-xs uppercase tracking-[0.18em] text-[color:var(--ink-soft)]">
             {status === "ready" ? "History is live." : "Waiting for app bootstrap."}
           </p>
         </div>
 
         {loadError ? (
-          <div className="mt-6 rounded-[1.35rem] border border-rose-400/30 bg-rose-500/10 px-4 py-4 text-sm text-rose-200">
+          <div className="mt-6 rounded-[1.35rem] border border-[rgba(185,90,66,0.28)] bg-[rgba(248,226,219,0.92)] px-4 py-4 text-sm text-[color:var(--accent)]">
             <p>{loadError}</p>
             <button
               type="button"
               onClick={retryConnection}
-              className="mt-3 rounded-full border border-rose-400/30 bg-rose-500/10 px-4 py-2 text-xs font-medium text-rose-100 transition hover:bg-rose-500/16"
+              className="mt-3 rounded-full border border-[rgba(185,90,66,0.24)] bg-[rgba(255,250,243,0.92)] px-4 py-2 text-xs font-medium text-[color:var(--accent)] transition hover:-translate-y-0.5 hover:bg-[rgba(249,240,227,0.98)]"
             >
               Retry connection
             </button>
@@ -194,47 +198,47 @@ export default function HistoryPage() {
         ) : null}
       </SectionCard>
 
-      <SectionCard className="bg-[linear-gradient(180deg,_rgba(8,12,28,0.96),_rgba(13,19,43,0.92))] text-slate-50">
-        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-fuchsia-300">
+      <SectionCard>
+        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--accent-deep)]">
           Recent Matches
         </p>
 
         <div className="mt-5 grid gap-3">
           {isLoading ? (
-            <div className="rounded-[1.35rem] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-6 text-slate-300">
+            <div className="rounded-[1.35rem] border border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.86)] px-4 py-4 text-sm leading-6 text-[color:var(--ink-soft)]">
               Loading match history.
             </div>
           ) : records.length > 0 ? (
             records.map((record) => (
               <article
                 key={record.historyKey}
-                className="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-4"
+                className="rounded-[1.4rem] border border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.88)] px-4 py-4"
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-100">
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--foreground)]">
                       {formatDateTime(record.timestamp)}
                     </p>
-                    <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-400">
+                    <p className="mt-1 text-xs uppercase tracking-[0.18em] text-[color:var(--ink-soft)]">
                       {record.mode} mode
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-semibold text-white">
+                    <p className="text-lg font-semibold text-[color:var(--foreground)]">
                       {getEntryResult(record, userId)}
                     </p>
-                    <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
+                    <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--ink-soft)]">
                       {record.durationSeconds > 0 ? formatDuration(record.durationSeconds) : "0:00"}
                     </p>
                   </div>
                 </div>
 
-                <p className="mt-3 text-sm leading-6 text-slate-300">
+                <p className="mt-3 text-sm leading-6 text-[color:var(--ink-soft)]">
                   {record.endReasonText}
                 </p>
 
                 <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                  <div className="rounded-[1.15rem] border border-cyan-400/15 bg-slate-950/65 px-3 py-3 text-sm text-slate-200">
+                  <div className="rounded-[1.15rem] border border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.86)] px-3 py-3 text-sm text-[color:var(--foreground)]">
                     Winner: {record.winner
                       ? getPlayerLabel(
                           record,
@@ -245,7 +249,7 @@ export default function HistoryPage() {
                         )
                       : "Draw"}
                   </div>
-                  <div className="rounded-[1.15rem] border border-fuchsia-400/15 bg-slate-950/65 px-3 py-3 text-sm text-slate-200">
+                  <div className="rounded-[1.15rem] border border-[rgba(185,90,66,0.14)] bg-[rgba(255,245,239,0.88)] px-3 py-3 text-sm text-[color:var(--foreground)]">
                     Result: {record.endReason}
                   </div>
                 </div>
@@ -254,7 +258,7 @@ export default function HistoryPage() {
                   {record.players.map((playerId) => (
                     <span
                       key={playerId}
-                      className="rounded-full border border-white/10 bg-slate-950/60 px-3 py-1 text-xs uppercase tracking-[0.18em] text-slate-300"
+                      className="rounded-full border border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.88)] px-3 py-1 text-xs uppercase tracking-[0.18em] text-[color:var(--ink-soft)]"
                     >
                       {getPlayerLabel(
                         record,
@@ -269,7 +273,7 @@ export default function HistoryPage() {
               </article>
             ))
           ) : (
-            <div className="rounded-[1.35rem] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-6 text-slate-300">
+            <div className="rounded-[1.35rem] border border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.86)] px-4 py-4 text-sm leading-6 text-[color:var(--ink-soft)]">
               {loadError ? "Unable to load history." : "No completed matches yet."}
             </div>
           )}
@@ -280,7 +284,7 @@ export default function HistoryPage() {
             type="button"
             onClick={() => setOffset((current) => current + HISTORY_PAGE_SIZE)}
             disabled={isLoading}
-            className="mt-6 inline-flex rounded-full border border-cyan-400/35 bg-cyan-400/10 px-4 py-2 text-sm font-medium text-cyan-100 transition hover:-translate-y-0.5 hover:bg-cyan-400/16 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-800 disabled:text-slate-500"
+            className="mt-6 inline-flex rounded-full border border-[rgba(95,71,48,0.18)] bg-[rgba(255,250,243,0.92)] px-4 py-2 text-sm font-medium text-[color:var(--accent-deep)] transition hover:-translate-y-0.5 hover:bg-[rgba(249,240,227,0.98)] disabled:cursor-not-allowed disabled:border-[rgba(95,71,48,0.12)] disabled:bg-[rgba(250,246,239,0.75)] disabled:text-[rgba(107,91,77,0.6)]"
           >
             {isLoading ? "Loading" : "Load older matches"}
           </button>

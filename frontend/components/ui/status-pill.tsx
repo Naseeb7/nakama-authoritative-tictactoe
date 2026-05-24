@@ -9,14 +9,14 @@ export function StatusPill({
 }: StatusPillProps) {
   const toneClassName =
     tone === "cyan"
-      ? "border-cyan-400/25 bg-cyan-400/10 text-cyan-200"
+      ? "border-[rgba(57,95,120,0.24)] bg-[rgba(226,234,241,0.9)] text-[color:var(--accent-deep)]"
       : tone === "fuchsia"
-        ? "border-fuchsia-400/25 bg-fuchsia-500/10 text-fuchsia-200"
-        : "border-slate-700 bg-slate-950/70 text-slate-300";
+        ? "border-[rgba(185,90,66,0.22)] bg-[rgba(248,231,220,0.92)] text-[color:var(--accent)]"
+        : "border-[rgba(95,71,48,0.16)] bg-[rgba(255,250,241,0.92)] text-[color:var(--ink-soft)]";
 
   return (
     <span
-      className={`rounded-full border px-3 py-2 text-xs uppercase tracking-[0.22em] ${toneClassName}`}
+      className={`paper-card rounded-full border px-3 py-2 text-xs uppercase tracking-[0.22em] ${toneClassName}`}
     >
       {children}
     </span>

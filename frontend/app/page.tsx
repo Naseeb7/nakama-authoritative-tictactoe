@@ -22,12 +22,12 @@ export default function Home() {
   return (
     <div className="grid items-start gap-6 xl:grid-cols-[1.18fr_0.82fr]">
       <SectionCard className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(0,183,255,0.16),_transparent_28%),radial-gradient(circle_at_20%_80%,_rgba(255,79,216,0.12),_transparent_22%)]" />
-        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-300">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(185,90,66,0.1),_transparent_28%),radial-gradient(circle_at_20%_80%,_rgba(214,164,93,0.12),_transparent_22%)]" />
+        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--accent)]">
           Welcome
         </p>
-        <h2 className="mt-3 max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl">
-          Quick online tic-tac-toe, built for instant play.
+        <h2 className="paper-heading mt-3 max-w-3xl text-4xl font-semibold tracking-tight text-[color:var(--foreground)] sm:text-5xl lg:text-6xl">
+          Quick online tic-tac-toe, built like a tabletop keepsake.
         </h2>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-[color:var(--ink-soft)] sm:text-base">
           Start a match in a couple of clicks, play live against another
@@ -37,13 +37,13 @@ export default function Home() {
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href="/play"
-            className="rounded-full border border-cyan-400/40 bg-cyan-400/12 px-5 py-3 text-sm font-medium text-cyan-100 shadow-[0_0_26px_rgba(0,183,255,0.16)] transition hover:-translate-y-0.5 hover:bg-cyan-400/18"
+            className="rounded-full border border-[rgba(95,71,48,0.2)] bg-[linear-gradient(180deg,rgba(255,249,241,0.98),rgba(242,228,207,0.96))] px-5 py-3 text-sm font-medium text-[color:var(--foreground)] shadow-[0_12px_24px_rgba(78,54,35,0.12)] transition hover:-translate-y-0.5 hover:border-[rgba(185,90,66,0.24)] hover:text-[color:var(--accent)]"
           >
             Play now
           </Link>
           <Link
             href="/history"
-            className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-5 py-3 text-sm font-medium text-fuchsia-100 transition hover:-translate-y-0.5 hover:bg-fuchsia-500/16"
+            className="rounded-full border border-[rgba(185,90,66,0.22)] bg-[rgba(248,226,219,0.92)] px-5 py-3 text-sm font-medium text-[color:var(--accent)] transition hover:-translate-y-0.5 hover:bg-[rgba(243,214,203,0.98)]"
           >
             View past matches
           </Link>
@@ -68,31 +68,31 @@ export default function Home() {
         </div>
       </SectionCard>
 
-      <SectionCard className="self-start bg-[linear-gradient(180deg,_rgba(8,12,28,0.96),_rgba(13,19,43,0.92))] text-slate-50">
-        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-fuchsia-300">
+      <SectionCard className="self-start">
+        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--accent-deep)]">
           Why It Works
         </p>
         <div className="mt-5 grid gap-3">
           {foundationItems.map((item) => (
             <div
               key={item.title}
-              className="rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-4"
+              className="rounded-[1.5rem] border border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.86)] px-4 py-4"
             >
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-100">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--foreground)]">
                 {item.title}
               </p>
-              <p className="mt-2 text-sm leading-6 text-slate-300">
+              <p className="mt-2 text-sm leading-6 text-[color:var(--ink-soft)]">
                 {item.body}
               </p>
             </div>
           ))}
         </div>
 
-        <div className="mt-6 rounded-[1.6rem] border border-white/10 bg-white/6 px-5 py-5">
-          <p className="text-xs uppercase tracking-[0.24em] text-fuchsia-300">
+        <div className="mt-6 rounded-[1.6rem] border border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.86)] px-5 py-5">
+          <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--accent)]">
             Where to begin
           </p>
-          <p className="mt-3 text-sm leading-7 text-slate-300">
+          <p className="mt-3 text-sm leading-7 text-[color:var(--ink-soft)]">
             If you are here to play, use `Play now`. If you want to review past
             games first, open `View past matches`.
           </p>

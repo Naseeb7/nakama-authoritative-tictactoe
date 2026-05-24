@@ -5,10 +5,10 @@ export default function AccountPage() {
   return (
     <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
       <SectionCard className="self-start">
-        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-300">
+        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--accent)]">
           Account
         </p>
-        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+        <h2 className="paper-heading mt-3 text-3xl font-semibold tracking-tight text-[color:var(--foreground)] sm:text-4xl">
           Identity and connection settings
         </h2>
         <p className="mt-4 max-w-xl text-sm leading-7 text-[color:var(--ink-soft)] sm:text-base">

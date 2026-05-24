@@ -444,17 +444,17 @@ export default function MatchRoomPage() {
       <div className="order-2 grid gap-4 xl:order-1 xl:sticky xl:top-8 xl:self-start xl:gap-6">
         {latestMatchState ? (
           <SectionCard>
-            <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-300">
+            <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--accent)]">
               Live HUD
             </p>
             <div className="mt-4 flex flex-wrap gap-2 text-xs uppercase tracking-[0.22em]">
-              <span className="rounded-full border border-cyan-400/25 bg-cyan-400/10 px-3 py-2 text-cyan-200">
+              <span className="rounded-full border border-[rgba(95,71,48,0.16)] bg-[rgba(255,250,244,0.9)] px-3 py-2 text-[color:var(--accent-deep)]">
                 Status {latestMatchState.status}
               </span>
-              <span className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-3 py-2 text-fuchsia-200">
+              <span className="rounded-full border border-[rgba(185,90,66,0.18)] bg-[rgba(248,226,219,0.9)] px-3 py-2 text-[color:var(--accent)]">
                 Turn {latestMatchState.currentTurn ? getPlayerLabel(latestMatchState.currentTurn, userId, latestMatchState.playerNames, latestMatchState.symbols) : "none"}
               </span>
-              <span className="rounded-full border border-slate-700 bg-slate-950/70 px-3 py-2 text-slate-300">
+              <span className="rounded-full border border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.86)] px-3 py-2 text-[color:var(--ink-soft)]">
                 Winner{" "}
                 {getWinnerText(
                   latestMatchState.winner,
@@ -464,13 +464,13 @@ export default function MatchRoomPage() {
                   latestMatchState.symbols
                 )}
               </span>
-              <span className="rounded-full border border-slate-700 bg-slate-950/70 px-3 py-2 text-slate-300">
+              <span className="rounded-full border border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.86)] px-3 py-2 text-[color:var(--ink-soft)]">
                 Moves {latestMatchState.moveHistory.length}
               </span>
             </div>
             <div className="mt-4 grid gap-3 text-sm leading-6">
               {isTimedMatch ? (
-                <div className="rounded-[1.2rem] border border-cyan-400/28 bg-cyan-400/10 px-4 py-3 text-cyan-100 sm:rounded-[1.4rem] sm:py-4">
+                <div className="rounded-[1.2rem] border border-[rgba(95,71,48,0.16)] bg-[rgba(255,250,244,0.88)] px-4 py-3 text-[color:var(--foreground)] sm:rounded-[1.4rem] sm:py-4">
                   {hasDisconnectedPlayers ? "The clock is paused with " : "Clock: "}
                   <TurnTimer
                     key={`body-${latestMatchState.turnExpiresAt ?? "none"}-${
@@ -485,11 +485,11 @@ export default function MatchRoomPage() {
                 </div>
               ) : null}
               {hasDisconnectedPlayers ? (
-                <div className="rounded-[1.2rem] border border-fuchsia-400/25 bg-fuchsia-500/10 px-4 py-3 text-fuchsia-100 sm:rounded-[1.4rem] sm:py-4">
+                <div className="rounded-[1.2rem] border border-[rgba(185,90,66,0.18)] bg-[rgba(248,226,219,0.92)] px-4 py-3 text-[color:var(--accent)] sm:rounded-[1.4rem] sm:py-4">
                   Return time left: {latestMatchState.disconnectTimeoutSeconds}s
                 </div>
               ) : null}
-              <div className="rounded-[1.2rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-3 text-slate-200 sm:rounded-[1.4rem] sm:py-4">
+              <div className="rounded-[1.2rem] border border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.86)] px-4 py-3 text-[color:var(--foreground)] sm:rounded-[1.4rem] sm:py-4">
                 {canPlay
                   ? "Your turn. Pick an empty square."
                   : activeMatch?.matchId !== matchId && socketStatus === "connected"
@@ -507,13 +507,13 @@ export default function MatchRoomPage() {
                       : "Waiting for the other player to move."}
               </div>
               {matchError || moveError ? (
-                <div className="rounded-[1.2rem] border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-rose-200 sm:rounded-[1.4rem] sm:py-4">
+                <div className="rounded-[1.2rem] border border-[rgba(185,90,66,0.28)] bg-[rgba(248,226,219,0.92)] px-4 py-3 text-[color:var(--accent)] sm:rounded-[1.4rem] sm:py-4">
                   {moveError ?? matchError}
                   {socketStatus !== "connected" || latestMatchState === null ? (
                     <button
                       type="button"
                       onClick={retryConnection}
-                      className="mt-3 rounded-full border border-rose-400/30 bg-rose-500/10 px-4 py-2 text-xs font-medium text-rose-100 transition hover:bg-rose-500/16"
+                      className="mt-3 rounded-full border border-[rgba(185,90,66,0.24)] bg-[rgba(255,250,243,0.92)] px-4 py-2 text-xs font-medium text-[color:var(--accent)] transition hover:-translate-y-0.5 hover:bg-[rgba(249,240,227,0.98)]"
                     >
                       Retry connection
                     </button>
@@ -529,13 +529,13 @@ export default function MatchRoomPage() {
                   await leaveMatch();
                   router.push("/play");
                 }}
-                className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-5 py-3 text-sm font-medium text-fuchsia-100 transition hover:-translate-y-0.5 hover:bg-fuchsia-500/16"
+                className="rounded-full border border-[rgba(185,90,66,0.22)] bg-[rgba(248,226,219,0.92)] px-5 py-3 text-sm font-medium text-[color:var(--accent)] transition hover:-translate-y-0.5 hover:bg-[rgba(243,214,203,0.98)]"
               >
                 Leave Room
               </button>
               <Link
                 href="/play"
-                className="rounded-full border border-cyan-400/35 bg-cyan-400/10 px-5 py-3 text-sm font-medium text-cyan-100 transition hover:-translate-y-0.5 hover:bg-cyan-400/16"
+                className="rounded-full border border-[rgba(95,71,48,0.18)] bg-[rgba(255,250,243,0.92)] px-5 py-3 text-sm font-medium text-[color:var(--accent-deep)] transition hover:-translate-y-0.5 hover:bg-[rgba(249,240,227,0.98)]"
               >
                 Back to Lobby
               </Link>
@@ -543,55 +543,55 @@ export default function MatchRoomPage() {
           </SectionCard>
         ) : null}
 
-        <SectionCard className="bg-[linear-gradient(180deg,_rgba(8,12,28,0.96),_rgba(13,19,43,0.92))] text-slate-50">
-          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-fuchsia-300">
+        <SectionCard>
+          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--accent-deep)]">
             Arena
           </p>
-          <h2 className="mt-3 break-all text-xl font-semibold tracking-tight text-white sm:text-3xl xl:text-4xl">
+          <h2 className="paper-heading mt-3 break-all text-xl font-semibold tracking-tight text-[color:var(--foreground)] sm:text-3xl xl:text-4xl">
             {matchId}
           </h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-            <div className="rounded-[1.15rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-3 sm:rounded-[1.35rem] sm:py-4">
-              <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-300">
+            <div className="rounded-[1.15rem] border border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.88)] px-4 py-3 sm:rounded-[1.35rem] sm:py-4">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--accent)]">
                 Pilot
               </p>
-              <p className="mt-2 text-base font-semibold text-white">
+              <p className="mt-2 text-base font-semibold text-[color:var(--foreground)]">
                 {username ?? "Unknown"}
               </p>
             </div>
-            <div className="rounded-[1.15rem] border border-fuchsia-400/18 bg-slate-950/70 px-4 py-3 sm:rounded-[1.35rem] sm:py-4">
-              <p className="text-[11px] uppercase tracking-[0.24em] text-fuchsia-300">
+            <div className="rounded-[1.15rem] border border-[rgba(185,90,66,0.14)] bg-[rgba(255,245,239,0.88)] px-4 py-3 sm:rounded-[1.35rem] sm:py-4">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--accent-deep)]">
                 Symbol
               </p>
-              <p className="mt-2 text-base font-semibold text-white">
+              <p className="mt-2 text-base font-semibold text-[color:var(--foreground)]">
                 {assignedSymbol ?? "Pending"}
               </p>
             </div>
-            <div className="rounded-[1.15rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-3 sm:rounded-[1.35rem] sm:py-4">
-              <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-300">
+            <div className="rounded-[1.15rem] border border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.88)] px-4 py-3 sm:rounded-[1.35rem] sm:py-4">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--accent)]">
                 Ruleset
               </p>
-              <p className="mt-2 text-base font-semibold text-white">
+              <p className="mt-2 text-base font-semibold text-[color:var(--foreground)]">
                 {currentMode}
               </p>
             </div>
-            <div className="rounded-[1.15rem] border border-fuchsia-400/18 bg-slate-950/70 px-4 py-3 sm:rounded-[1.35rem] sm:py-4">
-              <p className="text-[11px] uppercase tracking-[0.24em] text-fuchsia-300">
+            <div className="rounded-[1.15rem] border border-[rgba(185,90,66,0.14)] bg-[rgba(255,245,239,0.88)] px-4 py-3 sm:rounded-[1.35rem] sm:py-4">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--accent-deep)]">
                 Result
               </p>
-              <p className="mt-2 text-base font-semibold text-white">
+              <p className="mt-2 text-base font-semibold text-[color:var(--foreground)]">
                 {matchResult}
               </p>
-              <p className="mt-1 text-xs leading-5 text-slate-400">
+              <p className="mt-1 text-xs leading-5 text-[color:var(--ink-soft)]">
                 {matchOutcome}
               </p>
             </div>
             {isTimedMatch ? (
-              <div className="rounded-[1.15rem] border border-cyan-400/30 bg-[linear-gradient(180deg,_rgba(0,183,255,0.14),_rgba(0,183,255,0.08))] px-4 py-3 text-cyan-50 shadow-[0_0_24px_rgba(0,183,255,0.16)] sm:col-span-2 sm:rounded-[1.35rem] sm:py-4 xl:col-span-1">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-200">
+              <div className="rounded-[1.15rem] border border-[rgba(95,71,48,0.16)] bg-[rgba(255,250,244,0.88)] px-4 py-3 text-[color:var(--foreground)] shadow-[0_12px_24px_rgba(78,54,35,0.1)] sm:col-span-2 sm:rounded-[1.35rem] sm:py-4 xl:col-span-1">
+                <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--accent-deep)]">
                   Turn Clock
                 </p>
-                <p className="mt-2 text-2xl font-semibold tracking-[0.14em] sm:text-3xl sm:tracking-[0.16em]">
+                <p className="mt-2 text-2xl font-semibold tracking-[0.14em] text-[color:var(--accent)] sm:text-3xl sm:tracking-[0.16em]">
                   <TurnTimer
                     key={`hero-${latestMatchState?.turnExpiresAt ?? "none"}-${
                       hasDisconnectedPlayers ? "paused" : "live"
@@ -602,7 +602,7 @@ export default function MatchRoomPage() {
                     secondsRemaining={latestMatchState?.turnSecondsRemaining ?? null}
                   />
                 </p>
-                <p className="mt-2 text-xs uppercase tracking-[0.18em] text-cyan-100/80">
+                <p className="mt-2 text-xs uppercase tracking-[0.18em] text-[color:var(--ink-soft)]">
                   {hasDisconnectedPlayers
                     ? "Paused while waiting for reconnect"
                     : latestMatchState?.currentTurn
@@ -621,8 +621,8 @@ export default function MatchRoomPage() {
       </div>
 
       <SectionCard className="order-1 relative overflow-hidden xl:order-2">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(0,183,255,0.08),_transparent_26%),radial-gradient(circle_at_bottom_right,_rgba(255,79,216,0.08),_transparent_24%)]" />
-        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-300">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(185,90,66,0.05),_transparent_26%),radial-gradient(circle_at_bottom_right,_rgba(214,164,93,0.08),_transparent_24%)]" />
+        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--accent)]">
           Duel Board
         </p>
 
@@ -631,16 +631,16 @@ export default function MatchRoomPage() {
             <div
               className={`mt-4 rounded-[1.25rem] border px-4 py-4 sm:rounded-[1.6rem] sm:px-5 sm:py-5 ${
                 latestMatchState.status === "finished"
-                  ? "border-cyan-400/28 bg-cyan-400/8"
+                  ? "border-[rgba(95,71,48,0.18)] bg-[rgba(255,250,244,0.88)]"
                   : latestMatchState.status === "waiting"
-                    ? "border-fuchsia-400/25 bg-fuchsia-500/8"
-                    : "border-cyan-400/18 bg-slate-950/66"
+                    ? "border-[rgba(185,90,66,0.16)] bg-[rgba(248,226,219,0.9)]"
+                    : "border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.86)]"
               }`}
             >
-              <h3 className="mt-2 text-xl font-semibold tracking-tight text-white sm:text-3xl">
+              <h3 className="paper-heading mt-2 text-xl font-semibold tracking-tight text-[color:var(--foreground)] sm:text-3xl">
                 {lifecycleHeading}
               </h3>
-              <p className="mt-2 text-sm leading-6 text-slate-300">
+              <p className="mt-2 text-sm leading-6 text-[color:var(--ink-soft)]">
                 {latestMatchState.status === "waiting"
                   ? "The game is ready and waiting for one more player."
                   : latestMatchState.status === "finished"
@@ -653,7 +653,7 @@ export default function MatchRoomPage() {
               </p>
 
               {hasDisconnectedPlayers ? (
-                <div className="mt-4 rounded-[1.15rem] border border-fuchsia-400/28 bg-fuchsia-500/10 px-4 py-4 text-sm text-fuchsia-100 sm:rounded-[1.3rem]">
+                <div className="mt-4 rounded-[1.15rem] border border-[rgba(185,90,66,0.18)] bg-[rgba(248,226,219,0.92)] px-4 py-4 text-sm text-[color:var(--accent)] sm:rounded-[1.3rem]">
                   <p className="font-medium">
                     Comeback window active
                   </p>
@@ -664,7 +664,7 @@ export default function MatchRoomPage() {
                     {disconnectedEntries.map(([playerId, disconnectedAt]) => (
                       <div
                         key={playerId}
-                        className="rounded-[1rem] border border-fuchsia-400/20 bg-slate-950/55 px-4 py-3 sm:rounded-[1.1rem]"
+                        className="rounded-[1rem] border border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.86)] px-4 py-3 text-[color:var(--foreground)] sm:rounded-[1.1rem]"
                       >
                         {getPlayerLabel(
                           playerId,
@@ -684,7 +684,7 @@ export default function MatchRoomPage() {
               ) : null}
 
               {activeMatch?.matchId !== matchId && socketStatus === "connected" ? (
-                <div className="mt-4 rounded-[1.1rem] border border-cyan-400/28 bg-cyan-400/10 px-4 py-4 text-sm text-cyan-100 sm:rounded-[1.2rem]">
+                <div className="mt-4 rounded-[1.1rem] border border-[rgba(95,71,48,0.16)] bg-[rgba(255,250,244,0.88)] px-4 py-4 text-sm text-[color:var(--foreground)] sm:rounded-[1.2rem]">
                   {isRouteJoinPending
                     ? "Rejoining this game."
                     : "Getting this game ready again."}
@@ -693,10 +693,10 @@ export default function MatchRoomPage() {
 
               {latestMatchState.status === "finished" ? (
                 <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  <div className="rounded-[1.1rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-4 text-sm text-slate-200 sm:rounded-[1.2rem]">
+                  <div className="rounded-[1.1rem] border border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.86)] px-4 py-4 text-sm text-[color:var(--foreground)] sm:rounded-[1.2rem]">
                     Result: {matchResult}
                   </div>
-                  <div className="rounded-[1.1rem] border border-fuchsia-400/18 bg-slate-950/70 px-4 py-4 text-sm text-slate-200 sm:rounded-[1.2rem]">
+                  <div className="rounded-[1.1rem] border border-[rgba(185,90,66,0.14)] bg-[rgba(255,245,239,0.88)] px-4 py-4 text-sm text-[color:var(--foreground)] sm:rounded-[1.2rem]">
                     Winner:{" "}
                     {getWinnerText(
                       latestMatchState.winner,
@@ -706,10 +706,10 @@ export default function MatchRoomPage() {
                       latestMatchState.symbols
                     )}
                   </div>
-                  <div className="rounded-[1.1rem] border border-cyan-400/18 bg-slate-950/70 px-4 py-4 text-sm text-slate-200 sm:rounded-[1.2rem]">
+                  <div className="rounded-[1.1rem] border border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.86)] px-4 py-4 text-sm text-[color:var(--foreground)] sm:rounded-[1.2rem]">
                     Duration: {finishedDuration}
                   </div>
-                  <div className="rounded-[1.1rem] border border-fuchsia-400/18 bg-slate-950/70 px-4 py-4 text-sm text-slate-200 sm:rounded-[1.2rem]">
+                  <div className="rounded-[1.1rem] border border-[rgba(185,90,66,0.14)] bg-[rgba(255,245,239,0.88)] px-4 py-4 text-sm text-[color:var(--foreground)] sm:rounded-[1.2rem]">
                     Outcome: {matchOutcome}
                   </div>
                 </div>
@@ -721,7 +721,7 @@ export default function MatchRoomPage() {
                     type="button"
                     onClick={() => handleNextMatch("find_match")}
                     disabled={isRequeuing}
-                    className="rounded-full border border-cyan-400/35 bg-cyan-400/12 px-5 py-3 text-sm font-medium text-cyan-100 shadow-[0_0_22px_rgba(0,183,255,0.14)] transition hover:-translate-y-0.5 hover:bg-cyan-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-800 disabled:text-slate-500 disabled:shadow-none"
+                    className="rounded-full border border-[rgba(95,71,48,0.18)] bg-[rgba(255,250,243,0.92)] px-5 py-3 text-sm font-medium text-[color:var(--accent-deep)] transition hover:-translate-y-0.5 hover:bg-[rgba(249,240,227,0.98)] disabled:cursor-not-allowed disabled:border-[rgba(95,71,48,0.12)] disabled:bg-[rgba(250,246,239,0.75)] disabled:text-[rgba(107,91,77,0.6)] disabled:shadow-none"
                   >
                     Play Again
                   </button>
@@ -732,7 +732,7 @@ export default function MatchRoomPage() {
                       router.push("/play");
                     }}
                     disabled={isRequeuing}
-                    className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-5 py-3 text-sm font-medium text-fuchsia-100 transition hover:-translate-y-0.5 hover:bg-fuchsia-500/16 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-800 disabled:text-slate-500"
+                    className="rounded-full border border-[rgba(185,90,66,0.22)] bg-[rgba(248,226,219,0.92)] px-5 py-3 text-sm font-medium text-[color:var(--accent)] transition hover:-translate-y-0.5 hover:bg-[rgba(243,214,203,0.98)] disabled:cursor-not-allowed disabled:border-[rgba(95,71,48,0.12)] disabled:bg-[rgba(250,246,239,0.75)] disabled:text-[rgba(107,91,77,0.6)]"
                   >
                     Back to Lobby
                   </button>
@@ -740,27 +740,27 @@ export default function MatchRoomPage() {
               ) : null}
 
               {latestMatchState.status === "finished" ? (
-                <p className="mt-4 text-sm leading-6 text-slate-400">
+                <p className="mt-4 text-sm leading-6 text-[color:var(--ink-soft)]">
                   Use `Play Again` on both screens to jump into the next round.
                   `Back to Lobby` takes you out to the game menu.
                 </p>
               ) : null}
 
               {matchActionError || (activeMatch?.matchId !== matchId ? joinRouteError : null) ? (
-                <div className="mt-4 rounded-[1.1rem] border border-rose-400/30 bg-rose-500/10 px-4 py-4 text-sm text-rose-200 sm:rounded-[1.2rem]">
+                <div className="mt-4 rounded-[1.1rem] border border-[rgba(185,90,66,0.28)] bg-[rgba(248,226,219,0.92)] px-4 py-4 text-sm text-[color:var(--accent)] sm:rounded-[1.2rem]">
                   {matchActionError ?? joinRouteError}
                 </div>
               ) : null}
             </div>
 
             {isTimedMatch ? (
-              <div className="mt-4 rounded-[1.25rem] border border-cyan-400/35 bg-[linear-gradient(135deg,_rgba(0,183,255,0.16),_rgba(11,18,42,0.94))] px-4 py-4 text-cyan-50 shadow-[0_0_28px_rgba(0,183,255,0.16)] sm:rounded-[1.6rem] sm:px-5 sm:py-5">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-200">
+              <div className="mt-4 rounded-[1.25rem] border border-[rgba(95,71,48,0.16)] bg-[rgba(255,250,244,0.88)] px-4 py-4 text-[color:var(--foreground)] shadow-[0_12px_24px_rgba(78,54,35,0.1)] sm:rounded-[1.6rem] sm:px-5 sm:py-5">
+                <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--accent-deep)]">
                   Active Turn Clock
                 </p>
                 <div className="mt-2 flex flex-wrap items-end justify-between gap-3 sm:gap-4">
                   <div>
-                    <p className="text-3xl font-semibold tracking-[0.12em] text-white sm:text-5xl sm:tracking-[0.18em]">
+                    <p className="text-3xl font-semibold tracking-[0.12em] text-[color:var(--accent)] sm:text-5xl sm:tracking-[0.18em]">
                       <TurnTimer
                         key={`banner-${latestMatchState.turnExpiresAt ?? "none"}-${
                           hasDisconnectedPlayers ? "paused" : "live"
@@ -771,7 +771,7 @@ export default function MatchRoomPage() {
                         secondsRemaining={latestMatchState.turnSecondsRemaining}
                       />
                     </p>
-                    <p className="mt-2 text-sm leading-6 text-cyan-100/80">
+                    <p className="mt-2 text-sm leading-6 text-[color:var(--ink-soft)]">
                       {hasDisconnectedPlayers
                         ? "Clock paused while the reconnect window is active."
                         : latestMatchState.currentTurn
@@ -784,7 +784,7 @@ export default function MatchRoomPage() {
                           : "Waiting for the next turn."}
                     </p>
                   </div>
-                  <div className="rounded-full border border-cyan-200/20 bg-slate-950/35 px-4 py-2 text-xs uppercase tracking-[0.2em] text-cyan-100">
+                  <div className="rounded-full border border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.86)] px-4 py-2 text-xs uppercase tracking-[0.2em] text-[color:var(--accent-deep)]">
                     {hasDisconnectedPlayers ? "Paused" : "Live"}
                   </div>
                 </div>
@@ -801,7 +801,7 @@ export default function MatchRoomPage() {
             </div>
 
             <div className="mt-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--accent)]">
                 Turn Log
               </p>
               <div className="mt-3 grid gap-2">
@@ -811,8 +811,8 @@ export default function MatchRoomPage() {
                       key={`${move.playerId}-${move.position}-${index}`}
                       className={`rounded-[1.2rem] border px-4 py-3 text-sm ${
                         index % 2 === 0
-                          ? "border-cyan-400/18 bg-slate-950/70 text-slate-200"
-                          : "border-fuchsia-400/18 bg-slate-950/78 text-slate-200"
+                          ? "border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.88)] text-[color:var(--foreground)]"
+                          : "border-[rgba(185,90,66,0.14)] bg-[rgba(255,245,239,0.88)] text-[color:var(--foreground)]"
                       }`}
                     >
                       Turn {index + 1}:{" "}
@@ -826,7 +826,7 @@ export default function MatchRoomPage() {
                     </div>
                   ))
                 ) : (
-                  <div className="rounded-[1.2rem] border border-slate-800 bg-slate-950/75 px-4 py-3 text-sm text-slate-400">
+                  <div className="rounded-[1.2rem] border border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.86)] px-4 py-3 text-sm text-[color:var(--ink-soft)]">
                     No moves yet.
                   </div>
                 )}
@@ -834,26 +834,26 @@ export default function MatchRoomPage() {
             </div>
           </>
         ) : joinRouteError ? (
-          <div className="mt-4 rounded-[1.4rem] border border-rose-400/30 bg-rose-500/10 px-4 py-5 text-sm leading-6 text-rose-100">
-            <p className="text-base font-semibold text-white">Match unavailable</p>
+          <div className="mt-4 rounded-[1.4rem] border border-[rgba(185,90,66,0.28)] bg-[rgba(248,226,219,0.92)] px-4 py-5 text-sm leading-6 text-[color:var(--accent)]">
+            <p className="text-base font-semibold text-[color:var(--foreground)]">Match unavailable</p>
             <p className="mt-2">{joinRouteError}</p>
             <div className="mt-4 flex flex-wrap gap-3">
               <Link
                 href="/play"
-                className="rounded-full border border-cyan-400/35 bg-cyan-400/10 px-5 py-3 text-sm font-medium text-cyan-100 transition hover:-translate-y-0.5 hover:bg-cyan-400/16"
+                className="rounded-full border border-[rgba(95,71,48,0.18)] bg-[rgba(255,250,243,0.92)] px-5 py-3 text-sm font-medium text-[color:var(--accent-deep)] transition hover:-translate-y-0.5 hover:bg-[rgba(249,240,227,0.98)]"
               >
                 Back to Lobby
               </Link>
               <Link
                 href="/history"
-                className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-slate-200 transition hover:border-cyan-400/30 hover:bg-white/8"
+                className="rounded-full border border-[rgba(95,71,48,0.16)] bg-[rgba(255,250,244,0.86)] px-5 py-3 text-sm font-medium text-[color:var(--foreground)] transition hover:-translate-y-0.5 hover:bg-[rgba(249,240,227,0.98)]"
               >
                 Open History
               </Link>
             </div>
           </div>
         ) : (
-          <div className="mt-4 rounded-[1.4rem] border border-slate-800 bg-slate-950/75 px-4 py-4 text-sm leading-6 text-slate-400">
+          <div className="mt-4 rounded-[1.4rem] border border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.86)] px-4 py-4 text-sm leading-6 text-[color:var(--ink-soft)]">
             Waiting for authoritative state broadcast from the backend.
           </div>
         )}
