@@ -6,6 +6,10 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 
 import { GameBoard } from "@/components/match/game-board";
 import { useApp } from "@/components/providers/app-provider";
+import {
+  PaperButton,
+  PaperLinkButton,
+} from "@/components/ui/paper-primitives";
 import { SectionCard } from "@/components/ui/section-card";
 import type { MatchMode } from "@/lib/match-types";
 
@@ -510,35 +514,38 @@ export default function MatchRoomPage() {
                 <div className="rounded-[1.2rem] border border-[rgba(185,90,66,0.28)] bg-[rgba(248,226,219,0.92)] px-4 py-3 text-[color:var(--accent)] sm:rounded-[1.4rem] sm:py-4">
                   {moveError ?? matchError}
                   {socketStatus !== "connected" || latestMatchState === null ? (
-                    <button
+                    <PaperButton
                       type="button"
                       onClick={retryConnection}
-                      className="mt-3 rounded-full border border-[rgba(185,90,66,0.24)] bg-[rgba(255,250,243,0.92)] px-4 py-2 text-xs font-medium text-[color:var(--accent)] transition hover:-translate-y-0.5 hover:bg-[rgba(249,240,227,0.98)]"
+                      variant="primary"
+                      size="sm"
+                      className="mt-3"
                     >
                       Retry connection
-                    </button>
+                    </PaperButton>
                   ) : null}
                 </div>
               ) : null}
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <button
+              <PaperButton
                 type="button"
                 onClick={async () => {
                   await leaveMatch();
                   router.push("/play");
                 }}
-                className="rounded-full border border-[rgba(185,90,66,0.22)] bg-[rgba(248,226,219,0.92)] px-5 py-3 text-sm font-medium text-[color:var(--accent)] transition hover:-translate-y-0.5 hover:bg-[rgba(243,214,203,0.98)]"
+                variant="primary"
+                size="lg"
               >
                 Leave Room
-              </button>
-              <Link
+              </PaperButton>
+              <PaperLinkButton
                 href="/play"
-                className="rounded-full border border-[rgba(95,71,48,0.18)] bg-[rgba(255,250,243,0.92)] px-5 py-3 text-sm font-medium text-[color:var(--accent-deep)] transition hover:-translate-y-0.5 hover:bg-[rgba(249,240,227,0.98)]"
+                className="px-5 py-3 text-sm"
               >
                 Back to Lobby
-              </Link>
+              </PaperLinkButton>
             </div>
           </SectionCard>
         ) : null}
@@ -587,7 +594,7 @@ export default function MatchRoomPage() {
               </p>
             </div>
             {isTimedMatch ? (
-              <div className="rounded-[1.15rem] border border-[rgba(95,71,48,0.16)] bg-[rgba(255,250,244,0.88)] px-4 py-3 text-[color:var(--foreground)] shadow-[0_12px_24px_rgba(78,54,35,0.1)] sm:col-span-2 sm:rounded-[1.35rem] sm:py-4 xl:col-span-1">
+              <div className="rounded-[1.15rem] border border-[rgba(95,71,48,0.16)] bg-[rgba(255,250,244,0.88)] px-4 py-3 text-[color:var(--foreground)] sm:col-span-2 sm:rounded-[1.35rem] sm:py-4 xl:col-span-1">
                 <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--accent-deep)]">
                   Turn Clock
                 </p>
@@ -717,25 +724,26 @@ export default function MatchRoomPage() {
 
               {latestMatchState.status === "finished" ? (
                 <div className="mt-5 flex flex-wrap gap-3">
-                  <button
+                  <PaperButton
                     type="button"
                     onClick={() => handleNextMatch("find_match")}
                     disabled={isRequeuing}
-                    className="rounded-full border border-[rgba(95,71,48,0.18)] bg-[rgba(255,250,243,0.92)] px-5 py-3 text-sm font-medium text-[color:var(--accent-deep)] transition hover:-translate-y-0.5 hover:bg-[rgba(249,240,227,0.98)] disabled:cursor-not-allowed disabled:border-[rgba(95,71,48,0.12)] disabled:bg-[rgba(250,246,239,0.75)] disabled:text-[rgba(107,91,77,0.6)] disabled:shadow-none"
+                    size="lg"
                   >
                     Play Again
-                  </button>
-                  <button
+                  </PaperButton>
+                  <PaperButton
                     type="button"
                     onClick={async () => {
                       await leaveMatch();
                       router.push("/play");
                     }}
                     disabled={isRequeuing}
-                    className="rounded-full border border-[rgba(185,90,66,0.22)] bg-[rgba(248,226,219,0.92)] px-5 py-3 text-sm font-medium text-[color:var(--accent)] transition hover:-translate-y-0.5 hover:bg-[rgba(243,214,203,0.98)] disabled:cursor-not-allowed disabled:border-[rgba(95,71,48,0.12)] disabled:bg-[rgba(250,246,239,0.75)] disabled:text-[rgba(107,91,77,0.6)]"
+                    variant="primary"
+                    size="lg"
                   >
                     Back to Lobby
-                  </button>
+                  </PaperButton>
                 </div>
               ) : null}
 
@@ -754,7 +762,7 @@ export default function MatchRoomPage() {
             </div>
 
             {isTimedMatch ? (
-              <div className="mt-4 rounded-[1.25rem] border border-[rgba(95,71,48,0.16)] bg-[rgba(255,250,244,0.88)] px-4 py-4 text-[color:var(--foreground)] shadow-[0_12px_24px_rgba(78,54,35,0.1)] sm:rounded-[1.6rem] sm:px-5 sm:py-5">
+              <div className="mt-4 rounded-[1.25rem] border border-[rgba(95,71,48,0.16)] bg-[rgba(255,250,244,0.88)] px-4 py-4 text-[color:var(--foreground)] sm:rounded-[1.6rem] sm:px-5 sm:py-5">
                 <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--accent-deep)]">
                   Active Turn Clock
                 </p>
@@ -838,18 +846,19 @@ export default function MatchRoomPage() {
             <p className="text-base font-semibold text-[color:var(--foreground)]">Match unavailable</p>
             <p className="mt-2">{joinRouteError}</p>
             <div className="mt-4 flex flex-wrap gap-3">
-              <Link
+              <PaperLinkButton
                 href="/play"
-                className="rounded-full border border-[rgba(95,71,48,0.18)] bg-[rgba(255,250,243,0.92)] px-5 py-3 text-sm font-medium text-[color:var(--accent-deep)] transition hover:-translate-y-0.5 hover:bg-[rgba(249,240,227,0.98)]"
+                className="px-5 py-3 text-sm"
               >
                 Back to Lobby
-              </Link>
-              <Link
+              </PaperLinkButton>
+              <PaperLinkButton
                 href="/history"
-                className="rounded-full border border-[rgba(95,71,48,0.16)] bg-[rgba(255,250,244,0.86)] px-5 py-3 text-sm font-medium text-[color:var(--foreground)] transition hover:-translate-y-0.5 hover:bg-[rgba(249,240,227,0.98)]"
+                variant="ghost"
+                className="px-5 py-3 text-sm"
               >
                 Open History
-              </Link>
+              </PaperLinkButton>
             </div>
           </div>
         ) : (

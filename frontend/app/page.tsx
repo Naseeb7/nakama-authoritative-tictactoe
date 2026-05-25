@@ -1,7 +1,6 @@
-import Link from "next/link";
-
 import { SectionCard } from "@/components/ui/section-card";
 import { StepCard } from "@/components/ui/step-card";
+import { PaperLinkButton } from "@/components/ui/paper-primitives";
 
 const foundationItems = [
   {
@@ -35,18 +34,19 @@ export default function Home() {
         </p>
 
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link
+          <PaperLinkButton
             href="/play"
-            className="rounded-full border border-[rgba(95,71,48,0.2)] bg-[linear-gradient(180deg,rgba(255,249,241,0.98),rgba(242,228,207,0.96))] px-5 py-3 text-sm font-medium text-[color:var(--foreground)] shadow-[0_12px_24px_rgba(78,54,35,0.12)] transition hover:-translate-y-0.5 hover:border-[rgba(185,90,66,0.24)] hover:text-[color:var(--accent)]"
+            className="px-5 py-3 text-sm"
           >
             Play now
-          </Link>
-          <Link
+          </PaperLinkButton>
+          <PaperLinkButton
             href="/history"
-            className="rounded-full border border-[rgba(185,90,66,0.22)] bg-[rgba(248,226,219,0.92)] px-5 py-3 text-sm font-medium text-[color:var(--accent)] transition hover:-translate-y-0.5 hover:bg-[rgba(243,214,203,0.98)]"
+            variant="primary"
+            className="px-5 py-3 text-sm"
           >
             View past matches
-          </Link>
+          </PaperLinkButton>
         </div>
 
         <div className="mt-8 grid gap-3 sm:grid-cols-3">

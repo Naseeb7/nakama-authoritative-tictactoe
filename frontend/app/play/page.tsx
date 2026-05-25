@@ -5,6 +5,7 @@ import { useEffect, useState, useTransition } from "react";
 
 import { useApp } from "@/components/providers/app-provider";
 import { ChoiceCard } from "@/components/ui/choice-card";
+import { PaperButton } from "@/components/ui/paper-primitives";
 import { SectionCard } from "@/components/ui/section-card";
 import { StatusPill } from "@/components/ui/status-pill";
 import type { MatchMode } from "@/lib/match-types";
@@ -91,7 +92,7 @@ export default function PlayPage() {
           ))}
         </div>
 
-        <div className="mt-8 rounded-[1.6rem] border border-[rgba(95,71,48,0.16)] bg-[rgba(255,250,244,0.88)] p-5 shadow-[0_18px_30px_rgba(78,54,35,0.1)]">
+        <div className="mt-8 rounded-[1.6rem] border border-[rgba(95,71,48,0.16)] bg-[rgba(255,250,244,0.88)] p-5">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--accent-deep)]">
             Quick start
           </p>
@@ -104,26 +105,28 @@ export default function PlayPage() {
                 We will place you into the next available {selectedMode} match.
               </p>
             </div>
-            <button
+            <PaperButton
               type="button"
+              variant="secondary"
+              size="lg"
               onClick={() => handleMatchRequest("find_match")}
               disabled={isPending || joinStatus === "working" || status !== "ready"}
-              className="rounded-full border border-[rgba(95,71,48,0.22)] bg-[linear-gradient(180deg,rgba(255,248,241,0.98),rgba(241,224,203,0.96))] px-6 py-3 text-sm font-semibold text-[color:var(--foreground)] shadow-[0_12px_22px_rgba(78,54,35,0.12)] transition hover:-translate-y-0.5 hover:border-[rgba(185,90,66,0.3)] hover:text-[color:var(--accent)] disabled:cursor-not-allowed disabled:border-[rgba(95,71,48,0.12)] disabled:bg-[rgba(250,246,239,0.75)] disabled:text-[rgba(107,91,77,0.6)] disabled:shadow-none"
             >
               {isPending || joinStatus === "working" ? "Joining..." : "Start game"}
-            </button>
+            </PaperButton>
           </div>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-3">
-          <button
+          <PaperButton
             type="button"
+            variant="primary"
+            size="lg"
             onClick={() => handleMatchRequest("create_match")}
             disabled={isPending || joinStatus === "working" || status !== "ready"}
-            className="rounded-full border border-[rgba(185,90,66,0.22)] bg-[rgba(248,226,219,0.92)] px-5 py-3 text-sm font-medium text-[color:var(--accent)] transition hover:-translate-y-0.5 hover:bg-[rgba(243,214,203,0.98)] disabled:cursor-not-allowed disabled:border-[rgba(95,71,48,0.12)] disabled:bg-[rgba(250,246,239,0.75)] disabled:text-[rgba(107,91,77,0.6)]"
           >
             Start a new room
-          </button>
+          </PaperButton>
           <p className="self-center text-sm text-[color:var(--ink-soft)]">
             Use this if you want to open your own room first.
           </p>
@@ -167,15 +170,16 @@ export default function PlayPage() {
           </div>
         </div>
         {activeMatch ? (
-          <button
+          <PaperButton
             type="button"
+            variant="secondary"
             onClick={() =>
               router.push(`/match/${encodeURIComponent(activeMatch.matchId)}`)
             }
-            className="mt-6 inline-flex rounded-full border border-[rgba(95,71,48,0.18)] bg-[rgba(255,250,243,0.92)] px-4 py-2 text-sm font-medium text-[color:var(--accent-deep)] transition hover:-translate-y-0.5 hover:bg-[rgba(249,240,227,0.98)]"
+            className="mt-6 inline-flex"
           >
             Go back to your game
-          </button>
+          </PaperButton>
         ) : null}
       </SectionCard>
     </div>

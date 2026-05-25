@@ -3,18 +3,13 @@
 import { type FormEvent, useEffect, useState } from "react";
 
 import { useApp } from "@/components/providers/app-provider";
-
-function getStatusTone(status: "booting" | "ready" | "error") {
-  if (status === "ready") {
-    return "border-[rgba(95,71,48,0.18)] bg-[rgba(239,229,210,0.9)] text-[color:var(--accent-deep)]";
-  }
-
-  if (status === "error") {
-    return "border-[rgba(185,90,66,0.28)] bg-[rgba(248,226,219,0.92)] text-[color:var(--accent)]";
-  }
-
-  return "border-[rgba(95,71,48,0.18)] bg-[rgba(250,244,233,0.9)] text-[color:var(--ink-soft)]";
-}
+import {
+  PaperBadge,
+  PaperButton,
+  PaperCard,
+  PaperInput,
+  PaperLinkButton,
+} from "@/components/ui/paper-primitives";
 
 export function AuthStatusCard({ compact = false }: { compact?: boolean }) {
   const {
@@ -68,51 +63,50 @@ export function AuthStatusCard({ compact = false }: { compact?: boolean }) {
 
   if (compact) {
     return (
-      <section className="paper-card rounded-full border border-[rgba(95,71,48,0.16)] bg-[rgba(251,247,239,0.92)] px-3 py-2 text-[color:var(--foreground)] shadow-[0_10px_28px_rgba(72,49,30,0.12)]">
+      <PaperCard variant="note" className="rounded-full px-3 py-2 text-[color:var(--foreground)]">
         <div className="flex flex-wrap items-center gap-2">
           <span className="max-w-[10rem] truncate text-xs font-medium text-[color:var(--foreground)]">
             {username ? username : "Connecting..."}
           </span>
-          <span
-            className={`rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${getStatusTone(
-              status
-            )}`}
+          <PaperBadge
+            tone={status === "ready" ? "accent-deep" : status === "error" ? "accent" : "neutral"}
+            className="px-2 py-1 text-[10px]"
           >
             {status}
-          </span>
-          <span className="rounded-full border border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.9)] px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-[color:var(--ink-soft)]">
+          </PaperBadge>
+          <PaperBadge tone="neutral" className="px-2 py-1 text-[10px]">
             {socketStatus}
-          </span>
+          </PaperBadge>
           {status !== "ready" || socketStatus !== "connected" ? (
-            <button
+            <PaperButton
               type="button"
+              variant="primary"
+              size="sm"
               onClick={() => void retryConnection()}
-              className="rounded-full border border-[rgba(185,90,66,0.24)] bg-[rgba(248,226,219,0.9)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)] transition hover:-translate-y-0.5 hover:bg-[rgba(243,214,203,0.95)]"
             >
               Retry
-            </button>
+            </PaperButton>
           ) : null}
-          <a
+          <PaperLinkButton
             href="/account"
-            className="rounded-full border border-[rgba(95,71,48,0.18)] bg-[rgba(255,249,239,0.88)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent-deep)] transition hover:-translate-y-0.5 hover:bg-[rgba(249,240,227,0.96)]"
+            className="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]"
           >
             Account
-          </a>
+          </PaperLinkButton>
         </div>
-      </section>
+      </PaperCard>
     );
   }
 
   return (
-    <section className="paper-card w-full rounded-[1.75rem] border border-[rgba(95,71,48,0.18)] bg-[linear-gradient(180deg,rgba(255,250,243,0.98),rgba(242,230,210,0.96))] px-4 py-4 text-[color:var(--foreground)] shadow-[0_18px_34px_rgba(72,49,30,0.13)] sm:max-w-sm">
+    <PaperCard variant="note" className="w-full rounded-[1.35rem] px-4 py-4 text-[color:var(--foreground)] sm:max-w-sm">
       <div className="flex items-center justify-between gap-3">
-        <span
-          className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] ${getStatusTone(
-            status
-          )}`}
+        <PaperBadge
+          tone={status === "ready" ? "accent-deep" : status === "error" ? "accent" : "neutral"}
+          className="px-3 py-1 text-xs"
         >
           {status}
-        </span>
+        </PaperBadge>
         <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--ink-soft)]">
           live {socketStatus}
         </span>
@@ -133,19 +127,19 @@ export function AuthStatusCard({ compact = false }: { compact?: boolean }) {
           Change nickname
         </label>
         <div className="flex gap-2">
-          <input
+          <PaperInput
             value={draftUsername}
             onChange={(event) => setDraftUsername(event.target.value)}
             placeholder="Enter a new nickname"
-            className="min-w-0 flex-1 rounded-full border border-[rgba(95,71,48,0.18)] bg-[rgba(255,250,244,0.96)] px-4 py-2 text-sm text-[color:var(--foreground)] outline-none transition placeholder:text-[color:var(--ink-soft)] focus:border-[rgba(185,90,66,0.35)] focus:ring-2 focus:ring-[rgba(185,90,66,0.1)]"
+            className="flex-1"
           />
-          <button
+          <PaperButton
             type="submit"
+            variant="primary"
             disabled={isSaving || draftUsername.trim().length === 0}
-            className="rounded-full border border-[rgba(95,71,48,0.22)] bg-[linear-gradient(180deg,rgba(255,248,241,0.98),rgba(241,224,203,0.96))] px-4 py-2 text-sm font-medium text-[color:var(--foreground)] transition hover:-translate-y-0.5 hover:border-[rgba(185,90,66,0.3)] hover:text-[color:var(--accent)] disabled:cursor-not-allowed disabled:border-[rgba(95,71,48,0.12)] disabled:bg-[rgba(250,246,239,0.75)] disabled:text-[rgba(107,91,77,0.6)]"
           >
             {isSaving ? "Saving" : "Save"}
-          </button>
+          </PaperButton>
         </div>
       </form>
 
@@ -162,30 +156,33 @@ export function AuthStatusCard({ compact = false }: { compact?: boolean }) {
 
       <div className="mt-4 flex flex-wrap gap-2">
         {status !== "ready" || socketStatus !== "connected" ? (
-          <button
+          <PaperButton
             type="button"
+            variant="primary"
+            size="sm"
             onClick={() => void retryConnection()}
-            className="rounded-full border border-[rgba(185,90,66,0.22)] bg-[rgba(248,226,219,0.9)] px-3 py-2 text-xs font-medium text-[color:var(--accent)] transition hover:-translate-y-0.5 hover:bg-[rgba(243,214,203,0.95)]"
           >
             Retry connection
-          </button>
+          </PaperButton>
         ) : null}
-        <button
+        <PaperButton
           type="button"
+          variant="ghost"
+          size="sm"
           onClick={() => void logout()}
-          className="rounded-full border border-[rgba(95,71,48,0.18)] bg-[rgba(255,250,244,0.92)] px-3 py-2 text-xs font-medium text-[color:var(--foreground)] transition hover:-translate-y-0.5 hover:border-[rgba(185,90,66,0.24)] hover:bg-[rgba(249,240,227,0.96)]"
         >
           Log out
-        </button>
-        <button
+        </PaperButton>
+        <PaperButton
           type="button"
+          variant="ghost"
+          size="sm"
           onClick={() => void switchUser()}
-          className="rounded-full border border-[rgba(95,71,48,0.18)] bg-[rgba(255,250,244,0.92)] px-3 py-2 text-xs font-medium text-[color:var(--foreground)] transition hover:-translate-y-0.5 hover:border-[rgba(185,90,66,0.24)] hover:bg-[rgba(249,240,227,0.96)]"
         >
           Switch user
-        </button>
+        </PaperButton>
       </div>
 
-    </section>
+    </PaperCard>
   );
 }

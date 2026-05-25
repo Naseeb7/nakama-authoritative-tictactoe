@@ -1,5 +1,7 @@
 "use client";
 
+import { PaperPressable, paperMotion } from "@/components/ui/paper-primitives";
+
 type ChoiceCardProps = {
   accent?: "cyan" | "fuchsia";
   description: string;
@@ -17,16 +19,15 @@ export function ChoiceCard({
 }: ChoiceCardProps) {
   const accentClassName =
     accent === "fuchsia"
-      ? "border-[rgba(185,90,66,0.3)] bg-[linear-gradient(180deg,rgba(253,236,228,0.98),rgba(243,213,202,0.98))] text-[color:var(--foreground)] shadow-[0_16px_30px_rgba(116,72,55,0.14)] -rotate-1"
-      : "border-[rgba(95,71,48,0.22)] bg-[linear-gradient(180deg,rgba(250,244,232,0.98),rgba(239,226,205,0.98))] text-[color:var(--foreground)] shadow-[0_16px_30px_rgba(116,72,55,0.12)] rotate-1";
+      ? "border-[rgba(185,90,66,0.24)] bg-[rgba(248,229,219,0.96)] text-[color:var(--foreground)]"
+      : "border-[rgba(95,71,48,0.2)] bg-[rgba(249,243,229,0.96)] text-[color:var(--foreground)]";
   const idleClassName =
-    "border-[rgba(95,71,48,0.18)] bg-[linear-gradient(180deg,rgba(255,251,244,0.94),rgba(242,232,215,0.96))] text-[color:var(--foreground)] hover:-translate-y-1 hover:rotate-0 hover:border-[rgba(185,90,66,0.24)] hover:shadow-[0_18px_32px_rgba(116,72,55,0.12)]";
+    "border-[rgba(95,71,48,0.16)] bg-[rgba(252,248,240,0.96)] text-[color:var(--foreground)] hover:border-[rgba(185,90,66,0.22)]";
 
   return (
-    <button
-      type="button"
+    <PaperPressable
       onClick={onClick}
-      className={`paper-card rounded-[1.45rem] border p-4 text-left transition duration-200 ease-out ${
+      className={`rounded-[1.1rem] p-4 text-left ${paperMotion.press} ${paperMotion.float} ${
         isActive ? accentClassName : idleClassName
       }`}
     >
@@ -40,6 +41,6 @@ export function ChoiceCard({
       >
         {description}
       </p>
-    </button>
+    </PaperPressable>
   );
 }

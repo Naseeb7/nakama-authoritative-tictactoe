@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { useApp } from "@/components/providers/app-provider";
+import { PaperButton } from "@/components/ui/paper-primitives";
 import { SectionCard } from "@/components/ui/section-card";
 import type { MatchHistoryEntry, MatchHistoryResponse } from "@/lib/match-history";
 
@@ -187,13 +188,15 @@ export default function HistoryPage() {
         {loadError ? (
           <div className="mt-6 rounded-[1.35rem] border border-[rgba(185,90,66,0.28)] bg-[rgba(248,226,219,0.92)] px-4 py-4 text-sm text-[color:var(--accent)]">
             <p>{loadError}</p>
-            <button
+            <PaperButton
               type="button"
               onClick={retryConnection}
-              className="mt-3 rounded-full border border-[rgba(185,90,66,0.24)] bg-[rgba(255,250,243,0.92)] px-4 py-2 text-xs font-medium text-[color:var(--accent)] transition hover:-translate-y-0.5 hover:bg-[rgba(249,240,227,0.98)]"
+              variant="primary"
+              size="sm"
+              className="mt-3"
             >
               Retry connection
-            </button>
+            </PaperButton>
           </div>
         ) : null}
       </SectionCard>
@@ -280,14 +283,14 @@ export default function HistoryPage() {
         </div>
 
         {hasMore ? (
-          <button
+          <PaperButton
             type="button"
             onClick={() => setOffset((current) => current + HISTORY_PAGE_SIZE)}
             disabled={isLoading}
-            className="mt-6 inline-flex rounded-full border border-[rgba(95,71,48,0.18)] bg-[rgba(255,250,243,0.92)] px-4 py-2 text-sm font-medium text-[color:var(--accent-deep)] transition hover:-translate-y-0.5 hover:bg-[rgba(249,240,227,0.98)] disabled:cursor-not-allowed disabled:border-[rgba(95,71,48,0.12)] disabled:bg-[rgba(250,246,239,0.75)] disabled:text-[rgba(107,91,77,0.6)]"
+            className="mt-6 inline-flex"
           >
             {isLoading ? "Loading" : "Load older matches"}
-          </button>
+          </PaperButton>
         ) : null}
       </SectionCard>
     </div>

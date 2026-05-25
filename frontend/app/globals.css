@@ -5,6 +5,7 @@
   --foreground: #2a2119;
   --surface: rgba(250, 244, 232, 0.92);
   --surface-strong: rgba(242, 228, 207, 0.98);
+  --surface-note: rgba(255, 250, 244, 0.88);
   --stroke: rgba(102, 82, 60, 0.2);
   --stroke-strong: rgba(95, 71, 48, 0.34);
   --accent: #b95a42;
@@ -12,6 +13,9 @@
   --accent-soft: #d6a45d;
   --ink-soft: #6b5b4d;
   --paper-line: rgba(92, 69, 47, 0.08);
+  --paper-border: rgba(95, 71, 48, 0.16);
+  --paper-border-strong: rgba(95, 71, 48, 0.24);
+  --paper-shadow: 0 0 0 1px rgba(255, 255, 255, 0.45) inset;
 }
 
 @theme inline {
@@ -32,9 +36,9 @@ body {
   background: var(--background);
   color: var(--foreground);
   background-image:
-    radial-gradient(circle at 14% 18%, rgba(214, 164, 93, 0.28), transparent 22%),
-    radial-gradient(circle at 82% 10%, rgba(185, 90, 66, 0.14), transparent 18%),
-    radial-gradient(circle at 50% 100%, rgba(95, 71, 48, 0.08), transparent 28%),
+    radial-gradient(circle at 14% 18%, rgba(214, 164, 93, 0.12), transparent 18%),
+    radial-gradient(circle at 82% 10%, rgba(185, 90, 66, 0.08), transparent 14%),
+    radial-gradient(circle at 50% 100%, rgba(95, 71, 48, 0.04), transparent 22%),
     linear-gradient(180deg, #f7eddc 0%, #f3e6d2 40%, #eadcc5 100%);
   background-repeat: no-repeat;
   background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
@@ -47,7 +51,7 @@ body::before {
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.12) 100%),
+    linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.08) 100%),
     repeating-linear-gradient(
       0deg,
       transparent 0,
@@ -55,10 +59,9 @@ body::before {
       var(--paper-line) 22px,
       transparent 23px
     ),
-    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.35), transparent 18%),
-    radial-gradient(circle at 80% 15%, rgba(255, 255, 255, 0.28), transparent 16%);
-  opacity: 0.36;
-  mix-blend-mode: multiply;
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.18), transparent 14%),
+    radial-gradient(circle at 80% 15%, rgba(255, 255, 255, 0.14), transparent 12%);
+  opacity: 0.18;
 }
 
 body::after {
@@ -67,10 +70,10 @@ body::after {
   inset: 0;
   pointer-events: none;
   background-image:
-    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.18), transparent 62%),
-    radial-gradient(circle at 25% 70%, rgba(83, 60, 39, 0.06), transparent 18%),
-    radial-gradient(circle at 75% 30%, rgba(83, 60, 39, 0.05), transparent 20%);
-  opacity: 0.22;
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.08), transparent 58%),
+    radial-gradient(circle at 25% 70%, rgba(83, 60, 39, 0.03), transparent 14%),
+    radial-gradient(circle at 75% 30%, rgba(83, 60, 39, 0.025), transparent 16%);
+  opacity: 0.12;
 }
 
 a {
@@ -87,6 +90,42 @@ a {
   color: #201712;
 }
 
+@keyframes paper-wobble {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-1px) rotate(0.35deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+@keyframes paper-stamp {
+  0% {
+    transform: scale(0.98);
+  }
+  70% {
+    transform: scale(1.01);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes paper-squash {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.99);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 h1,
 h2,
 h3,
@@ -98,7 +137,134 @@ h4,
 }
 
 .paper-card {
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.8) inset,
-    0 18px 42px rgba(72, 48, 29, 0.14);
+  box-shadow: var(--paper-shadow);
+}
+
+.paper-texture {
+  background-color: var(--surface-note);
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent 40%),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 22px,
+      rgba(92, 69, 47, 0.05) 23px,
+      transparent 24px
+    );
+}
+
+.paper-panel {
+  border: 1px solid var(--paper-border);
+  background: var(--surface-note);
+}
+
+.paper-panel-strong {
+  border: 1px solid var(--paper-border-strong);
+  background: var(--surface);
+}
+
+.paper-button {
+  border: 1px solid var(--paper-border);
+  background: var(--surface-note);
+  color: var(--foreground);
+  transition:
+    transform 150ms ease-out,
+    background-color 150ms ease-out,
+    border-color 150ms ease-out,
+    color 150ms ease-out;
+}
+
+.paper-button:hover {
+  border-color: rgba(185, 90, 66, 0.22);
+  background: rgba(249, 240, 227, 0.98);
+}
+
+.paper-button:active {
+  transform: scale(0.99);
+}
+
+.paper-button:disabled,
+.paper-button[aria-disabled="true"] {
+  cursor: not-allowed;
+  border-color: rgba(95, 71, 48, 0.12);
+  background: rgba(250, 246, 239, 0.75);
+  color: rgba(107, 91, 77, 0.6);
+}
+
+.paper-button-primary {
+  border: 1px solid rgba(185, 90, 66, 0.22);
+  background: rgba(248, 226, 219, 0.92);
+  color: var(--accent);
+}
+
+.paper-button-primary:hover {
+  background: rgba(243, 214, 203, 0.98);
+}
+
+.paper-button-ghost {
+  border: 1px solid var(--paper-border);
+  background: transparent;
+}
+
+.paper-button-ghost:hover {
+  background: rgba(255, 250, 244, 0.9);
+}
+
+.paper-badge {
+  border: 1px solid var(--paper-border);
+  background: rgba(255, 250, 244, 0.9);
+  color: var(--ink-soft);
+}
+
+.paper-badge-accent {
+  border-color: rgba(185, 90, 66, 0.22);
+  background: rgba(248, 226, 219, 0.92);
+  color: var(--accent);
+}
+
+.paper-badge-deep {
+  border-color: rgba(95, 71, 48, 0.18);
+  background: rgba(255, 249, 239, 0.9);
+  color: var(--accent-deep);
+}
+
+.paper-input {
+  border: 1px solid var(--paper-border);
+  background: rgba(255, 250, 244, 0.96);
+  color: var(--foreground);
+}
+
+.paper-input:focus {
+  border-color: rgba(185, 90, 66, 0.35);
+}
+
+.paper-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(95, 71, 48, 0.2) 18%,
+    rgba(95, 71, 48, 0.2) 82%,
+    transparent
+  );
+}
+
+.paper-rotate-left {
+  transform: rotate(-0.4deg);
+}
+
+.paper-rotate-right {
+  transform: rotate(0.4deg);
+}
+
+.paper-wobble {
+  animation: paper-wobble 160ms ease-out;
+}
+
+.paper-stamp {
+  animation: paper-stamp 160ms ease-out;
+}
+
+.paper-squash {
+  animation: paper-squash 160ms ease-out;
 }

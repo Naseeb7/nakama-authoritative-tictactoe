@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { useApp } from "@/components/providers/app-provider";
+import { PaperButton } from "@/components/ui/paper-primitives";
 import { SectionCard } from "@/components/ui/section-card";
 
 const GLOBAL_WINS_LEADERBOARD_ID = "global_wins";
@@ -313,13 +314,14 @@ export default function LeaderboardPage() {
               {isLoading ? "Refreshing" : "Live"}
             </div>
             {loadError ? (
-              <button
+              <PaperButton
                 type="button"
                 onClick={retryConnection}
-                className="rounded-full border border-[rgba(185,90,66,0.24)] bg-[rgba(255,250,243,0.92)] px-3 py-2 text-xs font-medium text-[color:var(--accent)] transition hover:-translate-y-0.5 hover:bg-[rgba(249,240,227,0.98)]"
+                variant="primary"
+                size="sm"
               >
                 Retry connection
-              </button>
+              </PaperButton>
             ) : null}
           </div>
 
@@ -354,7 +356,7 @@ export default function LeaderboardPage() {
                 return (
                   <article
                     key={`${entry.ownerId}-${entry.rank}`}
-                    className={`rounded-[1.4rem] border px-4 py-4 shadow-[0_0_0_1px_rgba(255,255,255,0.6)] ${
+                    className={`rounded-[1.4rem] border px-4 py-4 ${
                       isCurrentUser
                         ? "border-[rgba(185,90,66,0.26)] bg-[rgba(248,226,219,0.92)]"
                         : index % 2 === 0
