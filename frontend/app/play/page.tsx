@@ -15,13 +15,13 @@ const modes = [
     id: "classic",
     name: "Classic",
     description:
-      "Straight-up play with no clock. Just you, your rival, and the board.",
+      "A calm, no-rush round for slow afternoons and cozy bragging rights.",
   },
   {
     id: "timed",
     name: "Rush",
     description:
-      "A faster mode with a ticking clock on every turn.",
+      "A snappier round with a little timer tick to keep the game lively.",
   },
 ] as const satisfies Array<{
   description: string;
@@ -61,22 +61,22 @@ export default function PlayPage() {
   return (
     <div className="grid gap-6 xl:grid-cols-[1.18fr_0.82fr]">
       <SectionCard className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(185,90,66,0.08),_transparent_26%),radial-gradient(circle_at_bottom_right,_rgba(214,164,93,0.12),_transparent_24%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(91,62,43,0.08),_transparent_26%),radial-gradient(circle_at_bottom_right,_rgba(214,164,93,0.12),_transparent_24%)]" />
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--accent)]">
           Start here
         </p>
         <h2 className="paper-heading mt-3 text-3xl font-semibold tracking-tight text-[color:var(--foreground)] sm:text-4xl">
-          Choose how you want to play.
+          Choose the kind of round you want.
         </h2>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-[color:var(--ink-soft)] sm:text-base">
-          Pick your preferred style, then start a game. You can jump into the
-          next available match, or open a fresh room if you want to wait there.
+          Pick the pace that feels right, then start a game. You can slip into
+          the next open match, or open a fresh room and wait there.
         </p>
 
         <div className="mt-5 flex flex-wrap gap-2">
           <StatusPill tone="cyan">Ready: {status}</StatusPill>
-          <StatusPill tone="fuchsia">Socket: {socketStatus}</StatusPill>
-          <StatusPill>Mode: {selectedMode}</StatusPill>
+          <StatusPill tone="fuchsia">Signal: {socketStatus}</StatusPill>
+          <StatusPill>Pace: {selectedMode}</StatusPill>
         </div>
 
         <div className="mt-7 grid gap-4 sm:grid-cols-2">
@@ -99,10 +99,10 @@ export default function PlayPage() {
           <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-lg font-semibold text-[color:var(--foreground)]">
-                Find me a game
+                Find me a cozy match
               </p>
               <p className="mt-1 max-w-xl text-sm leading-6 text-[color:var(--ink-soft)]">
-                We will place you into the next available {selectedMode} match.
+                We will tuck you into the next available {selectedMode} match.
               </p>
             </div>
             <PaperButton
@@ -112,7 +112,7 @@ export default function PlayPage() {
               onClick={() => handleMatchRequest("find_match")}
               disabled={isPending || joinStatus === "working" || status !== "ready"}
             >
-              {isPending || joinStatus === "working" ? "Joining..." : "Start game"}
+              {isPending || joinStatus === "working" ? "Heading in..." : "Start game"}
             </PaperButton>
           </div>
         </div>
@@ -125,15 +125,15 @@ export default function PlayPage() {
             onClick={() => handleMatchRequest("create_match")}
             disabled={isPending || joinStatus === "working" || status !== "ready"}
           >
-            Start a new room
+            Open a fresh table
           </PaperButton>
           <p className="self-center text-sm text-[color:var(--ink-soft)]">
-            Use this if you want to open your own room first.
+            Use this if you want to open your own little room first.
           </p>
         </div>
 
         {matchError ? (
-          <div className="mt-6 rounded-[1.35rem] border border-[rgba(185,90,66,0.28)] bg-[rgba(248,226,219,0.92)] px-4 py-4 text-sm text-[color:var(--accent)]">
+          <div className="mt-6 rounded-[1.35rem] border border-[rgba(91,62,43,0.28)] bg-[rgba(238,224,208,0.92)] px-4 py-4 text-sm text-[color:var(--accent)]">
             {matchError}
           </div>
         ) : null}
@@ -144,12 +144,12 @@ export default function PlayPage() {
           Need help choosing?
         </p>
         <h2 className="paper-heading mt-3 text-2xl font-semibold tracking-tight text-[color:var(--foreground)] sm:text-3xl">
-          {activeMatch ? "You already have a game open" : "Two simple ways to start"}
+          {activeMatch ? "You already have a game open" : "Two gentle ways to begin"}
         </h2>
         <p className="mt-3 text-sm leading-7 text-[color:var(--ink-soft)]">
           {activeMatch
             ? `You are in ${activeMatch.mode} mode with ${activeMatch.presences.length} player slot(s) filled.`
-            : "Pick the option that matches what you want to do next."}
+            : "Pick the option that feels right for the next round."}
         </p>
         <div className="mt-6 grid gap-3">
           <div className="rounded-[1.35rem] border border-[rgba(95,71,48,0.16)] bg-[rgba(255,250,244,0.88)] px-4 py-4">
@@ -160,9 +160,9 @@ export default function PlayPage() {
               Best when you just want to play right away.
             </p>
           </div>
-          <div className="rounded-[1.35rem] border border-[rgba(185,90,66,0.16)] bg-[rgba(255,245,239,0.88)] px-4 py-4">
+          <div className="rounded-[1.35rem] border border-[rgba(91,62,43,0.16)] bg-[rgba(255,245,239,0.88)] px-4 py-4">
             <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--accent-deep)]">
-              Start a new room
+              Open a fresh table
             </p>
             <p className="mt-2 text-sm text-[color:var(--foreground)]">
               Best when you want to open a fresh room and wait there.

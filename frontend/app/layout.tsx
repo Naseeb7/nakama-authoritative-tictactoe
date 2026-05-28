@@ -15,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PulseGrid",
+  title: "Sticker Squares",
   description:
-    "A handcrafted paper-themed realtime tic-tac-toe duel built with Nakama and Next.js.",
+    "A soothing 90s-style tic-tac-toe playroom built with Nakama and Next.js.",
 };
 
 export default function RootLayout({

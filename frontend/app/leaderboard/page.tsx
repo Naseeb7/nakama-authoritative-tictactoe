@@ -68,11 +68,11 @@ function toSafeNumber(value: unknown): number {
 
 function getRankBadge(rank: number, isCurrentUser: boolean) {
   if (isCurrentUser) {
-    return "border-[rgba(185,90,66,0.24)] bg-[rgba(248,226,219,0.92)] text-[color:var(--accent)]";
+    return "border-[rgba(91,62,43,0.24)] bg-[rgba(238,224,208,0.92)] text-[color:var(--accent)]";
   }
 
   if (rank === 1) {
-    return "border-[rgba(185,90,66,0.24)] bg-[rgba(243,214,203,0.98)] text-[color:var(--accent)]";
+    return "border-[rgba(91,62,43,0.24)] bg-[rgba(236,223,207,0.98)] text-[color:var(--accent)]";
   }
 
   if (rank === 2) {
@@ -242,18 +242,18 @@ export default function LeaderboardPage() {
   return (
     <div className="grid gap-6 xl:grid-cols-[0.98fr_1.02fr]">
       <SectionCard className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(185,90,66,0.08),_transparent_28%),radial-gradient(circle_at_bottom_left,_rgba(214,164,93,0.12),_transparent_24%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(91,62,43,0.08),_transparent_28%),radial-gradient(circle_at_bottom_left,_rgba(214,164,93,0.12),_transparent_24%)]" />
 
         <div className="relative">
           <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--accent)]">
-            Hall of Fame
+            Scoreboard
           </p>
           <h2 className="paper-heading mt-3 max-w-3xl text-3xl font-semibold tracking-tight text-[color:var(--foreground)] sm:text-4xl lg:text-5xl">
-            Track your run and see who is leading the arena.
+            Track your run and see who is lighting up the scoreboard.
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-7 text-[color:var(--ink-soft)] sm:text-base">
-            This page shows your overall record, your current form, and the players
-            climbing fastest through the Hall of Fame.
+            This page shows your overall record, your current form, and the
+            players climbing fastest through the board.
           </p>
 
           <div className="mt-7 grid gap-3 sm:grid-cols-2">
@@ -265,7 +265,7 @@ export default function LeaderboardPage() {
                 {playerStats.wins}
               </p>
             </div>
-            <div className="rounded-[1.35rem] border border-[rgba(185,90,66,0.14)] bg-[rgba(255,245,239,0.88)] px-4 py-4">
+            <div className="rounded-[1.35rem] border border-[rgba(91,62,43,0.14)] bg-[rgba(255,245,239,0.88)] px-4 py-4">
               <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--accent-deep)]">
                 Losses
               </p>
@@ -281,7 +281,7 @@ export default function LeaderboardPage() {
                 {playerStats.gamesPlayed}
               </p>
             </div>
-            <div className="rounded-[1.35rem] border border-[rgba(185,90,66,0.14)] bg-[rgba(255,245,239,0.88)] px-4 py-4">
+            <div className="rounded-[1.35rem] border border-[rgba(91,62,43,0.14)] bg-[rgba(255,245,239,0.88)] px-4 py-4">
               <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--accent-deep)]">
                 Current Streak
               </p>
@@ -302,7 +302,7 @@ export default function LeaderboardPage() {
           <div className="mt-6 rounded-[1.35rem] border border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.86)] px-4 py-4 text-sm leading-6 text-[color:var(--foreground)]">
             <p>Player: {username ?? "Unknown"}</p>
             <p className="mt-2 text-xs uppercase tracking-[0.18em] text-[color:var(--ink-soft)]">
-              Every finished match can move you up the table.
+              Every finished round can move you up the board.
             </p>
           </div>
 
@@ -310,7 +310,7 @@ export default function LeaderboardPage() {
             <div className="rounded-full border border-[rgba(95,71,48,0.18)] bg-[rgba(255,250,243,0.92)] px-3 py-2 text-xs uppercase tracking-[0.22em] text-[color:var(--accent-deep)]">
               {status}
             </div>
-            <div className="rounded-full border border-[rgba(185,90,66,0.18)] bg-[rgba(248,226,219,0.92)] px-3 py-2 text-xs uppercase tracking-[0.22em] text-[color:var(--accent)]">
+            <div className="rounded-full border border-[rgba(91,62,43,0.18)] bg-[rgba(238,224,208,0.92)] px-3 py-2 text-xs uppercase tracking-[0.22em] text-[color:var(--accent)]">
               {isLoading ? "Refreshing" : "Live"}
             </div>
             {loadError ? (
@@ -320,13 +320,13 @@ export default function LeaderboardPage() {
                 variant="primary"
                 size="sm"
               >
-                Retry connection
+                Try again
               </PaperButton>
             ) : null}
           </div>
 
           {loadError ? (
-            <div className="mt-5 rounded-[1.35rem] border border-[rgba(185,90,66,0.28)] bg-[rgba(248,226,219,0.92)] px-4 py-4 text-sm text-[color:var(--accent)]">
+            <div className="mt-5 rounded-[1.35rem] border border-[rgba(91,62,43,0.28)] bg-[rgba(238,224,208,0.92)] px-4 py-4 text-sm text-[color:var(--accent)]">
               {loadError}
             </div>
           ) : null}
@@ -334,18 +334,18 @@ export default function LeaderboardPage() {
       </SectionCard>
 
       <SectionCard className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(185,90,66,0.06),_transparent_26%),radial-gradient(circle_at_bottom_right,_rgba(214,164,93,0.08),_transparent_24%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(91,62,43,0.06),_transparent_26%),radial-gradient(circle_at_bottom_right,_rgba(214,164,93,0.08),_transparent_24%)]" />
 
         <div className="relative">
           <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--accent-deep)]">
-            Top Wins
+            Top wins
           </p>
           <h2 className="paper-heading mt-3 text-3xl font-semibold tracking-tight text-[color:var(--foreground)] sm:text-4xl">
             The players setting the pace right now.
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-7 text-[color:var(--ink-soft)] sm:text-base">
-            Win matches, build momentum, and keep climbing. The top of the table is
-            reserved for the players closing games most consistently.
+            Win rounds, build momentum, and keep climbing. The top of the board is
+            reserved for the players who close games most consistently.
           </p>
 
           <div className="mt-6 grid gap-3">
@@ -358,7 +358,7 @@ export default function LeaderboardPage() {
                     key={`${entry.ownerId}-${entry.rank}`}
                     className={`rounded-[1.4rem] border px-4 py-4 ${
                       isCurrentUser
-                        ? "border-[rgba(185,90,66,0.26)] bg-[rgba(248,226,219,0.92)]"
+                        ? "border-[rgba(91,62,43,0.26)] bg-[rgba(238,224,208,0.92)]"
                         : index % 2 === 0
                           ? "border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.88)]"
                           : "border-[rgba(95,71,48,0.12)] bg-[rgba(249,240,227,0.92)]"
@@ -378,7 +378,7 @@ export default function LeaderboardPage() {
                           <p className="text-base font-semibold text-[color:var(--foreground)]">
                             {getDisplayUsername(entry, userId)}
                           </p>
-                          <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--ink-soft)]">
+                        <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--ink-soft)]">
                             {getDisplayOwnerLabel(entry, userId)}
                           </p>
                         </div>
@@ -398,7 +398,7 @@ export default function LeaderboardPage() {
               })
           ) : (
               <div className="rounded-[1.35rem] border border-[rgba(95,71,48,0.14)] bg-[rgba(255,250,244,0.86)] px-4 py-4 text-sm leading-6 text-[color:var(--ink-soft)]">
-                {isLoading ? "Loading the hall of fame." : "No ranked wins yet."}
+                {isLoading ? "Loading the scoreboard." : "No ranked wins yet."}
               </div>
             )}
           </div>

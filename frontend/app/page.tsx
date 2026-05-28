@@ -4,16 +4,16 @@ import { PaperLinkButton } from "@/components/ui/paper-primitives";
 
 const foundationItems = [
   {
-    title: "Jump in fast",
-    body: "Press Play to join the next open game without setting anything up first.",
+    title: "Easy to enter",
+    body: "Open Playroom and drift into the next open game without any fuss.",
   },
   {
-    title: "Choose your pace",
-    body: "Play Classic for a calm round or Rush when you want a timer on every turn.",
+    title: "Pick your pace",
+    body: "Choose a calm classic round or a brisk clock-ticking one when you want a little spark.",
   },
   {
-    title: "Track your games",
-    body: "Check match history and leaderboard whenever you want to review your results.",
+    title: "Keep the memories",
+    body: "Look back through keepsakes and the scoreboard whenever you want to revisit the fun.",
   },
 ];
 
@@ -21,16 +21,16 @@ export default function Home() {
   return (
     <div className="grid items-start gap-6 xl:grid-cols-[1.18fr_0.82fr]">
       <SectionCard className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(185,90,66,0.1),_transparent_28%),radial-gradient(circle_at_20%_80%,_rgba(214,164,93,0.12),_transparent_22%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(91,62,43,0.1),_transparent_28%),radial-gradient(circle_at_20%_80%,_rgba(214,164,93,0.12),_transparent_22%)]" />
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--accent)]">
           Welcome
         </p>
         <h2 className="paper-heading mt-3 max-w-3xl text-4xl font-semibold tracking-tight text-[color:var(--foreground)] sm:text-5xl lg:text-6xl">
-          Quick online tic-tac-toe, built like a tabletop keepsake.
+          A quiet little tic-tac-toe playroom with a 90s notebook heart.
         </h2>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-[color:var(--ink-soft)] sm:text-base">
-          Start a match in a couple of clicks, play live against another
-          player, and jump back in for another round when the game ends.
+          Start a round in a couple of clicks, play live against someone else,
+          and come back for another soft little game when the board clears.
         </p>
 
         <div className="mt-8 flex flex-wrap gap-3">
@@ -38,39 +38,39 @@ export default function Home() {
             href="/play"
             className="px-5 py-3 text-sm"
           >
-            Play now
+            Enter the playroom
           </PaperLinkButton>
           <PaperLinkButton
             href="/history"
             variant="primary"
             className="px-5 py-3 text-sm"
           >
-            View past matches
+            Open keepsakes
           </PaperLinkButton>
         </div>
 
         <div className="mt-8 grid gap-3 sm:grid-cols-3">
           <StepCard
             step="Step 1"
-            title="Open Play"
-            body="Head to the Play screen to start a new game or join one that is waiting."
+            title="Open Playroom"
+            body="Head to Playroom to start a new game or slip into one that is already waiting."
           />
           <StepCard
             step="Step 2"
-            title="Pick a mode"
-            body="Choose Classic for standard games or Rush for timed turns."
+            title="Choose a pace"
+            body="Pick Classic for a gentle round or Rush for a little timer-driven excitement."
           />
           <StepCard
             step="Step 3"
-            title="Start playing"
-            body="You are taken straight to the live board as soon as your match is ready."
+            title="Make a memory"
+            body="You go straight to the live board as soon as the game is ready."
           />
         </div>
       </SectionCard>
 
       <SectionCard className="self-start">
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--accent-deep)]">
-          Why It Works
+          Why it feels nice
         </p>
         <div className="mt-5 grid gap-3">
           {foundationItems.map((item) => (
@@ -93,8 +93,8 @@ export default function Home() {
             Where to begin
           </p>
           <p className="mt-3 text-sm leading-7 text-[color:var(--ink-soft)]">
-            If you are here to play, use `Play now`. If you want to review past
-            games first, open `View past matches`.
+            If you want to play, choose `Enter the playroom`. If you want to
+            look back first, open `Keepsakes`.
           </p>
         </div>
       </SectionCard>

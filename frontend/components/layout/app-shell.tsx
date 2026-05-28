@@ -8,10 +8,10 @@ import { PaperLinkButton, SketchDivider } from "@/components/ui/paper-primitives
 
 const navItems = [
   { href: "/", label: "Home" },
-  { href: "/play", label: "Play" },
-  { href: "/account", label: "Account" },
-  { href: "/history", label: "Match History" },
-  { href: "/leaderboard", label: "Hall of Fame" },
+  { href: "/play", label: "Playroom" },
+  { href: "/account", label: "Player Card" },
+  { href: "/history", label: "Keepsakes" },
+  { href: "/leaderboard", label: "Scoreboard" },
 ];
 
 function isNavItemActive(pathname: string, href: string) {
@@ -33,7 +33,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen text-[color:var(--foreground)]">
         <div className="mx-auto flex min-h-screen w-full max-w-[1500px] flex-col px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
           <header className={`${shellBackdrop} px-3 py-3 sm:px-4 sm:py-4`}>
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.22),_transparent_28%),radial-gradient(circle_at_top_right,_rgba(185,90,66,0.05),_transparent_24%)]" />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.22),_transparent_28%),radial-gradient(circle_at_top_right,_rgba(91,62,43,0.05),_transparent_24%)]" />
             <div className="relative flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div className="flex flex-col gap-3">
                 <div className="flex flex-wrap items-center gap-3">
@@ -41,10 +41,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     href="/"
                     className="w-fit -rotate-[0.4deg] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] sm:text-xs sm:tracking-[0.32em]"
                   >
-                    PulseGrid
+                    Sticker Squares
                   </PaperLinkButton>
                   <p className="hidden text-sm text-[color:var(--ink-soft)] sm:block">
-                    Match focus mode. Core controls and live game state stay above the fold.
+                    Quiet game mode. The board and the feeling stay up front.
                   </p>
                 </div>
 
@@ -55,8 +55,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       href={item.href}
                       className={`shrink-0 rounded-full border px-3 py-2 text-xs font-medium transition sm:px-4 sm:text-sm ${
                         isNavItemActive(pathname, item.href)
-                          ? "border-[rgba(185,90,66,0.24)] bg-[rgba(243,219,205,0.98)] text-[color:var(--accent)]"
-                          : "border-[rgba(95,71,48,0.16)] bg-[rgba(255,250,243,0.9)] text-[color:var(--foreground)] hover:border-[rgba(185,90,66,0.22)] hover:bg-[rgba(249,240,227,0.98)]"
+                          ? "border-[rgba(91,62,43,0.24)] bg-[rgba(236,223,207,0.98)] text-[color:var(--accent)]"
+                          : "border-[rgba(75,52,36,0.16)] bg-[rgba(255,250,243,0.9)] text-[color:var(--foreground)] hover:border-[rgba(91,62,43,0.22)] hover:bg-[rgba(249,240,227,0.98)]"
                       }`}
                     >
                       {item.label}
@@ -67,7 +67,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     variant="primary"
                     className="shrink-0 px-3 py-2 text-xs font-semibold sm:px-4 sm:text-sm"
                   >
-                    Start playing
+                    Step inside
                   </PaperLinkButton>
                 </nav>
               </div>
@@ -86,7 +86,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen text-[color:var(--foreground)]">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-5 py-6 sm:px-8 lg:px-10">
         <header className={`${shellBackdrop} px-4 py-4 sm:px-5`}>
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.2),_transparent_28%),radial-gradient(circle_at_top_right,_rgba(185,90,66,0.05),_transparent_24%)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.2),_transparent_28%),radial-gradient(circle_at_top_right,_rgba(91,62,43,0.05),_transparent_24%)]" />
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="space-y-2">
@@ -95,18 +95,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     href="/"
                     className="w-fit -rotate-[0.4deg] px-3 py-1 text-xs font-semibold uppercase tracking-[0.32em]"
                   >
-                    PulseGrid
+                    Sticker Squares
                   </PaperLinkButton>
                   <p className="text-sm text-[color:var(--ink-soft)]">
-                    Start a game fast and jump straight into the board.
+                    Start a soft little game and drift straight to the board.
                   </p>
                 </div>
                 <div>
                   <h1 className="paper-heading text-2xl font-semibold tracking-tight text-[color:var(--foreground)] sm:text-3xl">
-                    Start a game without digging.
+                    A small game with a gentle old-school feel.
                   </h1>
                   <p className="mt-1 max-w-2xl text-sm leading-6 text-[color:var(--ink-soft)]">
-                    Open `Play`, choose a mode, and get into a live room fast.
+                    Open `Playroom`, pick a pace, and step into a live board.
                   </p>
                 </div>
               </div>
@@ -116,7 +116,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   variant="primary"
                   className="inline-flex w-fit px-4 py-2 text-sm font-semibold"
                 >
-                  Go to play
+                  Open playroom
                 </PaperLinkButton>
                 <AuthStatusCard compact />
               </div>
@@ -131,8 +131,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   href={item.href}
                   className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
                     isNavItemActive(pathname, item.href)
-                      ? "border-[rgba(185,90,66,0.24)] bg-[rgba(243,219,205,0.98)] text-[color:var(--accent)]"
-                      : "border-[rgba(95,71,48,0.16)] bg-[rgba(255,250,243,0.9)] text-[color:var(--foreground)] hover:border-[rgba(185,90,66,0.22)] hover:bg-[rgba(249,240,227,0.98)]"
+                      ? "border-[rgba(91,62,43,0.24)] bg-[rgba(236,223,207,0.98)] text-[color:var(--accent)]"
+                      : "border-[rgba(75,52,36,0.16)] bg-[rgba(255,250,243,0.9)] text-[color:var(--foreground)] hover:border-[rgba(91,62,43,0.22)] hover:bg-[rgba(249,240,227,0.98)]"
                   }`}
                 >
                   {item.label}

@@ -207,7 +207,7 @@ export function PaperInput({
     <input
       {...props}
       className={cx(
-        "paper-card paper-input min-w-0 rounded-full px-4 py-2 text-sm outline-none placeholder:text-[color:var(--ink-soft)] focus:ring-2 focus:ring-[rgba(185,90,66,0.1)]",
+        "paper-card paper-input min-w-0 rounded-full px-4 py-2 text-sm outline-none placeholder:text-[color:var(--ink-soft)] focus:ring-2 focus:ring-[rgba(91,62,43,0.1)]",
         className
       )}
     />
@@ -249,7 +249,7 @@ export function PaperCell({
 }
 
 export const paperMotion = {
-  hover: "hover:bg-[rgba(249,240,227,0.98)] hover:border-[rgba(185,90,66,0.22)]",
+  hover: "hover:bg-[rgba(249,240,227,0.98)] hover:border-[rgba(91,62,43,0.22)]",
   float: "hover:-translate-y-px",
   press: "active:scale-[0.99]",
   wobble: "paper-wobble",

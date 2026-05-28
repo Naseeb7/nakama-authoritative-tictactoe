@@ -30,7 +30,7 @@ export function AuthStatusCard({ compact = false }: { compact?: boolean }) {
     error ??
     (socketStatus !== "connected"
       ? `Connection: ${socketStatus}`
-      : "Connection stable");
+      : "Connection feels steady");
   const connectionTone = error
     ? "text-[color:var(--accent)]"
     : socketStatus !== "connected"
@@ -49,12 +49,12 @@ export function AuthStatusCard({ compact = false }: { compact?: boolean }) {
 
     try {
       await renameNickname(draftUsername);
-      setActionMessage("Nickname updated.");
+      setActionMessage("Name card updated.");
     } catch (nextError) {
       setActionError(
         nextError instanceof Error && nextError.message
           ? nextError.message
-          : "Failed to update nickname."
+          : "Could not update the name card."
       );
     } finally {
       setIsSaving(false);
@@ -66,7 +66,7 @@ export function AuthStatusCard({ compact = false }: { compact?: boolean }) {
       <PaperCard variant="note" className="rounded-full px-3 py-2 text-[color:var(--foreground)]">
         <div className="flex flex-wrap items-center gap-2">
           <span className="max-w-[10rem] truncate text-xs font-medium text-[color:var(--foreground)]">
-            {username ? username : "Connecting..."}
+            {username ? username : "Warming up..."}
           </span>
           <PaperBadge
             tone={status === "ready" ? "accent-deep" : status === "error" ? "accent" : "neutral"}
@@ -108,29 +108,29 @@ export function AuthStatusCard({ compact = false }: { compact?: boolean }) {
           {status}
         </PaperBadge>
         <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--ink-soft)]">
-          live {socketStatus}
+          signal {socketStatus}
         </span>
       </div>
 
       <div className="mt-4 space-y-1">
-        <p className="text-sm text-[color:var(--ink-soft)]">Pilot</p>
+        <p className="text-sm text-[color:var(--ink-soft)]">Player</p>
         <p className="text-lg font-semibold tracking-tight text-[color:var(--foreground)]">
-          {username ? username : "Connecting..."}
+          {username ? username : "Warming up..."}
         </p>
         <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--ink-soft)]">
-          {status === "ready" ? "Identity online" : "Waiting for account"}
+          {status === "ready" ? "Ready to play" : "Getting ready"}
         </p>
       </div>
 
       <form onSubmit={handleNicknameSubmit} className="mt-4 space-y-3">
         <label className="block text-xs uppercase tracking-[0.2em] text-[color:var(--accent-deep)]">
-          Change nickname
+          Change name card
         </label>
         <div className="flex gap-2">
           <PaperInput
             value={draftUsername}
             onChange={(event) => setDraftUsername(event.target.value)}
-            placeholder="Enter a new nickname"
+            placeholder="Enter a new name"
             className="flex-1"
           />
           <PaperButton
@@ -138,7 +138,7 @@ export function AuthStatusCard({ compact = false }: { compact?: boolean }) {
             variant="primary"
             disabled={isSaving || draftUsername.trim().length === 0}
           >
-            {isSaving ? "Saving" : "Save"}
+            {isSaving ? "Saving" : "Keep it"}
           </PaperButton>
         </div>
       </form>
@@ -162,7 +162,7 @@ export function AuthStatusCard({ compact = false }: { compact?: boolean }) {
             size="sm"
             onClick={() => void retryConnection()}
           >
-            Retry connection
+            Try again
           </PaperButton>
         ) : null}
         <PaperButton
@@ -171,7 +171,7 @@ export function AuthStatusCard({ compact = false }: { compact?: boolean }) {
           size="sm"
           onClick={() => void logout()}
         >
-          Log out
+          Step out
         </PaperButton>
         <PaperButton
           type="button"
@@ -179,7 +179,7 @@ export function AuthStatusCard({ compact = false }: { compact?: boolean }) {
           size="sm"
           onClick={() => void switchUser()}
         >
-          Switch user
+          Switch player
         </PaperButton>
       </div>
 

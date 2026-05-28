@@ -19,10 +19,10 @@ export function ChoiceCard({
 }: ChoiceCardProps) {
   const accentClassName =
     accent === "fuchsia"
-      ? "border-[rgba(185,90,66,0.24)] bg-[rgba(248,229,219,0.96)] text-[color:var(--foreground)]"
-      : "border-[rgba(95,71,48,0.2)] bg-[rgba(249,243,229,0.96)] text-[color:var(--foreground)]";
+      ? "border-[rgba(91,62,43,0.24)] bg-[rgba(238,224,208,0.96)] text-[color:var(--foreground)]"
+      : "border-[rgba(75,52,36,0.2)] bg-[rgba(249,243,229,0.96)] text-[color:var(--foreground)]";
   const idleClassName =
-    "border-[rgba(95,71,48,0.16)] bg-[rgba(252,248,240,0.96)] text-[color:var(--foreground)] hover:border-[rgba(185,90,66,0.22)]";
+    "border-[rgba(75,52,36,0.16)] bg-[rgba(252,248,240,0.96)] text-[color:var(--foreground)] hover:border-[rgba(91,62,43,0.22)]";
 
   return (
     <PaperPressable

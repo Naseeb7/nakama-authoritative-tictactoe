@@ -14,7 +14,7 @@ export function SectionCard({
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[linear-gradient(135deg,rgba(255,255,255,0.12),transparent_42%,rgba(185,90,66,0.02)_78%,transparent)] opacity-25"
+        className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[linear-gradient(135deg,rgba(255,255,255,0.12),transparent_42%,rgba(91,62,43,0.02)_78%,transparent)] opacity-25"
       />
       {children}
     </PaperCard>
