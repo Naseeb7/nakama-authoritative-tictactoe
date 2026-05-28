@@ -27,10 +27,17 @@ export function ChoiceCard({
   return (
     <PaperPressable
       onClick={onClick}
-      className={`rounded-[1.1rem] p-4 text-left ${paperMotion.press} ${paperMotion.float} ${
+      aria-pressed={isActive}
+      className={`relative overflow-hidden rounded-[1.1rem] p-4 text-left ${paperMotion.press} ${paperMotion.float} ${
         isActive ? accentClassName : idleClassName
-      }`}
+      } ${isActive ? "ring-1 ring-[rgba(91,62,43,0.16)]" : ""}`}
     >
+      {isActive ? (
+        <div className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full border border-[rgba(75,52,36,0.14)] bg-[rgba(255,250,244,0.82)] px-2 py-1 text-[9px] uppercase tracking-[0.18em] text-[color:var(--accent-deep)] shadow-[0_1px_0_rgba(255,255,255,0.5)_inset]">
+          <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--accent-deep)] opacity-80" />
+          Selected
+        </div>
+      ) : null}
       <h3 className="text-lg font-semibold tracking-tight text-inherit">
         {title}
       </h3>
