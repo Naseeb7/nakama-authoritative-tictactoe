@@ -19,7 +19,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   nakama:
-    image: registry.heroiclabs.com/heroiclabs/nakama:3.22.0
+    image: heroiclabs/nakama:3.22.0
     container_name: nakama
     depends_on:
       postgres:

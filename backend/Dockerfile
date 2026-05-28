@@ -8,7 +8,7 @@ RUN npm ci
 COPY src ./src
 RUN npm run build
 
-FROM registry.heroiclabs.com/heroiclabs/nakama:3.22.0
+FROM heroiclabs/nakama:3.22.0
 
 COPY --from=builder /app/build /nakama/data/modules/build
 COPY local.yml /nakama/data/local.yml
