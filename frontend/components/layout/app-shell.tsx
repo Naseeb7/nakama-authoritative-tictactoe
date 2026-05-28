@@ -4,7 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { AuthStatusCard } from "@/components/layout/auth-status-card";
-import { PaperLinkButton, SketchDivider } from "@/components/ui/paper-primitives";
+import {
+  PaperLinkButton,
+  SketchDivider,
+} from "@/components/ui/paper-primitives";
 
 const navItems = [
   { href: "/", label: "Home" },
@@ -110,35 +113,37 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   </p>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <PaperLinkButton
-                  href="/play"
-                  variant="primary"
-                  className="inline-flex w-fit px-4 py-2 text-sm font-semibold"
-                >
-                  Open playroom
-                </PaperLinkButton>
+              <div className="flex flex-col items-center gap-3">
                 <AuthStatusCard compact />
               </div>
             </div>
 
             <SketchDivider />
 
-            <nav className="flex flex-wrap gap-2">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
-                    isNavItemActive(pathname, item.href)
-                      ? "border-[rgba(91,62,43,0.24)] bg-[rgba(236,223,207,0.98)] text-[color:var(--accent)]"
-                      : "border-[rgba(75,52,36,0.16)] bg-[rgba(255,250,243,0.9)] text-[color:var(--foreground)] hover:border-[rgba(91,62,43,0.22)] hover:bg-[rgba(249,240,227,0.98)]"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+            <div className="flex justify-between">
+              <nav className="flex flex-wrap gap-2">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+                      isNavItemActive(pathname, item.href)
+                        ? "border-[rgba(91,62,43,0.24)] bg-[rgba(236,223,207,0.98)] text-[color:var(--accent)]"
+                        : "border-[rgba(75,52,36,0.16)] bg-[rgba(255,250,243,0.9)] text-[color:var(--foreground)] hover:border-[rgba(91,62,43,0.22)] hover:bg-[rgba(249,240,227,0.98)]"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+              <PaperLinkButton
+                href="/play"
+                variant="primary"
+                className="inline-flex w-fit px-4 py-2 text-sm font-semibold"
+              >
+                Open playroom
+              </PaperLinkButton>
+            </div>
           </div>
         </header>
 
