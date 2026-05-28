@@ -30,12 +30,12 @@ export function AuthStatusCard({ compact = false }: { compact?: boolean }) {
     error ??
     (socketStatus !== "connected"
       ? `Connection: ${socketStatus}`
-      : "Connection feels steady");
+      : "Connected and ready to go.");
   const connectionTone = error
     ? "text-[color:var(--accent)]"
     : socketStatus !== "connected"
       ? "text-[color:var(--accent-deep)]"
-      : "text-[color:var(--ink-soft)]";
+      : "text-[color:var(--success)]";
 
   useEffect(() => {
     setDraftUsername(username ?? "");
@@ -148,7 +148,7 @@ export function AuthStatusCard({ compact = false }: { compact?: boolean }) {
       </div>
 
       <div className="mt-2 min-h-5 text-xs">
-        {actionError ? <p className="text-rose-200">{actionError}</p> : null}
+        {actionError ? <p className="text-[color:var(--accent-deep)]">{actionError}</p> : null}
         {actionMessage ? (
           <p className="text-[color:var(--accent-deep)]">{actionMessage}</p>
         ) : null}

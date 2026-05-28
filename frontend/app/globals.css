@@ -1,20 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f4eadc;
-  --foreground: #2b1f17;
-  --surface: rgba(251, 245, 234, 0.94);
-  --surface-strong: rgba(242, 232, 216, 0.98);
-  --surface-note: rgba(255, 251, 246, 0.9);
-  --stroke: rgba(90, 63, 44, 0.18);
-  --stroke-strong: rgba(75, 52, 36, 0.3);
-  --accent: #5b3e2b;
-  --accent-deep: #38261d;
-  --accent-soft: #ad7c4d;
-  --ink-soft: #6c5849;
-  --paper-line: rgba(90, 63, 44, 0.07);
-  --paper-border: rgba(75, 52, 36, 0.15);
-  --paper-border-strong: rgba(75, 52, 36, 0.22);
+  --background: #f2e8d8;
+  --foreground: #2a2119;
+  --surface: rgba(250, 244, 232, 0.92);
+  --surface-strong: rgba(242, 228, 207, 0.98);
+  --surface-note: rgba(255, 250, 244, 0.88);
+  --stroke: rgba(102, 82, 60, 0.2);
+  --stroke-strong: rgba(95, 71, 48, 0.34);
+  --accent: #b95a42;
+  --accent-deep: #6b4f3f;
+  --accent-soft: #d6a45d;
+  --ink-soft: #6b5b4d;
+  --paper-line: rgba(92, 69, 47, 0.08);
+  --paper-border: rgba(95, 71, 48, 0.16);
+  --paper-border-strong: rgba(95, 71, 48, 0.24);
   --paper-shadow: 0 0 0 1px rgba(255, 255, 255, 0.45) inset;
   --success: #2f7d57;
 }
@@ -38,9 +38,9 @@ body {
   color: var(--foreground);
   background-image:
     radial-gradient(circle at 14% 18%, rgba(214, 164, 93, 0.12), transparent 18%),
-    radial-gradient(circle at 82% 10%, rgba(91, 62, 43, 0.07), transparent 14%),
-    radial-gradient(circle at 50% 100%, rgba(75, 52, 36, 0.04), transparent 22%),
-    linear-gradient(180deg, #faf2e5 0%, #f4e8d6 42%, #ecdec7 100%);
+    radial-gradient(circle at 82% 10%, rgba(185, 90, 66, 0.08), transparent 14%),
+    radial-gradient(circle at 50% 100%, rgba(95, 71, 48, 0.04), transparent 22%),
+    linear-gradient(180deg, #f7eddc 0%, #f3e6d2 40%, #eadcc5 100%);
   background-repeat: no-repeat;
   background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
   background-attachment: fixed;
@@ -87,7 +87,7 @@ a {
 }
 
 *::selection {
-  background: rgba(91, 62, 43, 0.2);
+  background: rgba(185, 90, 66, 0.22);
   color: #201712;
 }
 
