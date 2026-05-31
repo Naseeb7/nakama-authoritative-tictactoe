@@ -51,20 +51,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   </p>
                 </div>
 
-                <nav className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
-                  {navItems.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`shrink-0 rounded-full border px-3 py-2 text-xs font-medium transition sm:px-4 sm:text-sm ${
-                        isNavItemActive(pathname, item.href)
-                          ? "border-[rgba(91,62,43,0.24)] bg-[rgba(236,223,207,0.98)] text-[color:var(--accent)]"
-                          : "border-[rgba(75,52,36,0.16)] bg-[rgba(255,250,243,0.9)] text-[color:var(--foreground)] hover:border-[rgba(91,62,43,0.22)] hover:bg-[rgba(249,240,227,0.98)]"
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <nav className="-mx-1 flex flex-wrap gap-2 px-1 pb-1 sm:mx-0 sm:px-0 sm:pb-0">
+                    {navItems.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-2 text-xs font-medium transition sm:px-4 sm:text-sm ${
+                          isNavItemActive(pathname, item.href)
+                            ? "border-[rgba(91,62,43,0.24)] bg-[rgba(236,223,207,0.98)] text-[color:var(--accent)]"
+                            : "border-[rgba(75,52,36,0.16)] bg-[rgba(255,250,243,0.9)] text-[color:var(--foreground)] hover:border-[rgba(91,62,43,0.22)] hover:bg-[rgba(249,240,227,0.98)]"
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </nav>
                   <PaperLinkButton
                     href="/play"
                     variant="primary"
@@ -72,7 +74,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   >
                     Step inside
                   </PaperLinkButton>
-                </nav>
+                </div>
               </div>
 
               <AuthStatusCard compact />
@@ -120,13 +122,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
             <SketchDivider />
 
-            <div className="flex justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <nav className="flex flex-wrap gap-2">
                 {navItems.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+                    className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition ${
                       isNavItemActive(pathname, item.href)
                         ? "border-[rgba(91,62,43,0.24)] bg-[rgba(236,223,207,0.98)] text-[color:var(--accent)]"
                         : "border-[rgba(75,52,36,0.16)] bg-[rgba(255,250,243,0.9)] text-[color:var(--foreground)] hover:border-[rgba(91,62,43,0.22)] hover:bg-[rgba(249,240,227,0.98)]"
